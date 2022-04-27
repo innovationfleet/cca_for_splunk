@@ -1,0 +1,15 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Perform a cleanup of state file
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: absent
+

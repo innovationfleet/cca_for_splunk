@@ -1,0 +1,16 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Add file to inform that this host is managed by ansible
+  ansible.builtin.file:
+    path: "{{ dot_managed_by_ansible }}"
+    state: touch
+  register: stat_dot_managed_by_ansible
+  changed_when: false

@@ -1,0 +1,43 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Find GUID from stored license file
+  become: false
+  ansible.builtin.shell:
+    cmd: "grep guid {{ cca_splunk_extension_licenses_path }}/{{ item }} | awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }'"
+  register: license_file_guid
+  delegate_to: localhost
+  loop: "{{ cca_splunk_extension_licenses }}"
+  when:
+    - cca_splunk_extension_licenses is defined
+  changed_when: false
+
+- name: Prep server with etc/licenses/enterprise directory
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/etc/licenses/enterprise"
+    state: 'directory'
+  changed_when: false
+
+- name: Check licenses that are already present in Splunk
+  ansible.builtin.shell:
+    cmd: "grep guid {{ splunk_path }}/etc/licenses/enterprise/* | awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }'"
+  register: installed_splunk_licenses
+  changed_when: false
+  failed_when: false
+
+- name: Copy license file if license shall be added
+  ansible.builtin.copy:
+    src: "{{ cca_splunk_extension_licenses_path }}/{{ item.item }}"
+    dest: "{{ splunk_path }}/etc/licenses/enterprise/{{ item.item }}"
+  loop: "{{ license_file_guid.results }}"
+  notify: notify splunkd restart
+  when:
+    - cca_splunk_extension_licenses is defined
+    - installed_splunk_licenses.stdout is not search(item.stdout)

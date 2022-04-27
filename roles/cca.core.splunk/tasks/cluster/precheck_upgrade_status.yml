@@ -1,0 +1,20 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Upgrade precheck, validate that all cluster status is as expected
+  ansible.builtin.assert:
+    that:
+      - cluster_preflight_status_flag | default(false)
+      - searchable_rolling_restart_flag | default(false)
+      - not index_cluster_rolling_upgrade_started | default(true)
+    fail_msg: One of the precheck flags are not as expected
+  when:
+    - cluster_precheck | default(false)

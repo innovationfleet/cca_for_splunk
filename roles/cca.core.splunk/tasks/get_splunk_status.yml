@@ -1,0 +1,44 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Check Splunk binary
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/bin/splunk"
+  register: stat_splunk_enterprise_binary
+
+- name: Include tasks to login to splunk cli
+  ansible.builtin.include_tasks:
+    splunk_login.yml
+  when:
+    - stat_splunk_enterprise_binary.stat.exists
+
+- name: Check that Splunk Enterprise is running
+  ansible.builtin.command:
+    cmd: "timeout 10 {{ splunk_path }}/bin/splunk status"
+  register: splunk_status_result
+  changed_when: false
+  when:
+    - stat_splunk_enterprise_binary.stat.exists
+  check_mode: false
+
+- name: Set fact if expected splunk status is met
+  ansible.builtin.set_fact:
+    splunk_ok_status_flag: true
+  when:
+    - splunk_status_result.stdout | default('') | regex_search(('splunkd is running'))
+    - stat_splunk_enterprise_binary.stat.exists
+
+- name: Assert that splunk exists and that it's running
+  ansible.builtin.assert:
+    that:
+      - stat_splunk_enterprise_binary.stat.exists
+      - splunk_status_result.stdout | regex_search(('splunkd is running'))
+    fail_msg: >-
+      Splunk status is not OK, this host will be skipped

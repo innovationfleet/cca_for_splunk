@@ -1,0 +1,91 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Assert that required parameters are available when the playbook starts
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+#
+
+- name: Assert that the following variables are defined
+  ansible.builtin.assert:
+    that:
+      - absolute_infra_repo_path is defined
+      - ansible_date_time.year is defined
+      - ansible_ssh_host is defined
+      - available_sites is defined
+      - cca_splunk_agg_cpu_profiling is defined
+      - cca_splunk_alert_action_smtp is defined
+      - cca_splunk_cert_enrollment_method is defined
+      - cca_splunk_cert_prefix is defined
+      - cca_splunk_certs_home_path is defined
+      - cca_splunk_certs_relative_path is defined
+      - cca_splunk_certs_server_cert is defined
+      - cca_splunk_certs_web_cert is defined
+      - cca_splunk_certs_web_key is defined
+      - cca_splunk_certs_web_sslpassword_hash is defined
+      - cca_splunk_clb_cpu_profiling is defined
+      - cca_splunk_cluster_c1_pass4SymmKey_hash is defined
+      - cca_splunk_cluster_c2_available_sites is defined
+      - cca_splunk_cluster_c2_cluster_label is defined
+      - cca_splunk_cluster_c2_manager_uri is defined
+      - cca_splunk_cluster_c2_pass4SymmKey_hash is defined
+      - cca_splunk_cluster_c2_site_replication_factor is defined
+      - cca_splunk_cluster_c2_site_search_factor is defined
+      - cca_splunk_cluster_c3_pass4SymmKey_hash is defined
+      - cca_splunk_cluster_c4_pass4SymmKey_hash is defined
+      - cca_splunk_cluster_peer_replication_port is defined
+      - cca_splunk_extension_cert_rootca is defined
+      - cca_splunk_extension_inputs_cert is defined
+      - cca_splunk_extension_inputs_key is defined
+      - cca_splunk_extension_outputs_cert is defined
+      - cca_splunk_extension_outputs_key is defined
+      - cca_splunk_extension_server_cert is defined
+      - cca_splunk_extension_server_key is defined
+      - cca_splunk_extension_web_cert is defined
+      - cca_splunk_extension_web_key is defined
+      - cca_splunk_health_alert_action_email_to is defined
+      - cca_splunk_lb_cpu_profiling is defined
+      - cca_splunk_license_manager_uri is defined
+      - cca_splunk_manager_user is defined
+      - cca_splunk_mp_cpu_profiling is defined
+      - cca_splunk_msp_cpu_profiling is defined
+      - cca_splunk_regex_cpu_profiling is defined
+      - cca_splunk_server_general_pass4SymmKey_hash is defined
+      - cca_splunk_server_sslConfig_sslRootCAPath is defined
+      - cca_splunk_shcluster_c1_clustering_manager_uris is defined
+      - cca_splunk_shcluster_c1_pass4SymmKey_hash is defined
+      - cca_splunk_shcluster_c2_clustering_manager_uris is defined
+      - cca_splunk_shcluster_c2_pass4SymmKey_hash is defined
+      - cca_splunk_shcluster_c2_shcluster_label is defined
+      - cca_splunk_shcluster_member_replication_port is defined
+      - cca_splunk_admin_password is defined
+      - cca_splunk_admin_user is defined
+      - cluster_label is defined
+      - cluster_manager_cluster_c2 is defined
+      - cluster_manager_cluster_c3 is defined
+      - cluster_manager_cluster_c4 is defined
+      - default_tcpout is defined
+      - environment_name is defined
+      - file_managed_by_ansible is defined
+      - inventory_dir is defined
+      - inventory_hostname is defined
+      - maxVolumeDataSizeMB_cold is defined
+      - maxVolumeDataSizeMB_hot is defined
+      - shcluster_label is defined
+      - site is defined
+      - site_replication_factor is defined
+      - site_search_factor is defined
+      - splunk_path is defined
+      - s2s_tcp_port is defined
+      - s2s_tcp_port_ssl is defined
+      - splunk_user is defined
+      - splunk_volume_name_cold is defined
+      - splunk_volume_name_hot is defined
+      - splunk_volume_path_cold is defined
+      - splunk_volume_path_hot is defined
+      - systemd_enterprise_name is defined
+      - systemd_uf_name is defined

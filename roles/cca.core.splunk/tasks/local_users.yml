@@ -1,0 +1,28 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Add admin user as local cli user
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ cca_splunk_admin_user }}:'
+    line: ":{{ cca_splunk_admin_user }}:{{ cca_splunk_admin_password_hash }}::Local Administrator Account:admin:{{ cca_splunk_admin_email | default('noreply@localhost') }}:::18956"
+    mode: '0600'
+    create: yes
+  notify: notify splunkd restart
+
+- name: Add additional local users to Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users | default([]) if cca_splunk_local_users | default([]) is iterable else [] }}'
+  notify: notify splunkd restart

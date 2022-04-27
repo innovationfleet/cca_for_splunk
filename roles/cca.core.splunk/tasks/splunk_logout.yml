@@ -1,0 +1,40 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Verify that Splunk is running
+  ansible.builtin.command:
+    cmd: "timeout 5 {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
+  changed_when: false
+  check_mode: no
+
+- name: Splunk logout
+  ansible.builtin.command:
+    cmd: "timeout 5 {{ splunk_path }}/bin/splunk logout"
+  register: splunk_logout_result
+  failed_when: false
+  changed_when: false
+  check_mode: no
+
+- name: Debug any error and fail task if logout wasn't successful
+  debug:
+    msg: >-
+      Splunk command or logout failed with the reason (
+      {{ splunk_logout_result.stderr | default('Skipped task, disregard this stderr message') }} )
+      Splunk command had an unexpected result if this is not blank (
+      {{ splunk_logout_result.stdout | default('Skipped task, disregard this stderr message') }} )
+  when:
+    - splunk_logout_result.rc > 0
+  failed_when:
+    - splunk_logout_result.rc > 0

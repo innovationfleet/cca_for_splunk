@@ -1,0 +1,95 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: This tasks parse the output of the task that configure splunk
+#              settings. Based on what items that has been updated different
+#              notify actions is triggered.
+#              Special actions is implemented for Splunk core, deployment-apps
+#              shcluster and master-apps.
+#
+# Prerequisite:
+#              splunk_settings_update must be defined and have results. This
+#              task shall not be called stand alone.
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION
+
+- name: Notify a standard splunkd restart if relevant changes are detected
+  set_fact:
+    splunkd_restart: true
+  loop: "{{ cca_splunk_settings_update.results }}"
+  when:
+    - (
+        item.changed and
+        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-apps).*?$')
+      ) or
+      stat_rolling_restart_pending | default(false) or
+      stat_splunkd_restart_pending | default(false) or
+      force_splunkd_restart | default(false)
+
+  changed_when:
+    - (
+        item.changed == true and
+        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-apps).*?$')
+      )
+      or
+      stat_rolling_restart_pending | default(false) or
+      stat_splunkd_restart_pending | default(false) or
+      force_splunkd_restart | default(false)
+  notify: notify splunkd restart
+  no_log: '{{ hide_password }}'
+
+
+# TODO
+#- name: Notify a standalone splunkd restart if special updates are detected
+#  set_fact:
+#    standalone_splunkd_restart: true
+#  with_items: "{{ cca_splunk_settings_update.results }}"
+#  when:
+#    - item.changed == true
+#    - item.path | regex_search('.*\/etc\/system\/local\/.*?$')
+#    - item.item[0].section | default('') | regex_search('(shclustering)')
+#  changed_when:
+#    - item.item[0].section | default('') | regex_search('(shclustering)')
+#  notify: notify standalone splunkd restart
+#  no_log: '{{ hide_password }}'
+
+- name: Notify a Deployment Server reload if deployment-apps content is updated
+  set_fact:
+     deploymentserver_reload: true
+  with_items: "{{ cca_splunk_settings_update.results }}"
+  when:
+    - item.changed
+    - item.path | regex_search('(deployment-apps)')
+  changed_when:
+    - item.changed
+    - item.path | regex_search('(deployment-apps)')
+  notify: notify deploymentserver reload
+  no_log: '{{ hide_password }}'
+
+- name: Notify a Search Head Deployer push if shcluster content is updated
+  set_fact:
+     deployer_push: true
+  with_items: "{{ cca_splunk_settings_update.results }}"
+  when:
+    - item.changed
+    - item.path | regex_search('(shcluster)')
+  changed_when:
+    - item.changed
+    - item.path | regex_search('(shcluster)')
+  notify: notify shcluster bundle push
+  no_log: '{{ hide_password }}'
+
+- name: Notify a Cluster Manager push if master-apps content is updated
+  set_fact:
+    cluster_manager_push: true
+  with_items: "{{ cca_splunk_settings_update.results }}"
+  when:
+    - item.changed
+    - item.path | regex_search('(master-apps)')
+  changed_when:
+    - item.changed
+    - item.path | regex_search('(master-apps)')
+  notify: notify cluster bundle push
+  no_log: '{{ hide_password }}'

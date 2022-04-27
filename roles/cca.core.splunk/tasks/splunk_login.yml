@@ -1,0 +1,41 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Verify that Splunk is running
+  ansible.builtin.command:
+    cmd: "timeout 5 {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
+  changed_when: false
+  check_mode: false
+
+- name: Splunk login
+  ansible.builtin.command:
+    cmd: "timeout 60 {{ splunk_path }}/bin/splunk login --accept-license --answer-yes --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'"
+  register: splunk_login_result
+  no_log: "{{ hide_password }}"
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Assert to find out if the login was successful
+  ansible.builtin.assert:
+    that:
+      - splunk_login_result.rc | int == 0
+    fail_msg: >-
+      Splunk command or login failed with the reason (
+      {{ splunk_login_result.stderr | default('Skipped task, disregard this stderr message') }} )
+      Splunk command had an unexpected result if this is not blank (
+      {{ splunk_login_result.stdout | default('Skipped task, disregard this stderr message') }} )
+    success_msg: >-
+      Login successful

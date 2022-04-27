@@ -1,0 +1,8 @@
+galaxy_info:
+  author: Roger Lindquist (github.com/rlinq)
+  description: CCA role for Splunk realated actions for configuring Splunk it self 
+  company: Innovationfleet (github.com/innovationfleet)
+
+  license: MIT
+
+  min_ansible_version: 2.11

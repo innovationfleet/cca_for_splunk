@@ -1,0 +1,19 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Upgrade precheck
+  ansible.builtin.assert:
+    that:
+      - splunk_ok_status_flag | default(false)
+    fail_msg: If at least one of the check flags are not as expected, the task will fail.
+  when:
+    - not skip_upgrade_check | default(false)
+  check_mode: false

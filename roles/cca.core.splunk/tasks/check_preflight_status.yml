@@ -1,0 +1,54 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Authenticate and check Pre-flight status
+  block:
+    - name: Include tasks to login to splunk cli
+      ansible.builtin.include_tasks:
+        splunk_login.yml
+
+    - name: Wait until kvstore is ready
+      ansible.builtin.shell:
+        cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
+      register: kvstore_status
+      retries: 6
+      delay: 10
+      until: kvstore_status.stdout | default('') | string | regex_search('(status {{ ":" }} ready)')
+      changed_when: false
+      check_mode: no
+
+    - name: Check Pre-flight status on Cluster Manager
+      ansible.builtin.shell:
+        cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose | grep Pre-flight"
+      register: cluster_manager_preflight_status
+      retries: "{{ preflight_command_retries }}"
+      delay: 60
+      until: cluster_manager_preflight_status.stdout | regex_search(('Pre-flight check successful.*YES'))
+      changed_when: false
+      check_mode: no
+      when:
+        - preflight_command_retries | int < 90
+
+    - name: Check Pre-flight status on Cluster Manager, no log
+      ansible.builtin.shell:
+        cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose -auth {{ splunk_cli_user }}:{{ splunk_cli_user_password }} | grep Pre-flight"
+      register: cluster_manager_preflight_status_no_log
+      retries: "{{ preflight_command_retries }}"
+      delay: 60
+      until: cluster_manager_preflight_status_no_log.stdout | regex_search(('Pre-flight check successful.*YES'))
+      changed_when: false
+      check_mode: no
+      no_log: "{{ hide_password }}"
+      when:
+        - preflight_command_retries | int >= 90
+
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml

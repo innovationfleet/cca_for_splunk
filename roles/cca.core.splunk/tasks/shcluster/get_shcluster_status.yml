@@ -1,0 +1,113 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Include tasks to login to splunk cli
+  ansible.builtin.include_tasks:
+    splunk_login.yml
+
+- name: Get running Splunk versions from SH Cluster
+  ansible.builtin.shell:
+    cmd: |
+      timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status --verbose
+      grep \"splunk_version :\"
+      awk '{ print $3 }' | sort -u
+  register: shcluster_splunk_version
+  changed_when: false
+  check_mode: false
+
+- name: Get info of kvstore engine
+  ansible.builtin.shell:
+    cmd: |
+      timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status
+      grep \"storageEngine :\"
+      awk '{ print $3 }'
+  register: kvstore_engine
+  changed_when: false
+  check_mode: false
+
+- name: Collect full Seach Head Cluster status
+  ansible.builtin.command:
+    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
+  register: verbose_shcluster_status
+  changed_when: false
+  check_mode: false
+
+- name: Collect Captain information from Seach Head Cluster status
+  ansible.builtin.shell:
+    cmd: |
+      timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status
+      head -9 | grep \"label\"
+      awk -F'label : ' '{ print $2 }'
+  register: shcluster_captain
+  changed_when: false
+  check_mode: false
+
+- name: Collect kvstore status
+  ansible.builtin.command:
+    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
+  register: shcluster_kvstore_status
+  changed_when: false
+  check_mode: false
+
+- name: Set fact for dynamic captain
+  ansible.builtin.set_fact:
+    shcluster_dynamic_captain_flag: true
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('dynamic_captain {{ ":" }} 1'))
+
+- name: Set fact for initialized status
+  ansible.builtin.set_fact:
+    shcluster_initialized_flag: true
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('initialized_flag {{ ":" }} 1'))
+
+- name: Set fact for rolling restart status
+  ansible.builtin.set_fact:
+    shcluster_rolling_restart_flag: false
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('rolling_restart_flag {{ ":" }} 0'))
+
+- name: Set fact for rolling upgrade status
+  ansible.builtin.set_fact:
+    shcluster_rolling_upgrade_flag: false
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('rolling_upgrade_flag {{ ":" }} 0'))
+
+- name: Set fact for service ready status
+  ansible.builtin.set_fact:
+    shcluster_service_ready_flag: true
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('service_ready_flag {{ ":" }} 1'))
+
+- name: Set fact for captain status
+  ansible.builtin.set_fact:
+    shcluster_stable_captain_flag: true
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('stable_captain {{ ":" }} 1'))
+
+- name: Set fact for manual detention status
+  ansible.builtin.set_fact:
+    shcluster_manual_detention_flag: false
+  when:
+    - verbose_shcluster_status.stdout | regex_search(('manual_detention {{ ":" }} off'))
+
+- name: Set fact of current captain
+  ansible.builtin.set_fact:
+    current_shcluster_captain: "{{ shcluster_captain.stdout }}"
+
+- name: Store file on search head cluster captain
+  ansible.builtin.file:
+    path: "{{ searchhead_captain }}"
+    state: touch
+    mode: '664'
+  when:
+    - current_shcluster_captain == inventory_hostname
+  changed_when: false

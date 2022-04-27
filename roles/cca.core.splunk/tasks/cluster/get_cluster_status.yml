@@ -1,0 +1,46 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Include tasks to login to splunk cli
+  ansible.builtin.include_tasks:
+    splunk_login.yml
+
+- name: Get running Splunk versions from Index Cluster
+  ansible.builtin.shell:
+    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status | grep \"Splunk Version=\" | awk -F= '{ print $2 }' | sort -u"
+  register: cluster_peer_splunk_version
+  changed_when: false
+  check_mode: false
+
+- name: Collect full Index Cluster status
+  ansible.builtin.command:
+    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose"
+  register: verbose_cluster_status
+  changed_when: false
+  check_mode: false
+
+- name: Set fact for preflight status
+  ansible.builtin.set_fact:
+    cluster_preflight_status_flag: true
+  when:
+    - verbose_cluster_status.stdout | regex_search(('Pre-flight.*YES'))
+
+- name: Set fact for searchable rolling restart
+  ansible.builtin.set_fact:
+    searchable_rolling_restart_flag: true
+  when:
+    - verbose_cluster_status.stdout | regex_search(('Ready for searchable rolling restart*.YES'))
+
+- name: Set fact for rolling upgrade status
+  ansible.builtin.set_fact:
+    index_cluster_rolling_upgrade_started: true
+  when:
+    - verbose_cluster_status.stdout | regex_search('(Searchable rolling upgrade is in progress)')

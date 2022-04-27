@@ -1,0 +1,105 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: This tasks reads the splunk_conf_general_settings and
+#              apply them on each splunk host that is targeted by te
+#              playbook.
+#
+# Prerequisite:
+#              splunk_conf_general_settings needs to be defined, if
+#              not the task is not included.
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION
+
+- name: Parse all sections for general settings and build a loop var
+  set_fact:
+    general_sections_loop: >
+      {{ general_sections_loop | d([])
+        + [ {} | combine(item[0]) | combine(item[1]) ]
+      }}
+  with_subelements:
+    - "{{ splunk_conf_general_settings }}"
+    - sections
+  no_log: '{{ hide_password }}'
+
+- name: Fail task if invalid general setting is found
+  set_fact:
+    general_settings_validatation_failed: true
+  with_subelements:
+    - "{{ general_sections_loop }}"
+    - options
+  failed_when:
+    - item.0.filepath is regex( invalid_config_regex ) or
+      item.0.section is regex( invalid_config_regex ) or
+      item.1.option is regex( invalid_config_regex ) or
+      item.1.value is regex( invalid_config_regex ) or
+      ( item.1.option is regex('^(?!#).*')
+        and item.1.value != ''
+        and item.1.option == ''
+        and item.1.state | default ('present') != 'absent'
+        and enable_precheck | default(true) )
+  no_log: '{{ hide_password }}'
+
+- name: Parse all sections for group settings and build a loop var
+  set_fact:
+    group_sections_loop: >
+      {{ group_sections_loop | d([])
+        + [ {} | combine(item[0]) | combine(item[1]) ]
+      }}
+  with_subelements:
+    - "{{ splunk_conf_group_settings }}"
+    - sections
+  when: splunk_conf_group_settings is defined
+  no_log: '{{ hide_password }}'
+
+- name: Fail task if invalid group setting is found
+  set_fact:
+    group_settings_validatation_failed: true
+  with_subelements:
+    - "{{ group_sections_loop }}"
+    - options
+  failed_when:
+    - item.0.filepath is regex( invalid_config_regex ) or
+      item.0.section is regex( invalid_config_regex ) or
+      item.1.option is regex( invalid_config_regex ) or
+      item.1.value is regex( invalid_config_regex ) or
+      ( item.1.option is regex('^(?!#).*')
+        and item.1.value != ''
+        and item.1.option == ''
+        and item.1.state | default ('present') != 'absent'
+        and enable_precheck | default(true) )
+  when: splunk_conf_group_settings is defined
+  no_log: '{{ hide_password }}'
+
+- name: Parse all sections for host settings and build a loop var
+  set_fact:
+    host_sections_loop: >
+      {{ host_sections_loop | d([])
+        + [ {} | combine(item[0]) | combine(item[1]) ]
+      }}
+  with_subelements:
+    - "{{ splunk_conf_host_settings }}"
+    - sections
+  when: splunk_conf_host_settings is defined
+  no_log: '{{ hide_password }}'
+
+- name: Fail task if invalid host setting is found
+  set_fact:
+    host_settings_validatation_failed: true
+  with_subelements:
+    - "{{ host_sections_loop }}"
+    - options
+  failed_when:
+    - item.0.filepath is regex( invalid_config_regex ) or
+      item.0.section is regex( invalid_config_regex ) or
+      item.1.option is regex( invalid_config_regex ) or
+      item.1.value is regex( invalid_config_regex ) or
+      ( item.1.option is regex('^(?!#).*')
+        and item.1.value != ''
+        and item.1.option == ''
+        and item.1.state | default ('present') != 'absent'
+        and enable_precheck | default(true) )
+  when: splunk_conf_host_settings is defined
+  no_log: '{{ hide_password }}'

@@ -1,0 +1,61 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#   The data-model handles everything that comes around settings paramters for
+#   Splunk instances based on their role. A Splunk role is mapped to an inventory
+#   group in Ansible.
+#   Functions for creating, updating and deleting sections, options and values
+#   in ini_file is implemented. Splunk .conf files is perfect for the ini_file
+#   module as it can configure settings with the concept of atomic precision.
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION
+- name: Include task for checking cca_for_splunk init state
+  include_tasks: check_init.yml
+
+- name: Include task for checking splunk.secret
+  include_tasks: check_splunk_secret.yml
+
+- name: Include task ensuring local admin user
+  include_tasks: local_users.yml
+
+- name: Include task for checking certificate status
+  include_tasks: ../../cca.splunk.ssl-certificates/tasks/validate_certificates.yml
+
+- name: Run a precheck of the config to find errors
+  include_tasks: precheck_settings.yml
+
+- name: Include task for splunk general settings
+  include_tasks: set_splunk_general_settings.yml
+  when:
+    - splunk_conf_general_settings is defined
+
+- name: Include task for splunk group settings
+  include_tasks: set_splunk_group_settings.yml
+  when:
+    - splunk_conf_group_settings is defined
+
+- name: Include task for splunk host settings
+  include_tasks: set_splunk_host_settings.yml
+  when:
+    - splunk_conf_host_settings is defined
+
+- name: Include task for adding Splunk license
+  include_tasks: add_license.yml
+  when:
+    - is_license_manager | default(false)
+
+- name: Restart Splunkd if splunk.secret is replaced
+  ansible.builtin.command:
+    cmd: "{{ restart_command }}"
+  when:
+    - result_splunk_secret_replace.changed == true
+
+- name: Ensure splunk is running
+  command:
+    cmd: "timeout 120 {{ start_command }}"
+  changed_when: false

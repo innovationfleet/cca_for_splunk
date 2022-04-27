@@ -1,0 +1,24 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+# Check if a system is in init state, valid in scale out, fresh installation
+# or transformation scenarios
+#
+
+- name: Check if we have a .ansible_managed file
+  ansible.builtin.stat:
+    path: "{{ dot_managed_by_ansible }}"
+  register: stat_dot_ansible_managed
+
+- name: Set state if we are in an init workflow
+  ansible.builtin.set_fact:
+    cca_splunk_init: true
+  when:
+    - stat_dot_ansible_managed.stat.exists == false
