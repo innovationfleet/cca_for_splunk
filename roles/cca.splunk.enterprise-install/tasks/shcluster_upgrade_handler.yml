@@ -1,0 +1,18 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Perform a rolling upgrade of Splunk Search Head Cluster
+  include_tasks: shcluster/shcluster_rolling_upgrade.yml
+  when: shc_upgrade_method | default('rolling') == 'rolling'
+
+- name: Perform a single upgrade of Splunk Search Head Cluster
+  include_tasks: shcluster/shcluster_member_by_member_upgrade.yml
+  when: shc_upgrade_method | default('') == 'member_by_member'

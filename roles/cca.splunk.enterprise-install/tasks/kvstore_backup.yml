@@ -1,0 +1,37 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Kvstore backup on Splunk instance before performing a backup
+  ansible.builtin.command:
+    cmd: >
+      timeout 10 {{ splunk_path }}/bin/splunk backup kvstore
+      -archiveName pre_{{ splunk_enterprise_version }}_upgrade
+      -auth '{{ splunk_cli_user | default('admin') }}'
+  args:
+    stdin: "{{ splunk_cli_user_password }}"
+    stdin_add_newline: true
+  when:
+    - enterprise_upgrade | default(false)
+
+- name: Wait until kvstore backup is completed
+  ansible.builtin.shell:
+    cmd: |
+      {{ splunk_path }}/bin/splunk show kvstore-status -auth '{{ splunk_cli_user | default('admin') }}'
+      grep backupRestoreStatus"
+  args:
+    stdin: "{{ splunk_cli_user_password }}"
+    stdin_add_newline: true
+  retries: 50
+  delay: 30
+  register: status_kvstore_backup
+  until: status_kvstore_backup.stdout | regex_search('(.*Ready.*)')
+  when:
+    - enpterprise_upgrade | default (false)

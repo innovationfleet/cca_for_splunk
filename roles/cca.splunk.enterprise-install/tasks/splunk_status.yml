@@ -1,0 +1,80 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Check if Splunk is installed
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/bin/splunk"
+  register: stat_splunk_enterprise_bin
+
+- name: Check if the instance is managed by Ansible
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/.ansible_managed"
+  register: stat_ansible_managed
+
+- name: Set fact if host is manged by ansible
+  ansible.builtin.set_fact:
+    cca_ansible_managed: true
+  when:
+    - stat_ansible_managed.stat.exists
+
+- name: Include task to handle unmanaged servers
+  ansible.builtin.include_tasks: prompt_unmanaged.yml
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+    - not stat_ansible_managed.stat.exists
+    - not accept_cca_management | default(false)
+    - not cca_splunk_enterprise_upgrade | default(false)
+    - not ensure_splunk_version_task | default(false)
+    - not ansible_check_mode
+
+- name: Check if Systemd service exists
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/{{ systemd_enterprise_name }}"
+  register: stat_splunk_enterprise_systemd
+
+- name: Check if current splunk version is installed
+  ansible.builtin.shell:
+    cmd: "timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | awk '{ print $2 }'"
+  register: splunk_enterprise_version_result
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+  changed_when: false
+  check_mode: false
+
+- name: Evaluate version result and set fact based on result
+  ansible.builtin.set_fact:
+    expected_splunk_version: true
+  when:
+    - splunk_enterprise_version_result is defined
+    - splunk_enterprise_version_result.stdout | default('') == splunk_enterprise_version
+    - stat_splunk_enterprise_bin.stat.exists
+
+- name: If Splunk is left in migration state, stop it first
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk stop"
+  when:
+    - splunk_enterprise_version_result.stderr | default('') | regex_search('Migration information')
+
+- name: If Splunk is left in migration state, then start it with migration arguments
+  ansible.builtin.command:
+    cmd: "{{ start_command }}"
+  when:
+    - splunk_enterprise_version_result.stderr is defined
+    - splunk_enterprise_version_result.stderr | default('') | regex_search('Migration information')
+
+- name: Control logic if Splunk should be upgraded
+  ansible.builtin.set_fact:
+    enterprise_upgrade: true
+  when:
+    - splunk_enterprise_version_result.stdout is defined
+    - splunk_enterprise_version_result.stderr | default('') == ''
+    - splunk_enterprise_version_result.stdout | default('') != ''
+    - not expected_splunk_version | default(false)
+    - cca_splunk_enterprise_upgrade | default(false)

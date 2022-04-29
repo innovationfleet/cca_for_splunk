@@ -1,0 +1,18 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Start splunk on command line
+  ansible.builtin.command:
+    cmd: "timeout 120 {{ start_command }}"
+  when:
+    - stat_splunk_enterprise_bin.stat.exists
+    - stat_ansible_managed.stat.exists
+  changed_when: false

@@ -1,0 +1,15 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Finalize rolling upgrade on the cluster manager
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk upgrade-finalize cluster-peers"
+  when: true

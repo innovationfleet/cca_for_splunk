@@ -1,0 +1,22 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Include tasks to login to Splunk
+  ansible.builtin.include_tasks: ../cca.core.splunk/tasks/splunk_login.yml
+
+- name: Initialize rolling upgrade on cluster manager
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk upgrade-init cluster-peers"
+  register: upgrade_init_cluster_peers
+  failed_when:
+    - upgrade_init_cluster_peers.rc != 0
+    - not upgrade_init_cluster_peers.stderr | regex_search('Rolling upgrade/restart is already in progress')
+  when: true

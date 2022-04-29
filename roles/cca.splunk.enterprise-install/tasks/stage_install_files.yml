@@ -1,0 +1,40 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Stage splunk_cca files used during initial install or upgrade of Splunk Enterprise
+  ansible.builtin.synchronize:
+    src: "{{ role_path }}/files/"
+    dest: "{{ cca_splunk_var_tmp }}/"
+    recursive: true
+    checksum: true
+    archive: false
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_opts:
+      - "--include=dat/untracked_files_splunk_{{ splunk_enterprise_version }}_Linux.diff"
+      - "--include=bin/sudo_ansible_helper.sh"
+      - "--include=bin/splunk_upgrade_cleanup.sh"
+      - "--exclude=dat/*"
+  check_mode: false
+
+- name: Stage Splunk tgz file at initial install or upgrade of Splunk Enterprise
+  ansible.builtin.synchronize:
+    src: "{{ absolute_infra_repo_path }}/splunk/var/images/"
+    dest: "{{ cca_splunk_var_tmp }}/"
+    recursive: true
+    checksum: true
+    archive: false
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_opts:
+      - "--include=splunk-{{ splunk_enterprise_version }}-*-Linux-x86_64.tgz"
+      - "--exclude=*"
+  check_mode: false

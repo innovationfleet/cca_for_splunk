@@ -1,0 +1,58 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Login to splunk
+  include_tasks: ../../../cca.core.splunk/tasks/splunk_login.yml
+
+- name: Set a search head cluster member in manual detention
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk edit shcluster-config -manual_detention on"
+  when:
+    - enterprise_upgrade | default(false)
+
+- name: Check status and wait until all historical searches has completed
+  ansible.builtin.shell:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk list shcluster-member-info | grep "active"'
+  register: shcluster_member_info_status
+  until: shcluster_member_info_status.stdout | default('') | regex_search('(active_historical_search_count{{ ":" }}0)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+
+- name: Check status and wait until all realtime searches has completed
+  ansible.builtin.shell:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk list shcluster-member-info | grep "active"'
+  register: shcluster_member_info_status
+  until: shcluster_member_info_status.stdout | default('') | regex_search('(active_realtime_search_count{{ ":" }}0)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+
+- name: Include tasks to upgrade splunk
+  include_tasks: ensure_splunk_version.yml
+
+- name: Login to splunk
+  include_tasks: ../../../cca.core.splunk/tasks/splunk_login.yml
+
+- name: Turn off manual detention for search head cluster member
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk edit shcluster-config -manual_detention off"
+  when:
+    - enterprise_upgrade | default(false)
+
+- name: Include task to check cluster status
+  include_tasks: ../../../cca.splunk.role-searchhead/tasks/wait_for_shcluster.yml

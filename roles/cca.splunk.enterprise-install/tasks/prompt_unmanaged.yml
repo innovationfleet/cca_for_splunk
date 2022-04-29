@@ -1,0 +1,19 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: This server is not currently managed by Ansible
+  ansible.builtin.assert:
+    that:
+      - accept_cca_management | default(false)
+    fail_msg: >-
+      This server is not managed by the CCA automation framework.
+      You need to supply {"accept_cca_management":true} in cca_ctrl
+      to pass this assert check. After a successful migration, a state file
+      is added to the server, and this check is passed.

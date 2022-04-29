@@ -1,0 +1,22 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Finalize rolling upgrade on a SHC member
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk upgrade-finalize shcluster-members"
+  register: splunk_upgrade_finalize_status
+  until: splunk_upgrade_finalize_status.stdout | regex_search('Upgrade of search head cluster members finalized')
+  retries: 3
+  delay: 10
+  run_once: true
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode

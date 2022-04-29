@@ -1,0 +1,30 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+# tasks file for cca.splunk.enterprise-install
+#
+- name: Check Splunk status
+  include_tasks: splunk_status.yml
+
+- name: Include task to stage install files
+  include_tasks: stage_install_files.yml
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+
+- name: Include task to ensure splunk version
+  include_tasks: ensure_splunk_version.yml
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
+
+- name: Include task to always ensure that splunk is running
+  include_tasks: ensure_splunk_status_started.yml
