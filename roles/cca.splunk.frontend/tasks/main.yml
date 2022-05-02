@@ -1,0 +1,17 @@
+---
+# tasks file for cca.splunk.frontend
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+# tasks file for cca.splunk.frontend
+
+- name: Include task to suppress first time login message
+  include_tasks: suppress_first_time_logging_in.yml
+  when:
+    - cca_flag_supress_first_login_message | default(true)
