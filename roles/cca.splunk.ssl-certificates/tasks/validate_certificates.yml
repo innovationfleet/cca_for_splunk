@@ -1,0 +1,53 @@
+---
+# tasks file for cca.splunk.ssl-certificates
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Check if we have a server cert file on the server
+  ansible.builtin.stat:
+    path: '{{ cca_splunk_certs_path }}/{{ cca_splunk_certs_server_cert }}'
+  register: stat_server_cert_file
+
+- name: Set fact if server cert is found
+  ansible.builtin.set_fact:
+    cca_splunk_server_ssl: true
+  when:
+    - stat_server_cert_file.stat.exists
+
+- name: Check if we have a web cert file on the server
+  ansible.builtin.stat:
+    path: '{{ cca_splunk_certs_path }}/{{ cca_splunk_certs_web_cert }}'
+  register: stat_web_cert_file
+
+- name: Set fact if web cert is found
+  ansible.builtin.set_fact:
+    cca_splunk_web_ssl: true
+  when:
+    - stat_web_cert_file.stat.exists
+
+- name: Check if we have a inputs cert file on the server
+  ansible.builtin.stat:
+    path: '{{ cca_splunk_certs_path }}/{{ cca_splunk_certs_inputs_cert }}'
+  register: stat_inputs_cert_file
+
+- name: Set fact if inputs cert is found
+  ansible.builtin.set_fact:
+    cca_splunk_inputs_ssl: true
+  when:
+    - stat_inputs_cert_file.stat.exists
+
+- name: Check if we have a outputs cert file on the server
+  ansible.builtin.stat:
+    path: '{{ cca_splunk_certs_path }}/{{ cca_splunk_certs_outputs_cert }}'
+  register: stat_outputs_cert_file
+
+- name: Set fact if outputs cert is found
+  ansible.builtin.set_fact:
+    cca_splunk_outputs_ssl: true
+  when:
+    - stat_outputs_cert_file.stat.exists

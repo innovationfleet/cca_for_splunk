@@ -1,0 +1,34 @@
+---
+# tasks file for cca.splunk.ssl-certificates
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Set fact for server cert to be used in common tasks
+  ansible.builtin.set_fact:
+    cert_file_name: '{{ cca_splunk_certs_server_cert }}'
+    cert_staging_file_name: '{{ cca_splunk_certs_server_staging_cert }}'
+    privkey_file_name: '{{ cca_splunk_certs_server_key }}'
+    privkey_staging_file_name: '{{ cca_splunk_certs_server_staging_key }}'
+    privkey_password: '{{ cca_splunk_certs_server_sslpassword }}'
+    encrypt_private_key: '{{ openssl_certs_server_encryption }}'
+  no_log: "{{ hide_password }}"
+
+- name: Validate certs
+  include_tasks: validate_certificates.yml
+
+# TODO: Update logic to handle case where cert needs to be renewed.
+- name: Include task to deploy manual certs
+  include_tasks: deploy_manual_certs.yml
+  when:
+    ( cca_splunk_cert_enrollment_method == 'manual' and
+      stat_server_cert_file.stat.exists | default(false) == false )
+    or
+     ( renew_server_cert | default(false) == true )
+
+- name: Validate certs
+  include_tasks: validate_certificates.yml
