@@ -1,0 +1,35 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Include task to login
+  include_tasks: splunk_login.yml
+
+- name: Wait until shcluster status is ok
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Wait until rolling restart is completed
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(rolling_restart_flag {{ ":" }} 0)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  check_mode: false

@@ -1,0 +1,588 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Login to splunk
+  ansible.builtin.include_tasks: splunk_login.yml
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C1
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c1
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c1'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '10'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c1 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C2
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c2
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c2'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c2 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C3
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c3
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c3'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c3 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C4
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c4
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c4'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c4 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C5
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c5
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c5'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c5 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C6
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c6
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c6'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c6 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C7
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c7
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c7'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c7 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C8
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c8
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c8'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c8 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - not ansible_check_mode
+  run_once: true
+
+#
+# Bootstrap and configure the Search Head Cluster C9
+#
+- name: Bootstrap Search Head Captain in searchhead_members_shcluster_c9
+  ansible.builtin.command:
+    cmd: >
+      {{ splunk_path }}/bin/splunk bootstrap shcluster-captain -servers_list
+      '{% for host in groups['searchhead_members_shcluster_c9'] %}https://{{ host }}:{{ splunk_enterprise_mgmt_port }}
+      {% if not loop.last %},{% endif %}{% endfor %}'
+  register: bootstrap_shc_result
+  until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
+  changed_when: bootstrap_shc_result.rc == 0
+  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: '5'
+  delay: '30'
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - not ansible_check_mode
+  notify:
+    - notify shcluster bundle push
+  no_log: "{{ hide_password }}"
+  run_once: true
+
+- name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+    state: touch
+    mode: '664'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c9 }}"
+  when:
+    - bootstrap_shc_result.changed
+    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until cluster is initialized
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - not ansible_check_mode
+  run_once: true
+
+- name: Wait until service ready flag is set
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_status_result
+  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  retries: "{{ shc_sync_retry_num | default('30') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  failed_when: false
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - not ansible_check_mode
+  run_once: true

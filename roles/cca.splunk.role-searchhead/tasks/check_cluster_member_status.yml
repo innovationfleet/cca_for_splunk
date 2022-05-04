@@ -1,0 +1,25 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Include task to login
+  include_tasks: splunk_login.yml
+
+- name: Check if a search head cluster member is joined to the cluster
+  ansible.builtin.command:
+    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+  register: shcluster_member_status_result
+  changed_when: false
+
+- name: Set fact if member should be added
+  ansible.builtin.set_fact:
+    add_shcluster_mamber: true
+  when:
+    - shcluster_member_status_result.stdout | regex_search('(.*Search Head Clustering is not enabled on this node.*)')

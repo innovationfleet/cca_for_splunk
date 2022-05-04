@@ -1,0 +1,81 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Check the Search Head Cluster C1 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c1 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c1
+
+- name: Check the Search Head Cluster C2 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c2 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c2
+
+- name: Check the Search Head Cluster C3 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c3 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c3
+
+- name: Check the Search Head Cluster C4 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c4 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c4
+
+- name: Check the Search Head Cluster C5 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c5 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c5
+
+- name: Check the Search Head Cluster C6 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c6 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c6
+
+- name: Check the Search Head Cluster C7 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c7 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c7
+
+- name: Check the Search Head Cluster C8 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c8 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c8
+
+- name: Check the Search Head Cluster C9 bootstrap state, stored as state file on the deployer
+  ansible.builtin.stat:
+    path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
+  register: status_shc_init_stat
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c9 }}"
+  when: inventory_hostname in groups.searchhead_members_shcluster_c9

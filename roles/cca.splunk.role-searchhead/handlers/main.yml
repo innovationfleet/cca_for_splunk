@@ -1,0 +1,279 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#   These handlers listen to events from tasks and has different logic
+#   depending on type of Splunk instance that issue a notify action.
+#   E.g. when conifg changes on a cluster peer it triggers a notify action,
+#   here a handler needs to resolve information of the corresponding Cluster
+#   Manager, so that the correct cluster peers are restarted.
+#   This is done by mapping a cluster peer to the hostgroup of its Cluster
+#   Manager. This information needs to be static and predefined for the 9
+#   possible concurrent clusters CCA supports per environment. (Cluster 1-9)
+#
+#   For standard splunkd restarts the state file is stored in /tmp, if a host
+#   restarts before splunkd is restarted, then the /tmp directory will be
+#   cleared. The service will also be restarted as part of a server reboot, so
+#   now need to leave a pending restart flag behind.
+#
+#   If the handler should inform that a push is needed then the state file needs
+#   to be stored persistently on the filesystem, this is done by storing the file
+#   in $SPLUNK_HOME/var/run/
+#
+# Prerequisite:
+#   Cluster peer groups needs to be named according to cluster_c1 - cluster_c9
+#   Search head cluster members groups needs to be named according to
+#   shcluster_c1 - shcluster_c9
+#
+# META_AUTHOR
+# META_DATE
+# META_VERSION
+
+- name: Splunkd restart handler on non cluster instances
+  ansible.builtin.file:
+    path: "{{ splunkd_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when:
+    - inventory_hostname not in groups.cluster_peers
+    - inventory_hostname not in groups.searchhead_members
+
+- name: Splunkd restart handler on SHC members
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when:
+    - inventory_hostname in groups.searchhead_members
+    - not force_splunkd_restart | default(false)
+
+- name: Override restart handler for SHC members
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: absent
+  listen: notify splunkd restart
+  when:
+    - inventory_hostname in groups.searchhead_members
+    - force_splunkd_restart | default(false)
+
+- name: Execute a splunkd stop,start when in force mode
+  ansible.builtin.command:
+    cmd: '{{ item }}'
+  listen: notify splunkd restart
+  loop:
+    - '{{ splunk_path }}/bin/splunk stop'
+    - 'sleep 5'
+    - '{{ splunk_path }}/bin/splunk start'
+  when:
+    - force_splunkd_restart | default(false)
+
+- name: Splunkd standalone restart handler on any server
+  ansible.builtin.command:
+    cmd: '{{ splunk_path }}/bin/splunk restart'
+  listen: notify standalone splunkd restart
+
+- name: Splunk deployment-server reload handler on Deployment Server
+  ansible.builtin.file:
+    path: "{{ deployment_server_reload_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify deployment server reload
+
+- name: Splunk shcluster bundle push handler on clustered search head peers
+  ansible.builtin.file:
+    path: "{{ shcluster_bundle_push_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify shcluster bundle push
+  when: inventory_hostname in groups.searchhead_deployers
+
+- name: Splunk cluster bundle push handler on Cluster Manager
+  ansible.builtin.file:
+    path: "{{ cluster_bundle_push_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify cluster bundle push
+  when: inventory_hostname in groups.cluster_managers
+
+- name: Splunkd restart handler on cluster peers for Cluster C1
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c1
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c1 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C2
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c2
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c2 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C3
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c3
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c3 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C4
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c4
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c4 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C5
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c5
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c5 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C6
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c6
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c6 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C7
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c7
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c7 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C8
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c8
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c8 }}"
+
+- name: Splunkd restart handler on cluster peers for Cluster C9
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.cluster_peers_cluster_c9
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.cluster_manager_cluster_c9 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C1
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c1
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c1 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C2
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c2
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c2 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C3
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c3
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c3 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C4
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c4
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c4 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C5
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c5
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c5 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C6
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c6
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c6 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C7
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c7
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c7 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C8
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c8
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c8 }}"
+
+- name: Splunkd restart handler on cluster members for Shcluster C9
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members_shcluster_c9
+  delegate_to: "{{ item }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c9 }}"
+
