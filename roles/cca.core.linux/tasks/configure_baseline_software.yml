@@ -1,0 +1,18 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Install wanted baseline software on server
+  ansible.builtin.yum:
+    name: "{{ ensure_baseline_software }}"
+    state: present
+  loop_control:
+    loop_var: ensure_baseline_software
+  loop: '{{ cca_baseline_software | default([]) if cca_baseline_software | default([]) is iterable else [] }}'

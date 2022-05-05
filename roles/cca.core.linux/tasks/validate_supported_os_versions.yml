@@ -1,0 +1,60 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+# tasks file for cca.core.linux
+#
+# Description:
+#   Validates that the managed host is running on a tested and supported
+#   OS version.
+#
+# Prerequisite:
+#   Gather at least network facts from the target host
+#
+# Author: Roger Lindquist (Orange Cyberdefense)
+#
+
+- name: List of supported RedHat versions
+  ansible.builtin.set_fact:
+     redhat_support: true
+  when:
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version == "7" or
+      ansible_distribution_major_version == "8"
+    - ansible_architecture == "x86_64"
+
+- name: List of supported CentOS versions
+  ansible.builtin.set_fact:
+     centos_support: true
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "7" or
+      ansible_distribution_major_version == "8"
+    - ansible_architecture == "x86_64"
+
+- name: List of supported Amazon Linux versions
+  ansible.builtin.set_fact:
+    amazon_al2_support: true
+  when:
+    - ansible_distribution == "Amazon"
+    - ansible_distribution_major_version == "2"
+    - ansible_architecture == "x86_64"
+
+- name: Assert that only supported OS Versions is found
+  ansible.builtin.assert:
+    that:
+      - redhat_support is defined or
+        centos_support is defined or
+        amazon_al2_support is defined
+    fail_msg: >-
+        This Ansible framework has not been against the following OS/Version combination:
+          ansible_distribution = {{ ansible_distribution }}
+          ansible_distribution_major_version = {{ ansible_distribution_major_version }}
+          ansible_architecture = {{ ansible_architecture }}"

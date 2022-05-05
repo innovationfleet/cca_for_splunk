@@ -1,0 +1,30 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Create group for splunk user
+  ansible.builtin.group:
+    name: "{{ splunk_user_group_name }}"
+    state: present
+    gid: "{{ splunk_user_gid }}"
+
+- name: Create {{ splunk_user }} on system
+  ansible.builtin.user: 
+    name: "{{ splunk_user }}"
+    comment: 'Splunk CCA created account, locked no passwd'
+    home: '{{ splunk_path }}'
+    group: '{{ splunk_user_gid }}'
+    shell: /bin/bash
+    state: present
+    password_lock: yes
+    uid: '{{ splunk_user_uid }}'
+
+- name: Set password to never expire, despite no password is used
+  ansible.builtin.command:
+    cmd: "{{ 'chage -m -1 -M -1 ' + splunk_user }}"

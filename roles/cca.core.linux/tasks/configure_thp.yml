@@ -1,0 +1,46 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+- name: Strip out any existing transparent_hugepage settings from GRUB_CMD_LINE
+  ansible.builtin.shell:
+    cmd: cat /etc/default/grub | grep GRUB_CMDLINE_LINUX | awk -F\" '{ print $2 }' | sed -E 's:transparent_hugepage=[[:alpha:]]{1,}[[:space:]]{0,}::' | xargs
+  register: grub_cmdline_linux_result
+
+- name: Update the grub file if needed based on regexp and new line
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    state: present
+    regexp: '^GRUB_CMDLINE_LINUX="({{ grub_cmdline_linux_result.stdout }}|{{ grub_cmdline_linux_result.stdout }} transparent_hugepage=never)"$'
+    backrefs: yes
+    line: 'GRUB_CMDLINE_LINUX="{{ grub_cmdline_linux_result.stdout }} transparent_hugepage=never"'
+  register: grub_file_status
+  notify: notify server reboot
+
+- name: Get stat from the custom grub.cfg file
+  ansible.builtin.stat:
+    path: "/boot/grub2/grub.cfg"
+  register: stat_grub2_grubcfg
+
+- name: Take backup of existing grub.cfg, with timestamp
+  ansible.builtin.copy:
+    src: '/boot/grub2/grub.cfg'
+    dest: "/root/grub_backup-{{ansible_date_time.date}}.cfg"
+    remote_src: true
+  when:
+    - stat_grub2_grubcfg.stat.exists
+    - grub_file_status.changed
+
+- name: Rebuild grub conf
+  ansible.builtin.shell:
+    cmd: 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+  when:
+    - grub_file_status.changed
+  register: grub_mkconfig

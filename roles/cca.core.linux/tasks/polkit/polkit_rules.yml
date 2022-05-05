@@ -1,0 +1,21 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Configure polkit rule in /etc/polkit.1/rules.d
+  ansible.builtin.template:
+    src: "etc/polkit-1/rules.d/10-Splunkd.rules_{{ cca_splunk_polkit_template_version }}.j2"
+    dest: /etc/polkit-1/rules.d/10-Splunkd.rules
+    mode: '0644'
+
+- name: Restart polkit systemd service
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: yes
+    name: polkit

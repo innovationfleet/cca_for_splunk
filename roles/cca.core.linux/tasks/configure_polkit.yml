@@ -1,0 +1,15 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Include tasks that will install/upgrade polkit
+  include_tasks: polkit/ensure_polkit.yml
+
+- name: Configure polkit for splunk
+  include_tasks: polkit/polkit_rules.yml

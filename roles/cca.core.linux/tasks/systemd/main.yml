@@ -1,0 +1,12 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION
+- name: Include tasks for systemd setup
+  include_tasks: systemd/splunkd_service.yml

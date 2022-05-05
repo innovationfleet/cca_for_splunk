@@ -1,0 +1,62 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+# Configure systemd limits for Splunk user
+- name: 'Set ulimits for {{ splunk_user }} - hard nofile'
+  pam_limits:
+    domain: "{{ splunk_user }}"
+    limit_item: nofile
+    limit_type: hard
+    value: '64000'
+    use_max: yes
+    dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+    
+- name: 'Set ulimits for {{ splunk_user }} - soft nofile'
+  pam_limits:
+    domain: "{{ splunk_user }}"
+    limit_item: nofile
+    limit_type: soft
+    value: '32000'
+    use_max: yes
+    dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+    
+- name: 'Set ulimits for {{ splunk_user }} - hard noproc'
+  pam_limits:
+    domain: "{{ splunk_user }}"
+    limit_item: nproc
+    limit_type: hard
+    value: '64000'
+    dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+
+- name: 'Set ulimits for {{ splunk_user }} - soft nproc'
+  pam_limits:
+    domain: "{{ splunk_user }}"
+    limit_item: nproc
+    limit_type: soft
+    value: '32000'
+    dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+
+- name: 'Set ulimits for {{ splunk_user }} - hard fsize'
+  pam_limits:
+    domain: "{{ splunk_user }}"
+    limit_item: fsize
+    limit_type: soft
+    value: '-1'
+    dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+
+- name: 'Set ulimits for {{ splunk_user }} - soft fsize'
+  pam_limits:
+    domain: "{{ splunk_user }}"
+    limit_item: fsize
+    limit_type: soft
+    value: '-1'
+    dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+
+

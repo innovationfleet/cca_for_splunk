@@ -1,0 +1,15 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Ensure that the splunk_cca manager user is added to sudoers
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ cca_splunk_manager_user }}"
+    mode: 0700
+    content: "%{{ cca_splunk_manager_user }} ALL=(ALL) NOPASSWD:ALL"

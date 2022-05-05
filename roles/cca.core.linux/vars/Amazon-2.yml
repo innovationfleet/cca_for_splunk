@@ -1,0 +1,3 @@
+cca_splunk_polkit_template_version: 'Amazon-2'
+cca_splunk_systemd_template_version: 'latest'
+cca_splunk_systemd_memory_limit: '{{ ansible_memtotal_mb | int * 1024 * 1024 }}'

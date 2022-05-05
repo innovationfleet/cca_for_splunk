@@ -1,0 +1,14 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Ensure polkit is installed and updated, CVE-2021-3560 is solved in version 0.115.12
+  ansible.builtin.yum:
+    name: polkit
+    state: latest

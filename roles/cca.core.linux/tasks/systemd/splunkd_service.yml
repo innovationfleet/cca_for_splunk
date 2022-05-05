@@ -1,0 +1,33 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Configure splunk service in /etc/systemd/system/{{ systemd_enterprise_name }}
+  ansible.builtin.template:
+    src: "etc/systemd/system/{{ systemd_enterprise_name }}_{{ cca_splunk_systemd_template_version }}.j2"
+    dest: "/etc/systemd/system/{{ systemd_enterprise_name }}"
+    mode: '0644'
+
+- name: Ensure the destination directory exists
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ systemd_enterprise_name }}.d"
+    state: directory
+    mode: '0755'
+
+- name: Configure splunk service limits in /etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf
+  ansible.builtin.template:
+    src: "etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf_{{ cca_splunk_systemd_template_version }}.j2"
+    dest: "/etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf"
+    mode: '0644'
+
+- name: Configure systemd for the new service
+  ansible.builtin.systemd:
+    name: "{{ systemd_enterprise_name }}"
+    enabled: true
+    daemon_reload: true

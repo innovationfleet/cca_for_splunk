@@ -1,0 +1,101 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#   The enterprise-bootstrap makes all necessary configurations that is needed
+#   to manage splunk as a non privilieged user, set ulimits, create service
+#   files, install required packages and harden the server.
+#
+#   The task include_external_roles takes a list of additional roles that is
+#   needed, i.e. configure additional server parameters, disks, etc.
+#
+# Prerequisite:
+#   A filesytem needs to exist for Splunk Enterprise install path. Recommended
+#   is to keep the default /opt/splunk and configure it as own LVM.
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+# META_VERSION
+
+- name: Load OS specific variables if found, else default
+  ansible.builtin.include_vars: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
+    - 'default.yml'
+
+- name: Validate supported OS versions
+  ansible.builtin.include_tasks: validate_supported_os_versions.yml
+
+- name: Import external roles for pre server configuration
+  ansible.builtin.include_tasks: include_external_pre_roles.yml
+
+- name: Setup user for running splunk
+  ansible.builtin.include_tasks: configure_splunk_user.yml
+  when:
+    - control.linux_configuration.splunk_user |
+      default(true)
+
+- name: Import external roles for server configuration
+  ansible.builtin.include_tasks: include_external_roles.yml
+
+- name: Create a state file on target to set the system as bootstrapped
+  ansible.builtin.include_tasks: dot_bootstrap.yml
+
+# If any of the tasks below is not included, then its guaranteed that Splunk
+# Enterprise will not function as intented. The logic of the below tasks can
+# however be replaced by tasks in one of the imported custom roles but at your
+# own reponsability.
+
+
+- name: Configure Splunk related FW settings
+  ansible.builtin.include_tasks: configure_firewall.yml
+  when:
+    - control.linux_configuration.configure_firewall | default(true)
+
+- name: Configure base hardening for server
+  ansible.builtin.include_tasks: configure_server_hardening.yml
+  when:
+    - control.linux_configuration.server_hardening | default(true)
+
+- name: Configure baseline software needed for Ansible management for Splunk
+  ansible.builtin.include_tasks: configure_baseline_software.yml
+  when:
+    - control.linux_configuration.basline_software | default(true)
+
+- name: Setup splunk system and user limits
+  ansible.builtin.include_tasks: configure_splunk_limits.yml
+  when:
+    - control.linux_configuration.splunk_limits | default(true)
+
+- name: Setup splunk service
+  ansible.builtin.include_tasks: configure_splunk_service.yml
+  when:
+    - control.linux_configuration.splunk_service | default(true)
+
+- name: Configure polkit for splunk systemd service
+  ansible.builtin.include_tasks: configure_polkit.yml
+  when:
+    - control.linux_configuration.splunk_polkit | default(true)
+
+- name: Disable THP on server
+  ansible.builtin.include_tasks: configure_thp.yml
+  when:
+    - control.linux_configuration.thp | default(true)
+
+- name: Configure SELinux as permissive
+  ansible.builtin.include_tasks: configure_selinux.yml
+  when:
+    - control.linux_configuration.selinux | default(true)
+    - ansible_distribution != "Amazon"
+# TODO Add default false on selinux in inventory linux config for Amazon and true for other os
+
+- name: Setup required sudo rights for managing Splunk as a non root user
+  ansible.builtin.include_tasks: configure_sudoers.yml
+  when:
+    - control.linux_configuration.sudoers | default(true)
+
+- name: Import external roles for post server configuration
+  ansible.builtin.include_tasks: include_external_post_roles.yml
+
+# TODO  - name: Save state of installation
+#    import_tasks: save_state.yml

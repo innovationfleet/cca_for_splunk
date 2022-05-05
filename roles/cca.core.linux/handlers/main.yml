@@ -1,0 +1,8 @@
+---
+# handlers file for cca.core.linux
+#
+- name: Server reboot notification handler
+  ansible.builtin.file:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+    state: touch
+  listen: notify server reboot
