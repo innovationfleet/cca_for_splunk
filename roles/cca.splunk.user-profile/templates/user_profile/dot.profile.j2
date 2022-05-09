@@ -1,0 +1,87 @@
+###############################
+
+# enable option with better support window resizing
+shopt -s checkwinsize
+
+###############################
+
+# prompt setting:
+RED="\[\e[0;31m\]"
+GREEN="\[\e[0;32m\]"
+COLOR="\[\e[0;32m\]"
+YELLOW="\[\e[0;33m\]"
+BCYAN="\[\e[1;36m\]"
+ORANGE="\[\e[30;38;5;214m\]"
+MAGENTA="\[\e[30;38;5;127m\]"
+NONE="\[\e[0;0m\]"
+
+if [[ -x ${HOME}/.scripts/pwd.sh ]]; then
+
+   if [[ $LOGNAME != "root" &&  $LOGNAME != "splunk" ]] ; then
+
+      PS1="${BCYAN}\u${NONE}@${BCYAN}\h: ${BCYAN}\$(${HOME}/.scripts/pwd.sh)${BCYAN} \$ ${NONE}"
+      alias splunk='echo "Entering splunk account" ; sudo su - splunk'
+
+   else
+
+      PS1="${COLOR}\u${NONE}@${COLOR}\h: ${BCYAN}\$(${HOME}/.scripts/pwd.sh)${COLOR} \$ ${NONE}"
+
+   fi
+
+else
+
+   PS1="${COLOR}\u${NONE}@${COLOR}\h: ${BCYAN}\w${COLOR} \$ ${NONE}"
+
+fi
+export PS1
+
+###############################
+
+# settings for history:
+export PROMPT_COMMAND='echo "$(date "+%Y-%m-%d %H:%M:%S") $(logname):${PWD} $(history 1)" >> ~/.bash-history-$(date "+%Y-%m-%d").log'
+export HISTCONTROL="ignoreboth"
+
+###############################
+
+# load ls colors configuration:
+[[ -r ${HOME}/.lscolors.conf ]] && eval `dircolors ${HOME}/.lscolors.conf`
+
+###############################
+# aliases:
+alias cp='cp -iv'                       # Preferred 'cp' implementation
+alias mv='mv -iv'                       # Preferred 'mv' implementation
+alias mkdir='mkdir -pv'                 # Preferred 'mkdir' implementation
+alias ls='ls -htrFX --group-directories-first --color --time-style="+%d.%m.%Y %H:%M"'   # Preferred 'ls' implementation
+alias ll='ls -lG'                       # Long formatted ls output
+alias less='less -FSRXc'                # Preferred 'less' implementation
+alias ..='cd ../'                       # Go back 1 directory level
+alias ...='cd ../../'                   # Go back 2 directory levels
+alias path='echo -e ${PATH//:/\\n}'
+alias qfind='find . -name '
+alias grep='grep --color=auto'
+alias sc='screen -S'
+alias sr='screen -r'
+alias sl='screen -ls'
+
+
+# If a user has a .profile_local source it
+if [[ -f ~/.profile_local ]]; then
+
+  source ~/.profile_local
+
+fi
+
+##############################
+
+# SPLUNK CONFIGURATION:
+if [[ $LOGNAME = "splunk" ]] ; then
+
+  # main variables:
+  export SPLUNK_HOME="{{ splunk_path }}"
+  export PATH="${PATH}:{{ splunk_path }}/bin:{{ splunk_path }}/local/bin:/etc/alternatives"
+
+  # Aliases
+  alias tails='tail -F {{ splunk_path }}/var/log/splunk/splunkd.log'
+
+fi
+

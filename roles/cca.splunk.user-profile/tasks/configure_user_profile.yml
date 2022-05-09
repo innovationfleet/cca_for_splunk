@@ -1,0 +1,103 @@
+---
+# tasks file for cca.splunk.user-profile
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Configure user profile
+  ansible.builtin.template:
+    src: user_profile/dot.profile.j2
+    dest: '{{ splunk_path }}/.profile'
+    mode: '0700'
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+
+- name: Ensure directories exists for splunk user profile files
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/.scripts'
+    state: 'directory'
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+
+- name: Copy additional user profile files - Splunk user
+  ansible.builtin.copy:
+    src: 'user_profile/{{ item }}'
+    dest: '{{ splunk_path }}/'
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+  loop:
+    - '.vimrc'
+    - '.bashrc'
+    - '.bash_profile'
+
+- name: Copy additional user profile files - Splunk user
+  ansible.builtin.copy:
+    src: 'user_profile/{{ item }}'
+    dest: '{{ splunk_path }}/.scripts'
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+  loop:
+    - '.scripts/pwd.sh'
+
+- name: Get local manager users home directory
+  become: no
+  local_action: command echo ~
+  register: homedir
+  changed_when:
+    - false
+
+- name: Check status of manager users home directory
+  ansible.builtin.stat:
+    path: '{{ homedir.stdout }}'
+  register: manager_user_homedir
+
+- name:  Ensure directories exists for user profile files - manager user
+  become: no
+  ansible.builtin.file:
+    path: '{{ homedir.stdout }}'
+    state: 'directory'
+  when:
+    - manager_user_homedir.stat.exists
+
+- name: Configure user profile - manager user
+  become: no
+  ansible.builtin.template:
+    src: user_profile/dot.profile.j2
+    dest: '{{ homedir.stdout }}/.profile'
+  when:
+    - manager_user_homedir.stat.exists
+
+- name:  Ensure directories exists for user profile files - manager user
+  become: no
+  ansible.builtin.file:
+    path: '{{ homedir.stdout }}/.scripts'
+    state: 'directory'
+  when:
+    - manager_user_homedir.stat.exists
+
+- name: Copy additional user profile files - manager user
+  become: no
+  ansible.builtin.copy:
+    src: 'user_profile/{{ item }}'
+    dest: '{{ homedir.stdout }}'
+  loop:
+    - '.vimrc'
+    - '.bashrc'
+    - '.bash_profile'
+  when:
+    - manager_user_homedir.stat.exists
+
+- name: Copy additional user profile files - manager user
+  become: no
+  ansible.builtin.copy:
+    src: 'user_profile/{{ item }}'
+    dest: '{{ homedir.stdout }}/.scripts'
+    mode: '0700'
+  loop:
+    - '.scripts/pwd.sh'
+  when:
+    - manager_user_homedir.stat.exists
