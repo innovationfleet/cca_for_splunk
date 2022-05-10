@@ -1,0 +1,47 @@
+- name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
+  become: false
+  ansible.posix.synchronize:
+    src: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/'
+    dest: '{{ splunk_path }}/etc/deployment-apps/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_opts: '{{ deployment_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else deployment_apps_rsync_opts }}'
+  register: deployment_apps_update_status
+  check_mode: true
+  no_log: "{{ hide_password }}"
+  changed_when: false
+
+- name: Assert that no unexpected directories wil be deleted on the deployment server
+  ansible.builtin.assert:
+    that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
+    success_msg: 'No critical app directories will be deleted on the deployment server'
+    fail_msg: 'An app directory deletion is detected on the deployment server'
+  with_items: "{{ deployment_apps_update_status.stdout_lines | default('') | list }}"
+  when:
+    - not accept_deployment_app_removal | default(false)
+
+- name: Deploy the apps from the staging directory to the deployment server
+  become: false
+  ansible.posix.synchronize:
+    src: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/'
+    dest: '{{ splunk_path }}/etc/deployment-apps/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_opts: '{{ deployment_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else deployment_apps_rsync_opts }}'
+  notify: notify deployment server reload

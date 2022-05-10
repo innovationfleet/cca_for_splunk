@@ -1,0 +1,70 @@
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#   The handlers listen to events from tasks and has different implementation
+#   depending on type of Splunk instance that issue a notify action.
+#   When splund restarts are notified on Indexer peers, the handler needs
+#   to resolve information of the correct Cluster Manager to inform.
+#   This is done by mapping a clustered cluster peer to the hostgroup of its
+#   manager.
+#
+#   For splunkd restarts the state file is stored in /tmp, if the host restarts
+#   the /tmp directory will be cleared. No problem as the service will also be
+#   restarted.
+#
+#   If the handler should inform that a push is needed then the state file needs
+#   to be stored persistently on the filesystem, this is done by storing the file
+#   in $SPLUNK_HOME/var/run/
+#
+# Prerequisite:
+#   Index cluster groups needs to be named according to cluster_c1 - cluster_c9
+#
+# META_AUTHOR
+# META_DATE
+# META_VERSION
+
+- name: Splunkd restart handler on non cluster instances
+  ansible.builtin.file:
+    path: "{{ splunkd_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when:
+    - inventory_hostname not in groups.cluster_peers
+    - inventory_hostname not in groups.searchhead_members
+
+- name: Splunkd restart handler on SHC members
+  ansible.builtin.file:
+    path: "{{ rolling_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify splunkd restart
+  when: inventory_hostname in groups.searchhead_members
+
+- name: Splunkd standalone restart handler on any server
+  ansible.builtin.command:
+    cmd: '{{ splunk_path }}/bin/splunk restart'
+  listen: notify standalone splunkd restart
+
+- name: Splunk shcluster bundle push handler on clustered search head peers
+  ansible.builtin.file:
+    path: "{{ shcluster_bundle_push_pending }}"
+    state: touch
+    mode: '644'
+  listen: notify shcluster bundle push
+  when: inventory_hostname in groups.searchhead_deployers
+
+- name: Splunk cluster bundle push handler on Cluster Manager
+  ansible.builtin.file:
+    path: "{{ cluster_bundle_push_pending }}"
+    state: touch
+    mode: '644'
+  listen: notify cluster bundle push
+  when: inventory_hostname in groups.cluster_managers
+
+- name: Splunk deployment-server reload handler on Deployment Server
+  ansible.builtin.file:
+    path: "{{ deployment_server_reload_pending }}"
+    state: touch
+    mode: '644'
+  listen: notify deployment server reload

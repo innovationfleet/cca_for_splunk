@@ -1,0 +1,82 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: Deploy the apps from the apps directory to the splunk servers
+  ansible.posix.synchronize:
+    src: '{{ absolute_file_store_path }}/etc/{{ apps_selectable_sourcedir }}/{{ item.source_app }}/'
+    dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_opts: '{{ apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else apps_rsync_opts }}'
+  notify: notify standalone splunkd restart
+  loop: '{{ apps | default([]) if apps | default([]) is iterable else [] }}'
+  when:
+    - item.state == 'present'
+    - item.dest_dir is not defined
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
+
+- name: Deploy generic apps from the apps generic directory to the splunk servers
+  ansible.posix.synchronize:
+    src: '{{ absolute_file_store_path }}/etc/{{ apps_generic_sourcedir }}/{{ item.source_app }}/'
+    dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_opts: '{{ versioned_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else versioned_apps_rsync_opts }}'
+  notify: notify standalone splunkd restart
+  loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
+  when:
+    - item.state == 'present'
+    - item.dest_dir is not defined
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
+
+- name: Delete listed generic apps from server if they are set to absent
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
+    state: 'absent'
+  notify: notify standalone splunkd restart
+  loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
+  when:
+    - item.state == 'absent'
+    - item.dest_dir is not defined
+
+- name: Delete apps from server if they are set to absent
+  ansible.builtin.file:
+    path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
+    state: 'absent'
+  notify: notify standalone splunkd restart
+  loop: '{{ apps | default([]) if apps | default([]) is iterable else [] }}'
+  when:
+    - item.state == 'absent'
+    - item.dest_dir is not defined
+
+- name: Include and run tasks from custom onboarding roles
+  ansible.builtin.include_role:
+    name: '{{ external_onboarding_role }}'
+  loop_control:
+    loop_var: external_onboarding_role
+  loop: '{{ external_onboarding_app_roles | default([]) if external_onboarding_app_roles | default([]) is iterable else [] }}'

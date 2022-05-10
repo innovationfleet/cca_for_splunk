@@ -1,0 +1,57 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+- name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
+  become: false
+  ansible.posix.synchronize:
+    src: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/'
+    dest: '{{ splunk_path }}/etc/shcluster/apps/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_opts: '{{ shcluster_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else shcluster_apps_rsync_opts }}'
+  register: shcluster_apps_update_status
+  check_mode: true
+  no_log: "{{ hide_password }}"
+  changed_when: false
+
+- name: Assert that no unexpected directories wil be deleted on the deployer
+  ansible.builtin.assert:
+    that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
+    success_msg: 'No critical app directories will be deleted on the deployer'
+    fail_msg: 'An app directory deletion is detected on the deployer'
+  with_items: "{{ shcluster_apps_update_status.stdout_lines | default('') | list }}"
+  when:
+    - not accept_shc_app_removal | default(false)
+
+- name: Deploy the apps from the staging directory to the deployer
+  become: false
+  ansible.posix.synchronize:
+    src: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/'
+    dest: '{{ splunk_path }}/etc/shcluster/apps/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_opts: '{{ shcluster_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else shcluster_apps_rsync_opts }}'
+  notify: notify shcluster bundle push
