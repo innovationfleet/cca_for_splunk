@@ -1,0 +1,67 @@
+---
+# tasks file for cca.common.setup-wizard
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+
+- ansible.builtin.set_fact:
+    tmp_admin: "{{ vars_current_wizard.cca_splunk_admin_user if cca_identical else 'admin' }}"
+
+- name: "Username for administrator in: {{ vars.cca_environment.name }}"
+  ansible.builtin.pause:
+    prompt: "Press enter for a administrator login. ({{ tmp_admin }})"
+  register: splunk_admin_username
+
+- name: Generate a random password for {{ cluster }}
+  ansible.builtin.shell:
+    cmd: "{{ splunk_path }}/bin/splunk cmd openssl rand -base64 48"
+  register: rand
+
+- ansible.builtin.set_fact:
+    tmp_password: "{{ vars_current_wizard.cca_splunk_admin_password if cca_identical == true else rand.stdout }}"
+
+- name: Password for {{ vars.cca_environment.name }}
+  ansible.builtin.pause:
+    prompt: "Press enter for a random password or enter a 8 character minimum password ({{ tmp_password }})"
+  register: master
+
+- name: Hash the password {{ cluster }}
+  ansible.builtin.shell:
+    cmd: "{{ splunk_path }}/bin/splunk hash-passwd '{{ tmp_password if master.user_input | length ==0 else master.user_input }}'"
+  register: tmp_password_hash
+
+- ansible.builtin.set_fact:
+    user_info:
+        username: "{{ tmp_admin if splunk_admin_username.user_input | length ==0 else splunk_admin_username.user_input }}"
+        password: "{{ tmp_password if splunk_admin_username.user_input | length ==0 else master.user_input }}"
+        password_hash: "{{ tmp_password_hash.stdout }}"
+  no_log: True
+
+- name: Vault the password
+  ansible.builtin.shell:
+    cmd: "ansible-vault encrypt_string '{{ user_info.password }}' | sed ':a; N; $!ba; s/\\n/#/g' | sed 's/[[:space:]]*//g' | sed 's/|#/ \"/' | sed 's/$/\"/'"
+  register: vault_secret_result
+
+- name: Save cli username to vars file
+  ansible.builtin.lineinfile:
+    path: "{{ cca_splunk_secret_file }}"
+    line: "cca_splunk_admin_user: '{{ user_info.username }}'"
+    regex: '^cca_splunk_admin_user:'
+
+- name: Save the clear text secret as an ansible vault
+  ansible.builtin.lineinfile:
+    path: "{{ cca_splunk_secret_file }}"
+    line: "cca_splunk_admin_password: {{ vault_secret_result.stdout | replace('#','\\r\\n')}}"
+    regex: '^cca_splunk_admin_password:'
+
+- name: Save the hashed secret to the file
+  ansible.builtin.lineinfile:
+    path: "{{ cca_splunk_secret_file }}"
+    line: "cca_splunk_admin_password_hash: '{{ user_info.password_hash }}'"
+    regex: '^cca_splunk_admin_password_hash:'

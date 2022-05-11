@@ -1,0 +1,12 @@
+
+
+[defaults]
+stdout_callback = yaml
+callback_whitelist = profile_tasks
+interpreter_python=auto_silent
+private_key_file =  /home/ec2-user/secrets/cca_splunk_secret_id_rsa
+roles_path    = ./roles:/home/ec2-user/development/repos/splunk_ansible/roles:/home/ec2-user/development/repos/dev_cca_for_splunk/roles
+host_key_checking = False
+vault_password_file = /home/ec2-user/secrets/cca_splunk_ansible_vault.secret
+strategy_plugins    = /home/ec2-user/tools/mitogen-latest/ansible_mitogen/plugins/strategy
+strategy = mitogen_linear

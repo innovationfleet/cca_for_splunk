@@ -1,0 +1,71 @@
+---
+# tasks file for cca.common.setup-wizard
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+ - name: Create directory if it don't exist
+   ansible.builtin.file:
+     path: "{{ item }}"
+     state: directory
+   loop:
+     - "{{ infra_repo_path }}"
+     - "{{ onboarding_repo_path }}"
+
+ - name: Copy template files for infrastructure
+   ansible.builtin.copy:
+     src: "{{ script_cwd }}/templates/infrastructure_template/"
+     dest: "{{ infra_repo_path }}"
+
+ - name: Copy template files for onboarding
+   ansible.builtin.copy:
+     src: "{{ script_cwd }}/templates/onboarding_template/"
+     dest: "{{ onboarding_repo_path }}"
+
+ - name: Move ENVIRONMENT_NAME to new env directory for infra
+   ansible.builtin.copy:
+     src: "{{ infra_repo_path }}/{{ item }}/ENVIRONMENT_NAME/"
+     dest: "{{ infra_repo_path }}/{{ item }}/{{ environment_dir }}"
+   loop:
+     - "environments"
+
+ - name: Cleanup unused ENVIRONMENT_NAME directory for infra
+   ansible.builtin.file:
+     path: "{{ infra_repo_path }}/{{ item }}/ENVIRONMENT_NAME"
+     state: 'absent'
+   loop:
+      - "environments"
+
+ - name: Move ENVIRONMENT_NAME to new env directory for onboarding
+   ansible.builtin.copy:
+     src: "{{ onboarding_repo_path }}/{{ item }}/ENVIRONMENT_NAME/"
+     dest: "{{ onboarding_repo_path }}/{{ item }}/{{ environment_dir }}"
+   loop:
+     - "environments"
+     - "splunk/etc/deployment-apps"
+     - "splunk/etc/apps"
+     - "splunk/etc/shcluster"
+     - "splunk/etc/master-apps"
+
+ - name: Cleanup unused ENVIRONMENT_NAME directory for onboarding
+   ansible.builtin.file:
+     path: "{{ onboarding_repo_path }}/{{ item }}/ENVIRONMENT_NAME"
+     state: 'absent'
+   loop:
+     - "environments"
+     - "splunk/etc/deployment-apps"
+     - "splunk/etc/apps"
+     - "splunk/etc/shcluster"
+     - "splunk/etc/master-apps"
+
+ - name: Set execute bit on cca_ctrl file
+   ansible.builtin.file:
+     path: "{{ item }}/cca_ctrl"
+     mode: '0700'
+   loop:
+     - "{{  onboarding_repo_path }}"
+     - "{{  infra_repo_path }}"

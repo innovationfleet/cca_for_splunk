@@ -1,0 +1,74 @@
+---
+# tasks file for cca.common.setup-wizard
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+
+#- debug:
+#    var: cca_environment
+
+- set_fact:
+   cca_splunk_secret_path: "{{ infra_repo_path }}/environments/{{ environment_dir }}/group_vars/all"
+
+- set_fact:
+   cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
+
+- set_fact:
+    vault_path: "{{ user_home }}/secrets"
+
+- set_fact:
+    vault_secret: "{{ user_home + ansible_env.ANSIBLE_VAULT_PASSWORD_FILE | replace('~','')}}"
+
+- name: Check for first run wizard
+  ansible.builtin.stat:
+    path: "{{ vault_secret }}"
+  register: stat_wizard_vault_secret
+
+- name: Ensure that the secret file exists
+  ansible.builtin.assert:
+    that:
+      - stat_wizard_vault_secret.stat.exists
+    fail_msg: >-
+      We couldn't find the ansible vault secret. Please check you
+      env variable ANSIBLE_VAULT_PASSWORD_FILE is set correctly
+
+- name: Check for first run wizard
+  ansible.builtin.stat:
+    path: "{{ cca_splunk_secret_file }}"
+  register: stat_cca_splunk_secret_file
+
+- ansible.builtin.debug:
+    var: stat_cca_splunk_secret_file
+    verbosity: 1
+
+- name: Check for first run wizard
+  ansible.builtin.stat:
+    path: "{{ cca_splunk_secret_path }}"
+  register: stat_cca_splunk_secret_path
+
+- name: Create environment directory
+  ansible.builtin.file:
+    path: "{{ cca_splunk_secret_path }}"
+    state: directory
+    recurse: yes
+  when: not stat_cca_splunk_secret_path.stat.exists
+
+- name: Create the file, if it doesn't exist already
+  ansible.builtin.file:
+    path: "{{ cca_splunk_secret_file }}"
+    state: touch
+  when:
+    - not stat_cca_splunk_secret_file.stat.exists
+
+- name: Include wizard vars.
+  ansible.builtin.include_vars:
+    file: "{{ cca_splunk_secret_file }}"
+    name: vars_current_wizard
+  when:
+    - stat_cca_splunk_secret_file.stat.exists

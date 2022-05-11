@@ -1,0 +1,40 @@
+---
+# tasks file for cca.common.setup-wizard
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.1
+
+ - ansible.builtin.set_fact:
+     repo_base_path: "{{ cca_environment.default_repo_base_path }}"
+
+ - name: Prompt for a directory name where to store Splunk CCA Infrastructure config, default {{ cca_environment.default_infra_repo_name }}
+   ansible.builtin.pause:
+     prompt: "Enter directory name in which to save the infra config ({{ cca_environment.default_infra_repo_name }})"
+   register: wizard_infra_repo_path
+
+ - ansible.builtin.set_fact:
+     infra_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_infra_repo_name if wizard_infra_repo_path.user_input | length == 0 else wizard_infra_repo_path.user_input }}"
+
+ - ansible.builtin.set_fact:
+     absolute_infra_repo_path: "{{ infra_repo_path }}"
+
+ - name: Prompt for a directory name where to store Splunk CCA Onboarding config, default {{ cca_environment.default_onboarding_repo_name }}
+   ansible.builtin.pause:
+     prompt: "Enter directory name in which to save the onboarding config ({{ cca_environment.default_onboarding_repo_name }})"
+   register: wizard_onboarding_repo_path
+
+ - ansible.builtin.set_fact:
+     onboarding_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_onboarding_repo_name if wizard_onboarding_repo_path.user_input | length == 0 else wizard_onboarding_repo_path.user_input }}"
+
+ - name: Prompt for environment name where to store initial templates
+   ansible.builtin.pause:
+     prompt: "Enter a environment name without space characters ({{ cca_environment.default_environment_dir }})"
+   register: wizard_environment
+
+ - ansible.builtin.set_fact:
+     environment_dir: "{{ cca_environment.default_environment_dir if wizard_environment.user_input | length == 0 else wizard_environment.user_input }}"

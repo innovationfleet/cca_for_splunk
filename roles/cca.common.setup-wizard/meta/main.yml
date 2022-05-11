@@ -1,0 +1,8 @@
+galaxy_info:
+  author: André Enemark (github.com/fhunka)
+  description: CCA role assisting in setting up the environment
+  company: Innovationfleet (github.com/innovationfleet)
+
+  license: MIT
+
+  min_ansible_version: 2.11
