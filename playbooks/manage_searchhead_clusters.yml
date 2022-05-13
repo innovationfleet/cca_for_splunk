@@ -1,0 +1,904 @@
+# Playbook to handle Search head Cluster Deployer and Cluster members
+# This playbook is configured to handle 9 parallel search head
+# clusters.
+#
+#REPO_TYPE=infra
+#MENU_DESC=Manage Search Head Deployers and Members
+#EXTRA_VARS=hide_password(true),force_splunkd_restart(false)
+
+# Initialize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          initialize.yml
+      vars:
+        target: "searchhead_deployers-searchhead_members"
+
+# Verify that connection to all servers are ok before we start
+- hosts: searchhead_deployers:searchhead_members
+  gather_facts: false
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_tasks.yml
+
+# Configure the deployer
+- hosts: searchhead_deployers
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Debug all vars
+      debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+      when:
+        debug | default(false)
+
+  tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          server_certificate.yml
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          web_certificate.yml
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          outputs_certificate.yml
+    - include_role:
+        name: cca.splunk.frontend
+    - include_role:
+        name: cca.core.splunk
+    - include_role:
+        name: cca.splunk.user-profile
+        tasks_from:
+          configure_user_profile.yml
+
+  post_tasks:
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+
+# Configure general settings on the searchhead cluster members
+- hosts: searchhead_members
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Debug all vars
+      debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+      when:
+        debug | default(false)
+
+  tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          server_certificate.yml
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          web_certificate.yml
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          outputs_certificate.yml
+    - include_role:
+        name: cca.splunk.frontend
+    - include_role:
+        name: cca.core.splunk
+    - include_role:
+        name: cca.splunk.user-profile
+        tasks_from:
+          configure_user_profile.yml
+    - name: Start splunk on command line
+      command:
+        cmd: "timeout 120 {{ start_command }}"
+      changed_when: false
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c2
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c3
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c4
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c5
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c6
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c7
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c8
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+# Configure the searchhead cluster members
+- hosts: searchhead_members_shcluster_c9
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+  tasks:
+    - name: Check search head captain init
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_captain_init_status.yml
+
+    - name: Bootstrap Search Head cluster captain
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: bootstrap_search_head_captain.yml
+      when:
+        - bootstrap_captain | default(false)
+
+    - name: Trigger restart if pending from bootstrap
+      meta: flush_handlers
+
+    - name: Check cluster member status
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from: check_cluster_member_status.yml
+
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Wait until cluster is stable
+      include_role:
+        name: cca.splunk.role-searchhead
+        tasks_from:
+          wait_for_shcluster.yml
+
+
+# Check if there is any pending restarts that needs to be dealt with
+- hosts: searchhead_deployers
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  serial: 1
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+#TODO: Check if the previous deployer push has caused a rolling restart that is
+#      already ongoing. Then don't perform this restart, just remove the state file.
+    - name: Restart splunkd if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists == true
+
+    - name: Perform a bundle push if a pending action is found
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          apply_shcluster_bundle.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+# Check if there is any pending rolling restart that needs to be dealt with
+#
+- hosts: searchhead_members:&searchhead_members_shcluster_c1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c2
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c3
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Debug all vars
+      debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+      when:
+        debug | default(false)
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c4
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c5
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c6
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c7
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c8
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+- hosts: searchhead_members:&searchhead_members_shcluster_c9
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+  tasks:
+    - name: Start a rolling restart if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster_members_rolling_restart.yml
+      when:
+        - stat_rolling_restart_pending.stat.exists == true
+      run_once: true
+
+  post_tasks:
+    - name: Clean up rolling restart from remaining members
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cleanup_shcluster_rolling_restart_file.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+# Finalize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          finalize.yml
+      vars:
+        target: "searchhead_deployers-searchhead_members"
