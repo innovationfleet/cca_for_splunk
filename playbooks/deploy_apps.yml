@@ -1,0 +1,117 @@
+# Playbook to deploy apps to standalone splunk instances
+#
+#REPO_TYPE=onboarding
+#MENU_DESC=Deploy to standalone Splunk instances
+#EXTRA_VARS=hide_password(true)
+
+# Initialize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          initialize.yml
+      vars:
+        target: "deploy_apps"
+
+# Deploy apps to Splunk servers
+- hosts: forwarders:&ag1
+  become: true
+  become_method: sudo
+  become_user: splunk
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - include_role:
+        name: cca.splunk.onboarding
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Deploy apps to Splunk servers
+- hosts: forwarders:&ag2
+  become: true
+  become_method: sudo
+  become_user: splunk
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - include_role:
+        name: cca.splunk.onboarding
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Deploy apps to Splunk servers
+- hosts: forwarders:&ag3
+  become: true
+  become_method: sudo
+  become_user: splunk
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - include_role:
+        name: cca.splunk.onboarding
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Deploy apps to Splunk servers
+- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:deployment_servers:data_collection_nodes
+  become: true
+  become_method: sudo
+  become_user: splunk
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - include_role:
+        name: cca.splunk.onboarding
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Finalize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          finalize.yml
+      vars:
+        target: "deploy_apps"

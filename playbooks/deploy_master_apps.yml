@@ -1,0 +1,60 @@
+# Playbook to deploy apps to Index cluster
+#
+#REPO_TYPE=onboarding
+#MENU_DESC=Deploy to Cluster Manager
+#EXTRA_VARS=hide_password(true),accept_master_app_removal(false)
+
+# Initialize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          initialize.yml
+      vars:
+        target: "deploy_master-apps"
+
+# Configure the deployer
+- hosts: cluster_managers
+  become: true
+  become_method: sudo
+  become_user: splunk
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+    - name: Debug all vars
+      debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+        verbosity: 3
+
+    - include_role:
+        name: cca.splunk.onboarding
+  tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          apply_cluster_bundle.yml
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Finalize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          finalize.yml
+      vars:
+        target: "deploy_master-apps"
