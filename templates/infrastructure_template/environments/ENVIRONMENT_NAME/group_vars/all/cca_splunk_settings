@@ -1,0 +1,42 @@
+# Subject alt names can be override'd in the inventory file, don't forget
+# to also add inventory_hostname and host_fqdn
+
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_settings_file_version: '2022.2.1'
+
+# General settings for all certificates
+cca_splunk_cert_prefix: "{{ inventory_hostname if cca_splunk_cert_enrollment_method == 'api' else 'splunk' }}"
+cca_splunk_certs_relative_path: "{{ 'etc/auth' if cca_splunk_cert_enrollment_method == 'selfsigned' else 'etc/auth/certs' }}"
+cca_splunk_certs_path: "{{ splunk_path + '/' + cca_splunk_certs_relative_path }}"
+cca_splunk_certs_staging_path: "{{ splunk_path + '/etc/auth/certs/staging' }}"
+cca_splunk_certs_home_path: "{{ '$SPLUNK_HOME/' + cca_splunk_certs_relative_path }}"
+cca_splunk_server_sslConfig_sslRootCAPath: "{{ '' if cca_splunk_cert_enrollment_method == 'selfsinged' else cca_splunk_certs_home_path + '/' + cca_splunk_extension_cert_rootca }}"
+
+# Specific settings for web certificates
+cca_splunk_certs_web_cert: "{{ 'splunkweb/cert.pem' if cca_splunk_cert_enrollment_method == 'selfsigned' else cca_splunk_cert_prefix + '-web.pem' }}"
+cca_splunk_certs_web_staging_cert: "{{ cca_splunk_extension_web_cert if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-web.cer' }}"
+cca_splunk_certs_web_key: "{{ 'splunkweb/privkey.pem' if cca_splunk_cert_enrollment_method == 'selfsigned' else cca_splunk_cert_prefix + '-web.key' }}"
+cca_splunk_certs_web_staging_key: "{{ cca_splunk_extension_web_key if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-web.key' }}"
+openssl_certs_web_encryption: false
+
+# Specific settings for server certificates
+cca_splunk_certs_server_cert: "{{ 'server.pem' if cca_splunk_cert_enrollment_method == 'selfsigned' else  cca_splunk_cert_prefix + '-server.pem' }}"
+cca_splunk_certs_server_staging_cert: "{{ cca_splunk_extension_server_cert if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-server.cer' }}"
+cca_splunk_certs_server_key: "{{ 'server.key' if cca_splunk_cert_enrollment_method == 'selfsigned' else  cca_splunk_cert_prefix + '-server.key' }}"
+cca_splunk_certs_server_staging_key: "{{ cca_splunk_extension_server_key if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-server.key' }}"
+openssl_certs_server_encryption: true
+
+# Specific settings for inputs certificates
+cca_splunk_certs_inputs_cert: "{{ 'server.pem' if cca_splunk_cert_enrollment_method == 'selfsigned' else  cca_splunk_cert_prefix + '-inputs.pem' }}"
+cca_splunk_certs_inputs_staging_cert: "{{ cca_splunk_extension_inputs_cert if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-inputs.cer' }}"
+cca_splunk_certs_inputs_key: "{{ 'server.key' if cca_splunk_cert_enrollment_method == 'selfsigned' else  cca_splunk_cert_prefix + '-inputs.key' }}"
+cca_splunk_certs_inputs_staging_key: "{{ cca_splunk_extension_inputs_key if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-inputs.key' }}"
+openssl_certs_inputs_encryption: true
+
+# Specific settings for outputs certificates
+cca_splunk_certs_outputs_cert: "{{ 'server.pem' if cca_splunk_cert_enrollment_method == 'selfsigned' else  cca_splunk_cert_prefix + '-outputs.pem' }}"
+cca_splunk_certs_outputs_staging_cert: "{{ cca_splunk_extension_outputs_cert if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-outputs.cer' }}"
+cca_splunk_certs_outputs_key: "{{ 'server.key' if cca_splunk_cert_enrollment_method == 'selfsigned' else  cca_splunk_cert_prefix + '-outputs.key' }}"
+cca_splunk_certs_outputs_staging_key: "{{ cca_splunk_extension_outputs_key if cca_splunk_cert_enrollment_method == 'manual' else cca_splunk_cert_prefix + '-outputs.key' }}"
+openssl_certs_outputs_encryption: true

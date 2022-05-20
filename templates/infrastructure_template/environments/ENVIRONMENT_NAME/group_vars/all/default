@@ -1,0 +1,47 @@
+#
+# Default parameters for all environments
+#
+
+splunk_download_url: 'https://download.splunk.com/products/splunk/releases'
+splunk_path: "/opt/splunk"
+cca_splunk_var_tmp: "/var/tmp/{{ inventory_hostname }}"
+splunk_enterprise_mgmt_port: '8089'
+splunk_uf_mgmt_port: '48089'
+cca_splunk_cluster_peer_replication_port: '8080'
+cca_splunk_shcluster_member_replication_port: '8181'
+
+# Files for splunk handlers
+cluster_bundle_push_pending: "{{ splunk_path }}/var/run/splunk_bundle_push.pending"
+deployment_server_reload_pending: "{{ splunk_path }}/var/run/splunk_deployment_server_reload.pending"
+rolling_restart_pending: "{{ splunk_path }}/var/run/splunk_rolling_restart.pending"
+shcluster_bundle_push_pending: "{{ splunk_path }}/var/run/splunk_bundle_push.pending"
+shcluster_members_rolling_restart_command: '{{ splunk_path }}/bin/splunk rolling-restart shcluster-members'
+splunkd_restart_pending: "/tmp/splunkd_restart.pending"
+searchhead_captain: "/tmp/current_shcluster_captain"
+
+# Comments written to files managed by CCA for Splunk
+file_managed_by_ansible: "# This file is managed by Ansible, local changes are discouraged"
+ini_file_empty_section: "# This line is needed when configuring a empty section with Ansible"
+
+# Hidden files for ansible states
+dot_managed_by_ansible: "{{ splunk_path }}/.ansible_managed"
+dot_cca_splunk_bootstrap: "{{ splunk_path }}/.cca_splunk_bootstrap"
+
+# Default parameters for playbook logic
+hide_password: true
+
+# Check for invalid configuration patterns
+invalid_config_regex: '({|}|\[|\])'
+
+# Default service names and commands
+systemd_enterprise_name: "Splunkd.service"
+systemd_uf_name: "splunkforwarder.service"
+start_command: "{{ splunk_path }}/bin/splunk start --accept-license --answer-yes --no-prompt"
+restart_command: "{{ splunk_path }}/bin/splunk restart --accept-license --answer-yes --no-prompt"
+stop_command:  "{{ splunk_path }}/bin/splunk stop"
+start_enterprise_systemd_command: "systemctl start {{ systemd_enterprise_name }}"
+restart_enterprise_systemd_command: "systemctl restart {{ systemd_enterprise_name }}"
+stop_enterprise_systemd_command: "systemctl stop {{ systemd_enterprise_name }}"
+start_uf_systemd_command: "systemctl start {{ systemd_uf_name }}"
+restart_uf_systemd_command: "systemctl restart {{ systemd_uf_name }}"
+stop_uf_systemd_command: "systemctl stop {{ systemd_uf_name }}"

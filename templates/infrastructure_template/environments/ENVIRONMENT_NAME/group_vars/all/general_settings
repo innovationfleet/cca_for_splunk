@@ -1,0 +1,299 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_general_settings_file_version: '2022.2.1'
+
+# General settings for Splunk.
+# Group and host settings should be configured in
+# group_vars and host_vars respectively
+splunk_conf_general_settings:
+
+  - name: Splunk alert_actions.conf
+    filename: alert_actions.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'email'
+        options:
+         - option: 'mailserver'
+           value: '{{ cca_splunk_alert_action_smtp }}'
+
+
+  - name: Splunk authentication.conf
+    filename: authentication.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: ''
+        options:
+         - option: ''
+           value: ''
+
+
+  - name: Splunk authorize.conf
+    filename: authorize.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: ''
+        options:
+         - option: ''
+           value: ''
+
+
+  - name: Splunk deploymentclient.conf
+    filename: deploymentclient.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'deployment-client'
+        options:
+         - option: 'disabled'
+           value: 'true'
+           comment: >-
+             Disable internal deploymentclient configuration as Ansible will take
+             precedence of all configuration
+
+
+  - name: Splunk health.conf
+    filename: health.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'alert_action:email'
+        options:
+         - option: 'disabled'
+           value: '0'
+         - option: 'action.to'
+           value: '{{ cca_splunk_health_alert_action_email_to }}'
+
+
+  - name: Splunk inputs.conf
+    filename: inputs.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'default'
+        options:
+          - option: 'host'
+            value: '{{ inventory_hostname }}'
+
+      - section: 'splunktcp-ssl:{{ s2s_tcp_port_ssl }}'
+        comment: >-
+          The inputs configuration is handled on a general level as it will only be configured if the
+          inputs certificate has been configured on a host.
+        options:
+          - option: "{{ 'connection_host'
+                     if
+                        cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                     else
+                        None }}"
+            value: "{{ 'none'
+                    if
+                       cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                    else
+                       None }}"
+            state: "{{ 'present'
+                    if
+                       cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                    else
+                       'absent' }}"
+
+      - section: 'SSL'
+        options:
+          - option: "{{ 'serverCert'
+                     if
+                        cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                     else
+                        None }}"
+            value: "{{ cca_splunk_certs_home_path }}/{{ cca_splunk_certs_inputs_cert }}"
+            state: "{{ 'present'
+                    if
+                       cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                    else
+                       'absent' }}"
+          - option: "{{ 'sslPassword'
+                     if
+                        cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                     else
+                        None }}"
+            value: '{{ cca_splunk_certs_inputs_sslpassword_hash
+                       if
+                          cca_splunk_cert_enrollment_method != "selfsigned"
+                       else
+                          cca_splunk_certs_server_default_sslpassword_hash }}'
+            state: "{{ 'present'
+                    if
+                       cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                    else
+                      'absent' }}"
+
+
+  - name: Splunk outputs.conf
+    filename: outputs.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: "tcpout:{{ default_tcpout | default('AbsentSection') }}"
+        comment: >-
+          Set default_tcpout name per host or group in inventory file
+        options:
+         - option: 'server'
+           value: "{{ groups[ default_tcpout | default('manager') ] | join(':' + s2s_tcp_port_ssl + ',') + ':' + s2s_tcp_port_ssl | default(None)
+                   if
+                     cca_splunk_outputs_ssl | default(false) and
+                     configure_outputs_ssl | default(false) | bool
+                   else
+                     groups[ default_tcpout | default('manager') ] | join(':' + s2s_tcp_port + ',') + ':' + s2s_tcp_port | default(None) }}"
+           state: "{{ 'present'
+                   if
+                     default_tcpout is defined
+                   else
+                     'AbsentSection'}}"
+         - option: 'sslPassword'
+           value: '{{ cca_splunk_certs_outputs_sslpassword_hash
+                       if
+                          cca_splunk_cert_enrollment_method != "selfsigned"
+                       else
+                          cca_splunk_certs_server_default_sslpassword_hash
+                    }}'
+           state: "{{ 'present'
+                   if
+                     default_tcpout is defined and
+                     cca_splunk_outputs_ssl | default(false) and
+                     configure_outputs_ssl | default(false) | bool
+                   else
+                     'Absent'}}"
+
+         - option: 'clientCert'
+           value: "{{ cca_splunk_certs_home_path }}/{{ cca_splunk_certs_outputs_cert }}"
+           state: "{{ 'present'
+                   if
+                     default_tcpout is defined and
+                     cca_splunk_outputs_ssl | default(false) and
+                     configure_outputs_ssl | default(false) | bool
+                   else
+                    'Absent'}}"
+
+
+  - name: Splunk server.conf
+    filename: server.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'general'
+        options:
+          - option: 'serverName'
+            value: '{{ inventory_hostname }}'
+          - option: 'pass4SymmKey'
+            value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
+
+      - section: 'sslConfig'
+        options:
+          - option: 'sslPassword'
+            value: '{{ cca_splunk_certs_server_sslpassword_hash
+                       if
+                          cca_splunk_cert_prefix is defined
+                         and
+                          cca_splunk_cert_enrollment_method != "selfsigned"
+                       else
+                          cca_splunk_certs_server_default_sslpassword_hash
+                    }}'
+          - option: 'sslRootCAPath'
+            value: '{{ cca_splunk_server_sslConfig_sslRootCAPath }}'
+            state: 'absent'
+          - option: 'serverCert'
+            value: "{{ cca_splunk_certs_home_path + '/' +  cca_splunk_certs_server_cert }}"
+
+
+  - name: Splunk splunk-launch.conf
+    filename: splunk-launch.conf
+    filepath: '{{ splunk_path }}/etc'
+    sections:
+      - section:
+        options:
+         - option: 'SPLUNK_OS_USER'
+           value: '{{ splunk_user }}'
+         - option: 'SPLUNK_SERVER_NAME'
+           value: 'Splunkd'
+
+
+  - name: Splunk ui-tour.conf
+    filename: ui-tour.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'search-tour'
+        options:
+          - option: 'viewed'
+            value: '1'
+
+
+  - name: Splunk user-prefs.conf
+    filename: user-prefs.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'general'
+        options:
+          - option: 'dismissedInstrumentationOptInVersion'
+            value: '4'
+          - option: 'hideInstrumentationOptInModal'
+            value: '1'
+          - option: 'notification_python_3_impact'
+            value: 'false'
+          - option: 'render_version_messages'
+            value: '0'
+
+
+  - name: Splunk web.conf
+    filename: web.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'settings'
+        options:
+          - option: 'max_upload_size'
+            value: '1024'
+          - option: 'enableSplunkWebSSL'
+            value: "{{ 'true'
+                    if
+                      cca_splunk_web_ssl | default(false)
+                    and
+                      cca_splunk_cert_enrollment_method != 'selfsigned'
+                    else
+                      'false' }}"
+            state: "{{ 'present'
+                    if
+                       cca_splunk_web_ssl | default(false)
+                    else
+                      'absent' }}"
+          - option: 'serverCert'
+            value: "{{ cca_splunk_certs_home_path + '/' + cca_splunk_certs_web_cert }}"
+            state: "{{ 'present'
+                    if
+                      cca_splunk_web_ssl | default(false)
+                    and
+                      cca_splunk_cert_enrollment_method != 'selfsigned'
+                    else
+                      'absent' }}"
+          - option: 'privKeyPath'
+            value: "{{ cca_splunk_certs_home_path + '/' + cca_splunk_certs_web_key }}"
+            state: "{{ 'present'
+                    if
+                      cca_splunk_web_ssl | default(false)
+                    and
+                      cca_splunk_cert_enrollment_method != 'selfsigned'
+                    else
+                      'absent' }}"
+          - option: 'sslPassword'
+            value: "{{ cca_splunk_certs_web_sslpassword_hash }}"
+            state: "{{ 'present'
+                    if
+                      cca_splunk_web_ssl | default(false)
+                    and
+                      cca_splunk_cert_enrollment_method != 'selfsigned'
+                    else
+                      'absent' }}"

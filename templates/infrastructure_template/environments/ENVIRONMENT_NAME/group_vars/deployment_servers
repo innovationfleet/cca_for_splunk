@@ -1,0 +1,75 @@
+# This group_vars file holds a skeleton to custom Splunk configuration
+# CCA already have the essential configuration covered in
+# group_vars/all/general_settings. Review those settings before applying
+# additional settings here.
+
+splunk_group_conf_settings:
+
+ - name: Splunk serverclass.conf for deployment servers
+   filename: serverclass.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+     - section: 'global'
+       options:
+         - option: 'crossServerChecksum'
+           value: 'true'
+
+ - name: Splunk server.conf
+   filename: server.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk inputs.conf
+   filename: inputs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk outputs.conf
+   filename: outputs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk limits.conf
+   filename: limits.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk web.conf
+   filename: web.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk ui-prefs.conf
+   filename: ui-prefs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-

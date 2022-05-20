@@ -1,0 +1,1584 @@
+# CCA ansible hosts inventory file
+#
+# Coming up with a Splunk server naming convention that works for small
+# and large installations as well as its uniquely identifies a Splunk
+# role is harder than you first envision.
+#
+# The structure of Ansible groups and children groups in this hosts
+# file has been carefully planned and tested. It look massive at first
+# sight but the usage if it is hassle free. Just identify by looking at
+# the Splunk Validated Architecture what role you like to configure and
+# add your host to it. If your target architecture is C keep the base
+# configuration in group_vars for cluster_manager_cluster_c* and
+# cluster_peers_cluster_c* then you will get a multi site cluster
+# with just one site. Which is far better for the future than a single
+# site index cluster.
+#
+#
+# Groups available in this inventory is here for a purpose, the groups
+# are linked to logic in the cca_for_splunk playbooks. Unused groups
+# must be kept in the file, they do no harm staying in the file but
+# if they are removed, task logic might be impacted.
+#
+# The structure of this hosts file is using the ini file format and is
+# intentionally selected as there is many nested groups and variables
+# in this file. As mentioned The existing groups are important to keep,
+# if other groups are needed, add them as a child group to one of the
+# existing ones to keep integrity of the CCA roles. The hosts file with
+# hosts are safe to duplicate between the infrastructure and data
+# onboarding repo.
+#
+# Server names is up to decision for every organization or user of this
+# automation framework to decide upon. For those that would like to
+# have inspiration for a naming convention of servers, we provide a
+# suggestion, that makes it easy to identify server role, cluster and
+# site relations and availability group, just by looking at the name
+# of an server.
+#
+# Every splunk role as seen in the splunk_servers list below has a
+# unique 3 letter code. Search Head and Index clusters has a 4 digit
+# code where the first digit represents the cluster ID 1-9
+# The second digit is the availability group id, 1-9. In this hosts
+# file availability group 1-3 has been pre-configured.
+# The two last digits is consecutive number from 01-99 to uniquely
+# identify a server.
+# Non clustered servers has a 3 digit code, where the first digit
+# identifies the availability group 1-9 and the last two is the
+# consecutive server number 01-99
+#
+# For each of the roles the corresponding name of the Splunk Validated
+# Architecture (VA) is listed.
+#
+# Clustered Servers
+# Code  Splunk Role                  Example with 2 ag's   VA's
+# -----------------------------------------------------------------
+# CLM   Index Cluster Manger         splunk-prod-clm-1101  C,M
+# CLP   Index Cluster Peer           splunk-prod-clp-1202  C,M
+# SHD   Search Head Cluster Deployer splunk-prod-shd-1201  D,M
+# SHM   Search Head Cluster Member   splunk-prod-shm-1103  D,M
+#
+# Non Clustered Servers
+# Code  Splunk Role              Example with 2 ag's  VA's
+# -----------------------------------------------------------------
+# HSH   Hybrid Search Head       splunk-prod-hsh-102  Cloud
+# SHS   Standalone Search head   splunk-prod-shs-203  S,D,C
+# IDX   Standalone Index Server  splunk-dev-idx-101   D
+# DMC   Monitoring Console       splunk-prod-dmc-201  D,C,M
+# DPL   Deployment Server        splunk-prod-dpl-101  Cloud,S,D,C,M
+# LIC   License Manager          splunk-prod-lic-101  D,C,M
+# FWD   Forwarder                splunk-prod-fwd-202  Cloud,S,D,C,M
+# DCN   Data Collection Node     splunk-prod-dcn-101  Optional
+# AIO   All in one server        splunk-dev-aio-101   S
+#
+#
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_hosts_file_version: '2022.2.1'
+
+
+# If custom groups are added to the inventory and they are a Splunk
+# Enterprise infrastructure server, add them to the splunk_servers
+# children list. If not they might be skipped in some of the playbooks.
+[splunk_servers:children]
+cluster_managers
+cluster_peers
+searchhead_deployers
+searchhead_members
+hybrid_searchheads
+standalone_searchheads
+standalone_indexers
+monitoring_consoles
+deployment_servers
+license_managers
+forwarders
+data_collection_nodes
+all_in_one_servers
+
+# Global inventory variables for all splunk_servers children groups.
+# Splunk to Splunk (s2s) data can be override'd on a group level if
+# needed. Port numbers need to be quoted.
+# splunk_enterprise_version is required when performing Splunk upgrades
+# or compliance checks. Global version can be override'd on a group or
+# host level.
+# UPDATE Splunk S2S ports if the default don't match your environment.
+# UPDATE Splunk enterprise version to your desired version.
+# CCA for Splunk supports enterprise version 8.2+ for full management,
+# while support for upgrading from Splunk Enterprise 8.1 has been tested.
+[splunk_servers:vars]
+ansible_ssh_user="UPDATE_SSH_REMOTE_USER"
+s2s_tcp_port="9997"
+s2s_tcp_port_ssl="9998"
+splunk_enterprise_version="8.2.6"
+
+# Special groups dedicated to upgrade logics.
+# Clustered Splunk servers are all servers that should be part
+# of the rolling upgrade sequence.
+[clustered_splunk_servers:children]
+cluster_managers
+cluster_peers
+searchhead_deployers
+searchhead_members
+monitoring_consoles
+license_managers
+
+# Non clustered Splunk servers are servers that is not
+# part of a rolling upgrade and can be upgraded separately
+[non_clustered_splunk_servers:children]
+hybrid_searchheads
+standalone_searchheads
+standalone_indexers
+monitoring_consoles
+deployment_servers
+license_managers
+forwarders
+data_collection_nodes
+all_in_one_servers
+
+# Add relevant host groups in this group to control search head
+# clusters that should be part of a offline upgrade. Additional
+# playbooks needs to be developed to cover this shcluster
+# offline scenario.
+[upgrade_shclusters_offline:children]
+
+
+# Here follows host groups that facilities grouping of hosts into
+# availability groups.
+#
+# Availability groups is a way to control high availability
+# requirements when managing or upgrading Splunk servers.
+# As an example, you have 2 forwarders configured for collecting HEC
+# data. They sit behind a load balancer and you would like to manage
+# them one by one to avoid unnecessary service unavailability. Then
+# place the hosts in separate availability groups.
+#
+# Index and search head clusters *_c1-c3 are configured with an
+# availability group respectively, (ag1-ag3). If your environment
+# has more than 3 different index and search head clusters.
+# Then expand this hosts file with the required configuration.
+#
+# If you have a need to manage more than 3 separate availability
+# groups,like having a setup of a index or search head cluster with
+# more than 3 sites. Then modify this hosts file accordingly and make
+# a local copy of all playbooks that needs to be updated to handle
+# additional availability groups. If availability groups are not
+# relevant for your use case, place all your hosts in the first
+# availability group, ag1. This way all control logic will work
+# as designed.
+#
+# Availability groups are used in playbooks to respect high
+# availability configuration requirements by performing actions on
+# only one availability group at the time.
+[ag1:children]
+cluster_manager_cluster_c1_ag1
+cluster_manager_cluster_c2_ag1
+cluster_manager_cluster_c3_ag1
+cluster_peers_cluster_c1_ag1
+cluster_peers_cluster_c2_ag1
+cluster_peers_cluster_c3_ag1
+searchhead_deployer_shcluster_c1_ag1
+searchhead_deployer_shcluster_c2_ag1
+searchhead_deployer_shcluster_c3_ag1
+searchhead_members_shcluster_c1_ag1
+searchhead_members_shcluster_c2_ag1
+searchhead_members_shcluster_c3_ag1
+hybrid_searchheads_ag1
+standalone_searchheads_ag1
+standalone_indexers_ag1
+monitoring_consoles_ag1
+deployment_servers_ag1
+license_managers_ag1
+forwarders_ag1
+data_collection_nodes_ag1
+all_in_one_servers_ag1
+
+[ag2:children]
+cluster_manager_cluster_c1_ag2
+cluster_manager_cluster_c2_ag2
+cluster_manager_cluster_c3_ag2
+cluster_peers_cluster_c1_ag2
+cluster_peers_cluster_c2_ag2
+cluster_peers_cluster_c3_ag2
+searchhead_deployer_shcluster_c1_ag2
+searchhead_deployer_shcluster_c2_ag2
+searchhead_deployer_shcluster_c3_ag2
+searchhead_members_shcluster_c1_ag2
+searchhead_members_shcluster_c2_ag2
+searchhead_members_shcluster_c3_ag2
+hybrid_searchheads_ag2
+standalone_searchheads_ag2
+standalone_indexers_ag2
+monitoring_consoles_ag2
+deployment_servers_ag2
+license_managers_ag2
+forwarders_ag2
+data_collection_nodes_ag2
+all_in_one_servers_ag2
+
+[ag3:children]
+cluster_manager_cluster_c1_ag3
+cluster_manager_cluster_c2_ag3
+cluster_manager_cluster_c3_ag3
+cluster_peers_cluster_c1_ag3
+cluster_peers_cluster_c2_ag3
+cluster_peers_cluster_c3_ag3
+searchhead_deployer_shcluster_c1_ag3
+searchhead_deployer_shcluster_c2_ag3
+searchhead_deployer_shcluster_c3_ag3
+searchhead_members_shcluster_c1_ag3
+searchhead_members_shcluster_c2_ag3
+searchhead_members_shcluster_c3_ag3
+hybrid_searchheads_ag3
+standalone_searchheads_ag3
+standalone_indexers_ag3
+monitoring_consoles_ag3
+deployment_servers_ag3
+license_managers_ag3
+forwarders_ag3
+data_collection_nodes_ag3
+all_in_one_servers_ag3
+
+# All of the cluster_manager children groups needs to be defined in
+# this inventory file even if they are not used. Logic in handlers
+# and tasks refer to these groups.
+[cluster_managers:children]
+cluster_manager_cluster_c1
+cluster_manager_cluster_c2
+cluster_manager_cluster_c3
+cluster_manager_cluster_c4
+cluster_manager_cluster_c5
+cluster_manager_cluster_c6
+cluster_manager_cluster_c7
+cluster_manager_cluster_c8
+cluster_manager_cluster_c9
+
+# All of the cluster peers children groups needs to be defined in
+# this inventory file even if they are not used. Logic in handlers
+# and tasks refer to these groups.
+[cluster_peers:children]
+cluster_peers_cluster_c1
+cluster_peers_cluster_c2
+cluster_peers_cluster_c3
+cluster_peers_cluster_c4
+cluster_peers_cluster_c5
+cluster_peers_cluster_c6
+cluster_peers_cluster_c7
+cluster_peers_cluster_c8
+cluster_peers_cluster_c9
+
+# All of the searchhead deployer children groups needs to be defined
+# in this inventory file even if they are not used. Logic in handlers
+# and tasks refer to these groups.
+[searchhead_deployers:children]
+searchhead_deployer_shcluster_c1
+searchhead_deployer_shcluster_c2
+searchhead_deployer_shcluster_c3
+searchhead_deployer_shcluster_c4
+searchhead_deployer_shcluster_c5
+searchhead_deployer_shcluster_c6
+searchhead_deployer_shcluster_c7
+searchhead_deployer_shcluster_c8
+searchhead_deployer_shcluster_c9
+
+# All of the searchhead members children groups needs to be defined
+# in this inventory file even if they are not used. Logic in handlers
+# and tasks refer to these groups.
+[searchhead_members:children]
+searchhead_members_shcluster_c1
+searchhead_members_shcluster_c2
+searchhead_members_shcluster_c3
+searchhead_members_shcluster_c4
+searchhead_members_shcluster_c5
+searchhead_members_shcluster_c6
+searchhead_members_shcluster_c7
+searchhead_members_shcluster_c8
+searchhead_members_shcluster_c9
+
+
+#
+# Cluster Manager Cluster C1
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
+[cluster_manager_cluster_c1:vars]
+default_tcpout=cluster_peers_cluster_c1
+cluster=cluster_c1
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c1_indexer_conf"
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
+cluster_label="cluster_c1"
+# Set maxVolumeDataSizeMB to 95% of available storage
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
+
+[cluster_manager_cluster_c1:children]
+cluster_manager_cluster_c1_ag1
+cluster_manager_cluster_c1_ag2
+cluster_manager_cluster_c1_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-1101
+[cluster_manager_cluster_c1_ag1]
+#HOSTNAME site="site1"
+
+# Proposed server name PREFIX-clm-1201
+[cluster_manager_cluster_c1_ag2]
+
+# Proposed server name PREFIX-clm-1301
+[cluster_manager_cluster_c1_ag3]
+
+
+#
+# Cluster Manager Cluster C2
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c2:vars]
+default_tcpout=cluster_peers_cluster_c2
+cluster=cluster_c2
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c2_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c2"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c2:children]
+cluster_manager_cluster_c2_ag1
+cluster_manager_cluster_c2_ag2
+cluster_manager_cluster_c2_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-2101
+[cluster_manager_cluster_c2_ag1]
+
+# Proposed server name PREFIX-clm-2201
+[cluster_manager_cluster_c2_ag2]
+
+# Proposed server name PREFIX-clm-2301
+[cluster_manager_cluster_c2_ag3]
+
+
+#
+# Cluster Manager Cluster C3
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c3:vars]
+default_tcpout=cluster_peers_cluster_c3
+cluster=cluster_c3
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c3_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c3"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c3:children]
+cluster_manager_cluster_c3_ag1
+cluster_manager_cluster_c3_ag2
+cluster_manager_cluster_c3_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-3101
+[cluster_manager_cluster_c3_ag1]
+
+# Proposed server name PREFIX-clm-3201
+[cluster_manager_cluster_c3_ag2]
+
+# Proposed server name PREFIX-clm-3301
+[cluster_manager_cluster_c3_ag3]
+
+
+#
+# Cluster Manager Cluster C4
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c4:vars]
+default_tcpout=cluster_peers_cluster_c4
+cluster=cluster_c4
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c4_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c4"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c4:children]
+cluster_manager_cluster_c4_ag1
+cluster_manager_cluster_c4_ag2
+cluster_manager_cluster_c4_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-4101
+[cluster_manager_cluster_c4_ag1]
+
+# Proposed server name PREFIX-clm-4201
+[cluster_manager_cluster_c4_ag2]
+
+# Proposed server name PREFIX-clm-4301
+[cluster_manager_cluster_c4_ag3]
+
+
+#
+# Cluster Manager Cluster C5
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c5:vars]
+default_tcpout=cluster_peers_cluster_c5
+cluster=cluster_c5
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c5_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c5"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c5:children]
+cluster_manager_cluster_c5_ag1
+cluster_manager_cluster_c5_ag2
+cluster_manager_cluster_c5_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-5101
+[cluster_manager_cluster_c5_ag1]
+
+# Proposed server name PREFIX-clm-5201
+[cluster_manager_cluster_c5_ag2]
+
+# Proposed server name PREFIX-clm-5301
+[cluster_manager_cluster_c5_ag3]
+
+
+#
+# Cluster Manager Cluster C6
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c6:vars]
+default_tcpout=cluster_peers_cluster_c6
+cluster=cluster_c6
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c6_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c6"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c6:children]
+cluster_manager_cluster_c6_ag1
+cluster_manager_cluster_c6_ag2
+cluster_manager_cluster_c6_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-6101
+[cluster_manager_cluster_c6_ag1]
+
+# Proposed server name PREFIX-clm-6201
+[cluster_manager_cluster_c6_ag2]
+
+# Proposed server name PREFIX-clm-6301
+[cluster_manager_cluster_c6_ag3]
+
+
+#
+# Cluster Manager Cluster C7
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c7:vars]
+default_tcpout=cluster_peers_cluster_c7
+cluster=cluster_c7
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c7_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c7"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c7:children]
+cluster_manager_cluster_c7_ag1
+cluster_manager_cluster_c7_ag2
+cluster_manager_cluster_c7_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-7101
+[cluster_manager_cluster_c7_ag1]
+
+# Proposed server name PREFIX-clm-7201
+[cluster_manager_cluster_c7_ag2]
+
+# Proposed server name PREFIX-clm-7301
+[cluster_manager_cluster_c7_ag3]
+
+
+#
+# Cluster Manager Cluster C8
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c8:vars]
+default_tcpout=cluster_peers_cluster_c8
+cluster=cluster_c8
+configure_outputs_ssl=true
+app_name_index_peer_conf="cluster_c8_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c8"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c8:children]
+cluster_manager_cluster_c8_ag1
+cluster_manager_cluster_c8_ag2
+cluster_manager_cluster_c8_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-8101
+[cluster_manager_cluster_c8_ag1]
+
+# Proposed server name PREFIX-clm-8201
+[cluster_manager_cluster_c8_ag2]
+
+# Proposed server name PREFIX-clm-8301
+[cluster_manager_cluster_c8_ag3]
+
+
+#
+# Cluster Manager Cluster C9
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_manager_cluster_c9:vars]
+default_tcpout=cluster_peers_cluster_c9
+cluster=cluster_c9
+app_name_index_peer_conf="cluster_c9_indexer_conf"
+site_replication_factor=""
+site_search_factor=""
+available_sites=""
+cluster_label="cluster_c9"
+# Set maxVolumeDataSizeMB to 95% of available storage
+maxVolumeDataSizeMB_hot=""
+splunk_volume_name_hot=""
+splunk_volume_path_hot=""
+maxVolumeDataSizeMB_cold=""
+splunk_volume_name_cold=""
+splunk_volume_path_cold=""
+
+[cluster_manager_cluster_c9:children]
+cluster_manager_cluster_c9_ag1
+cluster_manager_cluster_c9_ag2
+cluster_manager_cluster_c9_ag3
+
+# Only one cluster manager shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-clm-9101
+[cluster_manager_cluster_c9_ag1]
+
+# Proposed server name PREFIX-clm-9201
+[cluster_manager_cluster_c9_ag2]
+
+# Proposed server name PREFIX-clm-9301
+[cluster_manager_cluster_c9_ag3]
+
+
+#
+# Index Cluster Peers Cluster C1
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c1:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c1:children]
+cluster_peers_cluster_c1_ag1
+cluster_peers_cluster_c1_ag2
+cluster_peers_cluster_c1_ag3
+
+# Proposed server name PREFIX-clp-1101
+[cluster_peers_cluster_c1_ag1]
+#HOSTNAME site="site1"
+
+# Proposed server name PREFIX-clp-1201
+[cluster_peers_cluster_c1_ag2]
+#HOSTNAME site="site2"
+
+# Proposed server name PREFIX-clp-1301
+[cluster_peers_cluster_c1_ag3]
+#HOSTNAME site="site3"
+
+#
+# Index Cluster Peers Cluster C2
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c2:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c2:children]
+cluster_peers_cluster_c2_ag1
+cluster_peers_cluster_c2_ag2
+cluster_peers_cluster_c2_ag3
+
+# Proposed server name PREFIX-clp-2101
+[cluster_peers_cluster_c2_ag1]
+
+# Proposed server name PREFIX-clp-2201
+[cluster_peers_cluster_c2_ag2]
+
+# Proposed server name PREFIX-clp-2301
+[cluster_peers_cluster_c2_ag3]
+
+
+#
+# Index Cluster Peers Cluster C3
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c3:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c3:children]
+cluster_peers_cluster_c3_ag1
+cluster_peers_cluster_c3_ag2
+cluster_peers_cluster_c3_ag3
+
+# Proposed server name PREFIX-clp-3101
+[cluster_peers_cluster_c3_ag1]
+
+# Proposed server name PREFIX-clp-3201
+[cluster_peers_cluster_c3_ag2]
+
+# Proposed server name PREFIX-clp-3301
+[cluster_peers_cluster_c3_ag3]
+
+
+#
+# Index Cluster Peers Cluster C4
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c4:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c4:children]
+cluster_peers_cluster_c4_ag1
+cluster_peers_cluster_c4_ag2
+cluster_peers_cluster_c4_ag3
+
+# Proposed server name PREFIX-clp-4101
+[cluster_peers_cluster_c4_ag1]
+
+# Proposed server name PREFIX-clp-4201
+[cluster_peers_cluster_c4_ag2]
+
+# Proposed server name PREFIX-clp-4301
+[cluster_peers_cluster_c4_ag3]
+
+
+#
+# Index Cluster Peers Cluster C5
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c5:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c5:children]
+cluster_peers_cluster_c5_ag1
+cluster_peers_cluster_c5_ag2
+cluster_peers_cluster_c5_ag3
+
+# Proposed server name PREFIX-clp-5101
+[cluster_peers_cluster_c5_ag1]
+
+# Proposed server name PREFIX-clp-5201
+[cluster_peers_cluster_c5_ag2]
+
+# Proposed server name PREFIX-clp-5301
+[cluster_peers_cluster_c5_ag3]
+
+
+#
+# Index Cluster Peers Cluster C6
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c6:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c6:children]
+cluster_peers_cluster_c6_ag1
+cluster_peers_cluster_c6_ag2
+cluster_peers_cluster_c6_ag3
+
+# Proposed server name PREFIX-clp-6101
+[cluster_peers_cluster_c6_ag1]
+
+# Proposed server name PREFIX-clp-6201
+[cluster_peers_cluster_c6_ag2]
+
+# Proposed server name PREFIX-clp-6301
+[cluster_peers_cluster_c6_ag3]
+
+
+#
+# Index Cluster Peers Cluster C7
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c7:vars]
+configure_inputs_ssl=true
+
+ [cluster_peers_cluster_c7:children]
+cluster_peers_cluster_c7_ag1
+cluster_peers_cluster_c7_ag2
+cluster_peers_cluster_c7_ag3
+
+# Proposed server name PREFIX-clp-7101
+[cluster_peers_cluster_c7_ag1]
+
+# Proposed server name PREFIX-clp-7201
+[cluster_peers_cluster_c7_ag2]
+
+# Proposed server name PREFIX-clp-7301
+[cluster_peers_cluster_c7_ag3]
+
+
+#
+# Index Cluster Peers Cluster C8
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c8:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c8:children]
+cluster_peers_cluster_c8_ag1
+cluster_peers_cluster_c8_ag2
+cluster_peers_cluster_c8_ag3
+
+# Proposed server name PREFIX-clp-8101
+[cluster_peers_cluster_c8_ag1]
+
+# Proposed server name PREFIX-clp-8201
+[cluster_peers_cluster_c8_ag2]
+
+# Proposed server name PREFIX-clp-8301
+[cluster_peers_cluster_c8_ag3]
+
+
+#
+# Index Cluster Peers Cluster C9
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[cluster_peers_cluster_c9:vars]
+configure_inputs_ssl=true
+
+[cluster_peers_cluster_c9:children]
+cluster_peers_cluster_c9_ag1
+cluster_peers_cluster_c9_ag2
+cluster_peers_cluster_c9_ag3
+
+# Proposed server name PREFIX-clp-9101
+[cluster_peers_cluster_c9_ag1]
+
+# Proposed server name PREFIX-clp-9201
+[cluster_peers_cluster_c9_ag2]
+
+# Proposed server name PREFIX-clp-9301
+[cluster_peers_cluster_c9_ag3]
+
+
+#
+# Search Head Deployer Shcluster C1
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c1:vars]
+default_tcpout=cluster_peers_cluster_c1
+shcluster=shcluster_c1
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c1_member_conf"
+shcluster_label="shcluster_c1"
+
+[searchhead_deployer_shcluster_c1:children]
+searchhead_deployer_shcluster_c1_ag1
+searchhead_deployer_shcluster_c1_ag2
+searchhead_deployer_shcluster_c1_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-1101
+[searchhead_deployer_shcluster_c1_ag1]
+#HOSTNAME
+
+# Proposed server name PREFIX-shd-1201
+[searchhead_deployer_shcluster_c1_ag2]
+
+# Proposed server name PREFIX-shd-1301
+[searchhead_deployer_shcluster_c1_ag3]
+
+
+#
+# Search Head Deployer Shcluster C2
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c2:vars]
+#default_tcpout=
+shcluster=shcluster_c2
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c2_member_conf"
+shcluster_label="shcluster_c2"
+
+# Proposed server name PREFIX-shd-2101
+[searchhead_deployer_shcluster_c2:children]
+searchhead_deployer_shcluster_c2_ag1
+searchhead_deployer_shcluster_c2_ag2
+searchhead_deployer_shcluster_c2_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-2101
+[searchhead_deployer_shcluster_c2_ag1]
+
+# Proposed server name PREFIX-shd-2201
+[searchhead_deployer_shcluster_c2_ag2]
+
+# Proposed server name PREFIX-shd-2301
+[searchhead_deployer_shcluster_c2_ag3]
+
+
+#
+# Search Head Deployer Shcluster C3
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c3:vars]
+#default_tcpout=
+shcluster=shcluster_c3
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c3_member_conf"
+shcluster_label="shcluster_c3"
+
+[searchhead_deployer_shcluster_c3:children]
+searchhead_deployer_shcluster_c3_ag1
+searchhead_deployer_shcluster_c3_ag2
+searchhead_deployer_shcluster_c3_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-3101
+[searchhead_deployer_shcluster_c3_ag1]
+
+# Proposed server name PREFIX-shd-3201
+[searchhead_deployer_shcluster_c3_ag2]
+
+# Proposed server name PREFIX-shd-3301
+[searchhead_deployer_shcluster_c3_ag3]
+
+
+#
+# Search Head Deployer Shcluster C4
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c4:vars]
+#default_tcpout=
+shcluster=shcluster_c4
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c4_member_conf"
+shcluster_label="shcluster_c4"
+
+[searchhead_deployer_shcluster_c4:children]
+searchhead_deployer_shcluster_c4_ag1
+searchhead_deployer_shcluster_c4_ag2
+searchhead_deployer_shcluster_c4_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-4101
+[searchhead_deployer_shcluster_c4_ag1]
+
+# Proposed server name PREFIX-shd-4201
+[searchhead_deployer_shcluster_c4_ag2]
+
+# Proposed server name PREFIX-shd-4301
+[searchhead_deployer_shcluster_c4_ag3]
+
+
+#
+# Search Head Deployer Shcluster C5
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c5:vars]
+#default_tcpout=
+shcluster=shcluster_c5
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c5_member_conf"
+shcluster_label="shcluster_c5"
+
+[searchhead_deployer_shcluster_c5:children]
+searchhead_deployer_shcluster_c5_ag1
+searchhead_deployer_shcluster_c5_ag2
+searchhead_deployer_shcluster_c5_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-5101
+[searchhead_deployer_shcluster_c5_ag1]
+
+# Proposed server name PREFIX-shd-5201
+[searchhead_deployer_shcluster_c5_ag2]
+
+# Proposed server name PREFIX-shd-5301
+[searchhead_deployer_shcluster_c5_ag3]
+
+
+#
+# Search Head Deployer Shcluster C6
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c6:vars]
+#default_tcpout=
+shcluster=shcluster_c6
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c6_member_conf"
+shcluster_label="shcluster_c6"
+
+[searchhead_deployer_shcluster_c6:children]
+searchhead_deployer_shcluster_c6_ag1
+searchhead_deployer_shcluster_c6_ag2
+searchhead_deployer_shcluster_c6_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-6101
+[searchhead_deployer_shcluster_c6_ag1]
+
+# Proposed server name PREFIX-shd-6201
+[searchhead_deployer_shcluster_c6_ag2]
+
+# Proposed server name PREFIX-shd-6301
+[searchhead_deployer_shcluster_c6_ag3]
+
+
+#
+# Search Head Deployer Shcluster C7
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c7:vars]
+#default_tcpout=
+shcluster=shcluster_c7
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c7_member_conf"
+shcluster_label="shcluster_c7"
+
+[searchhead_deployer_shcluster_c7:children]
+searchhead_deployer_shcluster_c7_ag1
+searchhead_deployer_shcluster_c7_ag2
+searchhead_deployer_shcluster_c7_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-7101
+[searchhead_deployer_shcluster_c7_ag1]
+
+# Proposed server name PREFIX-shd-7201
+[searchhead_deployer_shcluster_c7_ag2]
+
+# Proposed server name PREFIX-shd-7301
+[searchhead_deployer_shcluster_c7_ag3]
+
+
+#
+# Search Head Deployer Shcluster C8
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c8:vars]
+#default_tcpout=
+shcluster=shcluster_c8
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c8_member_conf"
+shcluster_label="shcluster_c8"
+
+[searchhead_deployer_shcluster_c8:children]
+searchhead_deployer_shcluster_c8_ag1
+searchhead_deployer_shcluster_c8_ag2
+searchhead_deployer_shcluster_c8_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-8101
+[searchhead_deployer_shcluster_c8_ag1]
+
+# Proposed server name PREFIX-shd-8201
+[searchhead_deployer_shcluster_c8_ag2]
+
+# Proposed server name PREFIX-shd-8301
+[searchhead_deployer_shcluster_c8_ag3]
+
+
+#
+# Search Head Deployer Shcluster C9
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_deployer_shcluster_c9:vars]
+#default_tcpout=
+shcluster=shcluster_c9
+configure_outputs_ssl=true
+app_name_shc_member_conf="shcluster_c9_member_conf"
+shcluster_label="shcluster_c9"
+
+[searchhead_deployer_shcluster_c9:children]
+searchhead_deployer_shcluster_c9_ag1
+searchhead_deployer_shcluster_c9_ag2
+searchhead_deployer_shcluster_c9_ag3
+
+# Only one deployer shall be configured, add it to one of the
+# availability groups
+# Proposed server name PREFIX-shd-9101
+[searchhead_deployer_shcluster_c9_ag1]
+
+# Proposed server name PREFIX-shd-9201
+[searchhead_deployer_shcluster_c9_ag2]
+
+# Proposed server name PREFIX-shd-9301
+[searchhead_deployer_shcluster_c9_ag3]
+
+
+#
+# Search Head Member Shcluster C1
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c1:vars]
+default_tcpout=cluster_peers_cluster_c1
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c1:children]
+searchhead_members_shcluster_c1_ag1
+searchhead_members_shcluster_c1_ag2
+searchhead_members_shcluster_c1_ag3
+
+# Proposed server name PREFIX-shm-1101
+[searchhead_members_shcluster_c1_ag1]
+# HOSTNAME site=siteX
+
+# Proposed server name PREFIX-shm-1201
+[searchhead_members_shcluster_c1_ag2]
+
+# Proposed server name PREFIX-shm-1301
+[searchhead_members_shcluster_c1_ag3]
+
+
+#
+# Search Head Member Shcluster C2
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c2:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c2:children]
+searchhead_members_shcluster_c2_ag1
+searchhead_members_shcluster_c2_ag2
+searchhead_members_shcluster_c2_ag3
+
+# Proposed server name PREFIX-shm-2101
+[searchhead_members_shcluster_c2_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-2201
+[searchhead_members_shcluster_c2_ag2]
+
+# Proposed server name PREFIX-shm-2301
+[searchhead_members_shcluster_c2_ag3]
+
+
+#
+# Search Head Member Shcluster C3
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c3:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c3:children]
+searchhead_members_shcluster_c3_ag1
+searchhead_members_shcluster_c3_ag2
+searchhead_members_shcluster_c3_ag3
+
+# Proposed server name PREFIX-shm-3101
+[searchhead_members_shcluster_c3_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-3201
+[searchhead_members_shcluster_c3_ag2]
+
+# Proposed server name PREFIX-shm-3301
+[searchhead_members_shcluster_c3_ag3]
+
+
+#
+# Search Head Member Shcluster C4
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c4:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c4:children]
+searchhead_members_shcluster_c4_ag1
+searchhead_members_shcluster_c4_ag2
+searchhead_members_shcluster_c4_ag3
+
+# Proposed server name PREFIX-shm-4101
+[searchhead_members_shcluster_c4_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-4201
+[searchhead_members_shcluster_c4_ag2]
+
+# Proposed server name PREFIX-shm-4301
+[searchhead_members_shcluster_c4_ag3]
+
+
+#
+# Search Head Member Shcluster C5
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c5:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c5:children]
+searchhead_members_shcluster_c5_ag1
+searchhead_members_shcluster_c5_ag2
+searchhead_members_shcluster_c5_ag3
+
+# Proposed server name PREFIX-shm-5101
+[searchhead_members_shcluster_c5_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-5201
+[searchhead_members_shcluster_c5_ag2]
+
+# Proposed server name PREFIX-shm-5301
+[searchhead_members_shcluster_c5_ag3]
+
+
+#
+# Search Head Member Shcluster C6
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c6:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c6:children]
+searchhead_members_shcluster_c6_ag1
+searchhead_members_shcluster_c6_ag2
+searchhead_members_shcluster_c6_ag3
+
+# Proposed server name PREFIX-shm-6101
+[searchhead_members_shcluster_c6_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-6201
+[searchhead_members_shcluster_c6_ag2]
+
+# Proposed server name PREFIX-shm-6301
+[searchhead_members_shcluster_c6_ag3]
+
+
+#
+# Search Head Member Shcluster C7
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c7:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c7:children]
+searchhead_members_shcluster_c7_ag1
+searchhead_members_shcluster_c7_ag2
+searchhead_members_shcluster_c7_ag3
+
+# Proposed server name PREFIX-shm-7101
+[searchhead_members_shcluster_c7_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-7201
+[searchhead_members_shcluster_c7_ag2]
+
+# Proposed server name PREFIX-shm-7301
+[searchhead_members_shcluster_c7_ag3]
+
+
+#
+# Search Head Member Shcluster C8
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c8:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c8:children]
+searchhead_members_shcluster_c8_ag1
+searchhead_members_shcluster_c8_ag2
+searchhead_members_shcluster_c8_ag3
+
+# Proposed server name PREFIX-shm-8101
+[searchhead_members_shcluster_c8_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-8201
+[searchhead_members_shcluster_c8_ag2]
+
+# Proposed server name PREFIX-shm-8301
+[searchhead_members_shcluster_c8_ag3]
+
+
+#
+# Search Head Member Shcluster C9
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[searchhead_members_shcluster_c9:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[searchhead_members_shcluster_c9:children]
+searchhead_members_shcluster_c9_ag1
+searchhead_members_shcluster_c9_ag2
+searchhead_members_shcluster_c9_ag3
+
+# Proposed server name PREFIX-shm-9101
+[searchhead_members_shcluster_c9_ag1]
+# HOSTNAME site=
+
+# Proposed server name PREFIX-shm-9201
+[searchhead_members_shcluster_c9_ag2]
+
+# Proposed server name PREFIX-shm-9301
+[searchhead_members_shcluster_c9_ag3]
+
+
+#
+# Hybrid Search Heads
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[hybrid_searchheads:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[hybrid_searchheads:children]
+hybrid_searchheads_ag1
+hybrid_searchheads_ag2
+hybrid_searchheads_ag3
+
+# Proposed server name PREFIX-hsh-101
+[hybrid_searchheads_ag1]
+
+# Proposed server name PREFIX-hsh-201
+[hybrid_searchheads_ag2]
+
+# Proposed server name PREFIX-hsh-301
+[hybrid_searchheads_ag3]
+
+
+#
+# Standalone Search Heads
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[standalone_searchheads:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+[standalone_searchheads:children]
+standalone_searchheads_ag1
+standalone_searchheads_ag2
+standalone_searchheads_ag3
+
+# Proposed server name PREFIX-shs-101
+[standalone_searchheads_ag1]
+
+# Proposed server name PREFIX-shs-201
+[standalone_searchheads_ag2]
+
+# Proposed server name PREFIX-shs-301
+[standalone_searchheads_ag3]
+
+
+#
+# Standalone Index Servers
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[standalone_indexers:vars]
+configure_inputs_ssl=true
+
+[standalone_indexers:children]
+standalone_indexers_ag1
+standalone_indexers_ag2
+standalone_indexers_ag3
+
+# Proposed server name PREFIX-idx-101
+[standalone_indexers_ag1]
+
+# Proposed server name PREFIX-idx-201
+[standalone_indexers_ag2]
+
+# Proposed server name PREFIX-idx-301
+[standalone_indexers_ag3]
+
+
+#
+# Monitoring Console
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[monitoring_consoles:vars]
+default_tcpout=cluster_peers_cluster_c1
+configure_outputs_ssl=true
+
+[monitoring_consoles:children]
+monitoring_consoles_ag1
+monitoring_consoles_ag2
+monitoring_consoles_ag3
+
+# Proposed server name PREFIX-dmc-101
+[monitoring_consoles_ag1]
+
+# Proposed server name PREFIX-dmc-201
+[monitoring_consoles_ag2]
+
+# Proposed server name PREFIX-dmc-301
+[monitoring_consoles_ag3]
+
+
+#
+# Deployment Servers
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[deployment_servers:vars]
+default_tcpout=cluster_peers_cluster_c1
+configure_outputs_ssl=true
+
+[deployment_servers:children]
+deployment_servers_ag1
+deployment_servers_ag2
+deployment_servers_ag3
+
+# Proposed server name PREFIX-dpl-101
+[deployment_servers_ag1]
+
+# Proposed server name PREFIX-dpl-201
+[deployment_servers_ag2]
+
+# Proposed server name PREFIX-dpl-301
+[deployment_servers_ag3]
+
+
+#
+# License Manager
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+# One license manager needs to have the is_license_manger
+# variable set to true for license files to be configured.
+[license_managers:vars]
+default_tcpout=cluster_peers_cluster_c1
+configure_outputs_ssl=true
+
+[license_managers:children]
+license_managers_ag1
+license_managers_ag2
+license_managers_ag3
+
+# Proposed server name PREFIX-lic-101
+[license_managers_ag1]
+#HOSTNAME is_license_manager=true
+
+# Proposed server name PREFIX-lic-201
+[license_managers_ag2]
+
+# Proposed server name PREFIX-lic-301
+[license_managers_ag3]
+
+
+#
+# Forwarder
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+# If you have requirement to configure different output groups
+# per forwarder, add the default_tcpout variable to each host
+# and configure it respectively.
+[forwarders:vars]
+default_tcpout=cluster_peers_cluster_c1
+configure_outputs_ssl=true
+
+# Proposed server name PREFIX-fwd-101
+[forwarders:children]
+forwarders_ag1
+forwarders_ag2
+forwarders_ag3
+
+# Proposed server name PREFIX-fwd-101
+[forwarders_ag1]
+
+# Proposed server name PREFIX-fwd-201
+[forwarders_ag2]
+
+# Proposed server name PREFIX-fwd-301
+[forwarders_ag3]
+
+
+#
+# Data Collection Nodes
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+[data_collection_nodes:vars]
+#default_tcpout=
+configure_outputs_ssl=true
+
+# Proposed server name PREFIX-dcn-101
+[data_collection_nodes:children]
+data_collection_nodes_ag1
+data_collection_nodes_ag2
+data_collection_nodes_ag3
+
+# Proposed server name PREFIX-dcn-101
+[data_collection_nodes_ag1]
+
+# Proposed server name PREFIX-dcn-201
+[data_collection_nodes_ag2]
+
+# Proposed server name PREFIX-dcn-301
+[data_collection_nodes_ag3]
+
+
+#
+# All in one servers
+#
+# Group specific variables that are applied for all hosts
+# within this group. An all in one server is not expected to forward
+# data to an indexing layer. So default_tcpout variable is not
+# applicable.
+[all_in_one_servers:vars]
+
+[all_in_one_servers:children]
+all_in_one_servers_ag1
+all_in_one_servers_ag2
+all_in_one_servers_ag3
+
+# Proposed server name PREFIX-aio-101
+[all_in_one_servers_ag1]
+
+# Proposed server name PREFIX-aio-201
+[all_in_one_servers_ag2]
+
+# Proposed server name PREFIX-aio-301
+[all_in_one_servers_ag3]
+
+
+#
+# CCA for Splunk - Manager Group
+#
+# Group specific variables that are applied for all hosts
+# within this group.
+# The onboarding playbook needs to rsync data to "localhost",
+# hence the need to be able to SSH to localhost using the users
+# own ssh key file.
+[manager:vars]
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+# Server name should be localhost
+[manager]
+localhost

@@ -1,0 +1,100 @@
+# This group_vars file holds a skeleton to custom Splunk configuration
+# CCA already have the essential configuration covered in
+# group_vars/all/general_settings. Review those settings before applying
+# additional settings here.
+
+splunk_group_conf_settings:
+
+ - name: Splunk server.conf
+   filename: server.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk inputs.conf
+   filename: inputs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk outputs.conf
+   filename: outputs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk limits.conf
+   filename: limits.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+
+ - name: Splunk web.conf
+   filename: web.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: 'settings'
+      options:
+       - option: 'minify_js'
+         value: 'False'
+         comment: >-
+           Development mode provides access to unbuilt file content and prevents caching.
+           These options are helpful for debugging as well as for viewing changes as you make them.
+
+       - option: 'minify_css'
+         value: 'False'
+         comment: >-
+           Development mode provides access to unbuilt file content and prevents caching.
+           These options are helpful for debugging as well as for viewing changes as you make them.
+
+       - option: 'js_no_cache'
+         value: 'True'
+         comment: >-
+           Development mode provides access to unbuilt file content and prevents caching.
+           These options are helpful for debugging as well as for viewing changes as you make them.
+
+       - option: 'cacheEntriesLimit'
+         value: '0'
+         comment: >-
+           Development mode provides access to unbuilt file content and prevents caching.
+           These options are helpful for debugging as well as for viewing changes as you make them.
+
+       - option: 'cacheBytesLimit'
+         value: '0'
+         comment: >-
+           Development mode provides access to unbuilt file content and prevents caching.
+           These options are helpful for debugging as well as for viewing changes as you make them.
+
+       - option: 'enableWebDebug'
+         value: 'True'
+         comment: >-
+           Development mode provides access to unbuilt file content and prevents caching.
+           These options are helpful for debugging as well as for viewing changes as you make them.
+
+
+ - name: Splunk ui-prefs.conf
+   filename: ui-prefs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+         comment: >-
+

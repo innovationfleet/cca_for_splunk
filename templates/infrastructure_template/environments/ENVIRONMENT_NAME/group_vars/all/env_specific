@@ -1,0 +1,63 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_env_specific_file_version: '2022.2.1'
+
+# Playbook tuning parameters
+# TUNE: Adapt settings to match performance or setup of your environment.
+preflight_command_retries: '100'
+splunk_cli_user: '{{ cca_splunk_admin_user }}'
+splunk_cli_user_password: '{{ cca_splunk_admin_password }}'
+inventory_dir_array: "{{ inventory_dir.split('/') }}"
+environment_name: "{{ inventory_dir_array[-1] }}"
+absolute_infra_repo_path: '{{ inventory_dir }}/../..'
+
+# License Information, it's highly recommended to use a DNS alias as
+# reference to the host that serves as the license manager
+cca_splunk_license_manager_uri: 'https://UPDATE_LICENSE_MANGER_FQDN:8089'
+
+# Clustering information, fill in the list of clusters that should
+# be referenced by the search heads in shcluster. Note that "clustermanager:"
+# is required by Splunk server.conf and must not be changed. In version prior
+# to 8.2 the name was "clustermaster:"
+# UPDATE the clustering manager uris if needed.
+cca_splunk_shcluster_c1_clustering_manager_uris: 'clustermanager:cluster_manager_cluster_c1'
+cca_splunk_shcluster_c2_clustering_manager_uris: 'clustermanager:cluster_manager_cluster_c2'
+
+
+# SMTP server info, with or without port information, default port 25 and no SSL
+cca_splunk_alert_action_smtp: 'UPDATE_SMTP_SERVER_FQDN'
+
+# Comma separated list of email addresses that will recieve health reports
+cca_splunk_health_alert_action_email_to: 'UPDATE_ALERT_EMAIL_ADDRESS'
+
+
+# Configure certificate method
+# See README in cca.splunk.ssl-certificates for documentation
+#  - selfsigned   Uses a self signed Splunk certificate, default, but not recommended
+#
+#  - manual       Create 4 certificates for server, inputs, outputs and web.
+#                 Store the certs with encrypted and matching private keys together with
+#                 a combined Root and Intermediate CA signing certificate on the manager.
+#                 Cert files needs to be stored in the cca_splunk_extension_certs_path
+cca_splunk_cert_enrollment_method: 'selfsigned'
+
+
+# The certificate should be in pem format, order the certificates in the file with. Starting
+# with the server certificate at the top, followed by any intermediate certificates and
+# end with the root certificate.
+cca_splunk_extension_certs_path: '{{ absolute_infra_repo_path }}/splunk/etc/auth/certs'
+cca_splunk_extension_cert_rootca: 'UPDATE_ROOT_CA_EXPIRE_DATE_Issuing_CA_EXPIRE_DATE.pem'
+cca_splunk_extension_server_cert: 'splunk-server_UPDATE_EXPIRE_DATE.cer'
+cca_splunk_extension_server_key: 'splunk-server_UPDATE_EXPIRE_DATE.key'
+cca_splunk_extension_inputs_cert: 'splunk-inputs_UPDATE_EXPIRE_DATE.cer'
+cca_splunk_extension_inputs_key: 'splunk-inputs_UPDATE_EXPIRE_DATE.key'
+cca_splunk_extension_outputs_cert: 'splunk-outputs_UPDATE_EXPIRE_DATE.cer'
+cca_splunk_extension_outputs_key: 'splunk-outputs_UPDATE_EXPIRE_DATE.key'
+cca_splunk_extension_web_cert: 'splunk-web_UPDATE_EXPIRE_DATE.cer'
+cca_splunk_extension_web_key: 'splunk-web_UPDATE_EXPIRE_DATE.key'
+
+# Store the Splunk license file in the cca_splunk_extension_licenses_path. Add the matching
+# license file name in cca_splunk_extension_licenses, the file extension needs to be .lic
+cca_splunk_extension_licenses_path: '{{ absolute_infra_repo_path }}/splunk/etc/licenses/enterprise'
+cca_splunk_extension_licenses:
+  - 'UPDATE_LICENSE_FILE.lic'

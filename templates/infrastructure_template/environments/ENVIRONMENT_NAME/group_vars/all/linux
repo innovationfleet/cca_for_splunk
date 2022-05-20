@@ -1,0 +1,37 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_linux_file_version: '2022.2.1'
+
+external_bootstrap_pre_roles:
+external_bootstrap_roles:
+external_bootstrap_post_roles:
+cca_splunk_manager_user: 'splunkmgr'
+cca_splunk_manager_user_uid: 'UPDATE_SPLUNK_MGR_UID'
+cca_splunk_manager_user_dir: '/home/{{ cca_splunk_manager_user }}'
+cca_splunk_manager_group_name: '{{ cca_splunk_manager_user }}'
+cca_splunk_manager_gid: 'UPDATE_SPLUNK_MGR_UID'
+splunk_user: 'splunk'
+splunk_user_uid: 'UPDATE_SPLUNK_UID'
+splunk_user_dir: '{{ splunk_path }}'
+splunk_user_group_name: '{{ splunk_user }}'
+splunk_user_gid: 'UPDATE_SPLUNK_GID'
+cca_baseline_software:
+  - 'rsync'
+  - 'git'
+  - 'openssl'
+  - 'bind-utils'
+control:
+  linux_configuration:
+    splunk_user: true
+    fs_path: false
+    configure_firewall: true
+    server_hardening: true
+    baseline_software: true
+    splunk_limits: true
+    splunk_service: true
+    splunk_polkit: true
+    thp: true
+    selinux: true
+    sudoers: true
+    user_profile: true
+

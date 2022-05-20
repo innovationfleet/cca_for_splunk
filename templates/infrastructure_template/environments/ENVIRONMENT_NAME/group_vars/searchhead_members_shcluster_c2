@@ -1,0 +1,103 @@
+splunk_conf_group_settings:
+
+ - name: Splunk server.conf
+   filename: server.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: 'general'
+      options:
+       - option: 'serverName'
+         value: '{{ inventory_hostname }}'
+       - option: 'pass4SymmKey'
+         value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
+       - option: 'site'
+         value: '{{ site }}'
+         comment: >-
+           Set site reference in host inventory for all search heads
+           For a search head, "site0" disables search affinity
+
+    - section: 'config_change_audit'
+      options:
+       - option: 'disabled'
+         value: 'false'
+       - option: 'mode'
+         value: 'auto'
+
+    - section: "{{ 'replication_port-ssl://' + cca_splunk_shcluster_member_replication_port }}"
+      options:
+        - option: 'serverCert'
+          value: "{{ cca_splunk_certs_home_path + '/' + cca_splunk_certs_server_cert }}"
+        - option: 'sslPassword'
+          value: '{{ cca_splunk_certs_server_sslpassword_hash
+                     if
+                        cca_splunk_cert_prefix is defined
+                      and
+                        cca_splunk_cert_enrollment_method != "selfsigned"
+                     else
+                        cca_splunk_certs_server_default_sslpassword_hash
+                  }}'
+
+    - section: "{{ 'replication_port://' + cca_splunk_shcluster_member_replication_port }}"
+      options:
+        - option: 'disabled'
+          value: 'true'
+
+    - section: 'shclustering'
+      options:
+       - option: 'conf_deploy_fetch_url'
+         value: "https://{{ groups['searchhead_deployer_shcluster_c2'] | first }}:{{ splunk_enterprise_mgmt_port }}"
+         comment: >-
+           Set deployer_fqdn on each searchhead peer in the inventory file
+       - option: 'pass4SymmKey'
+         value: '{{ cca_splunk_shcluster_c1_pass4SymmKey_hash }}'
+       - option: 'replication_factor'
+         value: "{{ groups['searchhead_members_shcluster_c2'] | length }}"
+         comment: >-
+           Dynamic calculation of shcluster replication factor
+       - option: 'disabled'
+         value: '0'
+       - option: 'mgmt_uri'
+         value: 'https://{{ inventory_hostname }}:{{ splunk_enterprise_mgmt_port }}'
+
+    - section: 'clustering'
+      options:
+       - option: 'mode'
+         value: 'searchhead'
+       - option: 'manager_uri'
+         value: '{{ cca_splunk_shcluster_c2_clustering_manager_uris }}'
+         comment: >-
+           Each manger_uri specified above needs to match a section below with a definition
+           of a clustermanger
+       - option: 'multisite'
+         value: 'true'
+
+    - section: 'clustermanager:cluster_manager_cluster_c2'
+      options:
+       - option: 'manager_uri'
+         value: "https://{{ groups['cluster_manager_cluster_c2'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+       - option: 'pass4SymmKey'
+         value: '{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}'
+       - option: 'multisite'
+         value: 'true'
+
+#    - section: 'clustermanager:cluster_manager_cluster_c1'
+#      options:
+#       - option: 'manager_uri'
+#         value: "https://{{ groups['cluster_manager_cluster_c1'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#       - option: 'pass4SymmKey'
+#         value: '{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}'
+
+#    - section: 'clustermanager:cluster_manager_cluster_c3'
+#      options:
+#       - option: 'manager_uri'
+#         value: "https://{{ groups['cluster_manager_cluster_c3'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#       - option: 'pass4SymmKey'
+#         value: '{{ cca_splunk_cluster_c3_pass4SymmKey_hash }}'
+
+#    - section: 'clustermanager:cluster_manager_cluster_c4'
+#      options:
+#       - option: 'manager_uri'
+#         value: "https://{{ groups['cluster_manager_cluster_c4'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#       - option: 'pass4SymmKey'
+#         value: '{{ cca_splunk_cluster_c4_pass4SymmKey_hash }}'
+

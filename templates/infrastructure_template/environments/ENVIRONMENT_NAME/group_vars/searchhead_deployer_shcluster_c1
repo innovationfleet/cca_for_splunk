@@ -1,0 +1,145 @@
+
+splunk_conf_group_settings:
+
+ - name: Splunk server.conf
+   filename: server.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: 'license'
+      options:
+       - option: 'master_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         comment: >-
+          Configure license master uri with a DNS alias, to ease future license master migration
+
+    - section: 'config_change_audit'
+      options:
+       - option: 'disabled'
+         value: 'false'
+         comment: >-
+          Enable config audit as it will assist in management of configuration
+          changes
+
+    - section: 'shclustering'
+      options:
+       - option: 'pass4SymmKey'
+         value: "{{ cca_splunk_shcluster_c1_pass4SymmKey_hash }}"
+       - option: 'shcluster_label'
+         value: "{{ shcluster_label }}"
+
+    - section: 'httpServer'
+      options:
+       - option: 'max_content_length'
+         value: '4294968000'
+         comment: >-
+          Increasing amount of used memory for http requests
+
+    - section: 'applicationsManagement'
+      options:
+       - option: 'allowInternetAccess'
+         value: 'false'
+         comment: >-
+          Disable Internet Access from Search Head Cluster Deployer
+
+ - name: Splunk inputs.conf
+   filename: inputs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+ - name: Splunk outputs.conf
+   filename: outputs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+ - name: Splunk limits.conf
+   filename: limits.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+ - name: Splunk web.conf
+   filename: web.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+ - name: Splunk ui-prefs.conf
+   filename: ui-prefs.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+###############################################################################
+#
+# Base configuration for Search Head cluster members, are being
+# managed using a dedicated app. The app is configured directly on the
+# Deployer in the shcluster/apps directory
+#
+###############################################################################
+ - name: Splunk server.conf for cluster members
+   filename: server.conf
+   filepath: '{{ splunk_path }}/etc/shcluster/apps/{{ app_name_shc_member_conf }}/default'
+   sections:
+    - section: 'license'
+      options:
+       - option: 'master_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         comment:
+
+    - section: 'applicationsManagement'
+      options:
+       - option: 'allowInternetAccess'
+         value: 'false'
+         comment: >-
+          Disallow internet access from servers to stop error messages from servers without internet access
+
+
+ - name: Splunk limits.conf for cluster members
+   filename: limits.conf
+   filepath: '{{ splunk_path }}/etc/shcluster/{{ app_name_shc_member_conf }}/default'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+
+ - name: Splunk props.conf
+   filename: props.conf
+   filepath: '{{ splunk_path }}/etc/shcluster/apps/{{ app_name_shc_member_conf }}/default'
+   sections:
+    - section: ''
+      options:
+       - option: ''
+         value: ''
+
+ - name: Splunk savedsearches.conf
+   filename: savedsearches.conf
+   filepath: '{{ splunk_path }}/etc/shcluster/apps/{{ app_name_shc_member_conf }}/default'
+   sections:
+    - section: 'default'
+      options:
+       - option: 'defer_scheduled_searchable_idxc'
+         value: 'false'
+         comment: >-
+           By default, during rolling upgrade, continuous scheduled searches are deferred
+           until after the upgrade is complete, based on the default defer_scheduled_searchable_idxc
+           attribute in savedsearches.conf. Real-time scheduled searches are deferred regardless
+           of this setting.
