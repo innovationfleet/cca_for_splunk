@@ -1,0 +1,12 @@
+# See README.md for description and optional parameters
+#
+
+selected_apps:
+#  - name: ''
+#    source_app: ''
+#    state: ''
+
+versioned_apps:
+#  - name: ''
+#    source_app: ''
+#    state: ''

@@ -1,0 +1,53 @@
+# Set dynamic inventory and environment variable or data onboarding
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_onboarding_onboarding_file_version: '2022.2.1'
+
+inventory_dir_array: "{{ inventory_dir.split('/') }}"
+environment_name: "{{ inventory_dir_array[-1] }}"
+
+absolute_file_store_path: '{{ inventory_dir }}/../../splunk'
+versioned_apps_sourcedir: 'apps/versioned'
+selected_apps_sourcedir: 'apps/selectable'
+deployment_apps_sourcedir: 'deployment-apps/{{ environment_name }}'
+selected_deployment_apps_sourcedir: 'deployment-apps/selectable'
+shcluster_apps_sourcedir: 'shcluster/{{ environment_name }}/{{ shcluster }}/apps'
+selected_shcluster_apps_sourcedir: 'shcluster/selectable'
+master_apps_sourcedir: 'master-apps/{{ environment_name }}/{{ cluster }}'
+selected_master_apps_sourcedir: 'master-apps/selectable'
+
+# Default rsync options for onboarding deployment
+deployment_apps_rsync_opts:
+  - '--perms'
+  - '--exclude=/README'
+  - '--exclude=.git'
+  - '--exclude=.gitkeep'
+
+shcluster_apps_rsync_opts:
+  - '--perms'
+  - '--exclude=/README'
+  - '--exclude=.git'
+  - '--exclude=.gitkeep'
+  - '--exclude={{ app_name_shc_member_conf }}'
+
+master_apps_rsync_opts:
+  - '--perms'
+  - '--exclude=/README'
+  - '--exclude=.git'
+  - '--exclude=.gitkeep'
+  - '--exclude={{ app_name_index_peer_conf }}'
+  - '--exclude=_cluster'
+
+apps_rsync_opts:
+  - '--perms'
+  - "--exclude=metadata"
+  - "--exclude=metadata/local.meta"
+  - "--exclude=*.pyc"
+  - "--exclude=__pycache__"
+
+versioned_apps_rsync_opts:
+  - '--perms'
+  - "--exclude=metadata"
+  - "--exclude=metadata/local.meta"
+  - "--exclude=*.pyc"
+  - "--exclude=__pycache__"

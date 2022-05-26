@@ -1,0 +1,3 @@
+splunk_user: 'splunk'
+splunk_user_dir: '{{ splunk_path }}'
+splunk_user_group_name: '{{ splunk_user }}'

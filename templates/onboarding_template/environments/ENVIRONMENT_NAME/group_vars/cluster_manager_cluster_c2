@@ -1,0 +1,19 @@
+# See README.md for description and optional parameters.
+# Set optional parameter dest_dir to 'master-apps' to
+# deploy apps to Cluster peers.
+
+selected_apps:
+#  - name: ''
+#    source_app: ''
+#    state: ''
+
+versioned_apps:
+#  - name: ''
+#    source_app: ''
+#    state: ''
+
+selected_master_apps:
+#  - name: ''
+#    source_app: ''
+#    state: ''
+
