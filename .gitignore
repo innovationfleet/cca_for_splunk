@@ -1,0 +1,19 @@
+# CCA CTRL
+.cookie
+
+# VI
+*.bak
+*.swp
+
+# Terraform
+.terraform
+*lock.hcl
+plan.tfplan
+
+# VS Code
+.vs
+.vscode
+.DS_Store
+*.log
+*.mdproj
+*.sln
