@@ -1,0 +1,38 @@
+# Playbook to configure linux servers
+#
+#REPO_TYPE=infra
+#MENU_DESC=Configure linux server to work with cca_for_splunk and Splunk Enterprise
+#VARS=hide_password(true)
+
+# Configure all servers
+- hosts: splunk_servers:!localhost
+  become: true
+  become_method: sudo
+  pre_tasks:
+    - include_role:
+        name: cca.core.linux
+
+- hosts: splunk_servers:&ag1:!localhost
+  become: true
+  become_method: sudo
+  pre_tasks:
+    - include_role:
+        name: cca.core.linux
+        tasks_from: server_reboot_handler.yml
+
+- hosts: splunk_servers:&ag2:!localhost
+  become: true
+  become_method: sudo
+  pre_tasks:
+    - include_role:
+        name: cca.core.linux
+        tasks_from: server_reboot_handler.yml
+
+- hosts: splunk_servers:&ag3:!localhost
+  become: true
+  become_method: sudo
+  pre_tasks:
+    - include_role:
+        name: cca.core.linux
+        tasks_from: server_reboot_handler.yml
+
