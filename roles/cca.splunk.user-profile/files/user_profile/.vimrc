@@ -1,4 +1,4 @@
-" Installed vim profile for CCA for Splunk Automation Frawework
+" Installed vim profile for CCA for Splunk Automation Framework
 "
 " Version: 2022.1.1
 
