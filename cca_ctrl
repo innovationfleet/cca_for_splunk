@@ -1,0 +1,1154 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+function Usage () {
+    cat <<HELP_USAGE
+
+    CCA for Splunk is a toolset used to automate infrastructure
+    and onboarding tasks using Ansible.
+
+    $0  [-d|--debug] [-c|--check] [-s|--setup] [-h|--help]
+
+   -d,--debug  Enable script debug
+   -c,--check  Configures Ansible to run in check mode
+   -s,--setup  Guided setup wizard to initially setup or upgrade CCA for Splunk
+   -h,--help   Print usage
+HELP_USAGE
+exit 0
+}
+
+! getopt --test > /dev/null
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+    echo 'I´m sorry, `getopt --test` failed in this environment.'
+    exit 1
+fi
+
+# Trap exit 1 and let it continue in script
+trap "exit 1" TERM
+export ProcessPid=$$
+
+# Get current dir, path and script name
+ScriptPath=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+DirName=$(basename "$ScriptPath")
+ScriptName=${0##*/}
+
+# CCA for Splunk globals
+CcaScriptName="cca_ctrl"
+CcaRepo="cca_for_splunk"
+CcaRepoShort="cca"
+ScriptParams=$@
+Setup=false
+EnforceMultiplexer=true
+PlaybookFindOptions=""
+
+test -f .storage/settings && source .storage/settings
+
+# Define other globals
+if [[ $(tput cols) >  130 ]] ; then
+
+  WhiptailWidth=130
+
+else
+
+  if [[ $(tput cols) -lt 120 ]] ; then
+
+    echo "You have a terminal width of $(tput cols), it's less than 120 and thus the CCA for Splunk UI will not render correctly"
+    echo "Please use a larger terminal screen."
+    exit 0
+
+  else
+
+     WhiptailWidth=$(($(tput cols)))
+
+  fi
+
+fi
+
+WhiptailHight=30
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2022.2.1"
+CookieFile="${ScriptPath}/.cookie"
+LicenseFile="${ScriptPath}/../${CcaRepo}/LICENSE"
+InfoFile="${ScriptPath}/../${CcaRepo}/RELEASE_NOTES.txt"
+Debug=false
+
+
+Options=:dchsu
+LongOpts=debug,check,help,setup,user
+
+! PARSED=$(getopt --options=$Options --longoptions=$LongOpts --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+    Usage
+    exit 2
+fi
+# read getopt's output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+debug=false CheckMode=false outFile=-
+while true; do
+    case "$1" in
+        -d|--debug)
+            Debug=true
+            shift
+            ;;
+        -c|--check)
+            CheckMode=true
+            shift
+            ;;
+        -h|--help)
+            Usage
+            shift
+            ;;
+        -s|--setup)
+            Setup=true
+            SelectedPlaybook=setup_wizard.yml
+            shift
+            ;;
+        -s|--user)
+            User=$1
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            Usage
+            ;;
+    esac
+done
+
+
+${Debug} && echo $ScriptPath
+${Debug} && echo $ScriptName
+
+###############################################################################
+#
+# If checkmode is active, switch thin border line to green to visually indicte
+# that we are in ansible checkmode.
+# Set required paramters for checmode
+#
+###############################################################################
+
+if ${CheckMode} ; then
+
+CheckModeArgument="-CD"
+CheckModeText=" - CHECK MODE"
+
+# Set whiptail black theme
+export NEWT_COLORS='
+root=black,black
+window=white,black
+border=green,black
+textbox=white,black
+button=black,brightgreen
+roottext=white,black
+label=white,black
+title=white,black
+actlistbox=green,black
+listbox=white,black
+actsellistbox=brightgreen,black
+entry=white,black
+listbox=white,black
+checkbox=white,black
+actcheckbox=black,brightgreen
+'
+
+else
+
+CheckModeArgument=""
+CheckModeText=""
+
+export NEWT_COLORS='
+root=black,black
+window=white,black
+border=lightgrey,black
+textbox=white,black
+button=black,brightgreen
+roottext=white,black
+label=white,black
+title=white,black
+actlistbox=green,black
+listbox=white,black
+actsellistbox=brightgreen,black
+entry=white,black
+listbox=white,black
+checkbox=white,black
+actcheckbox=black,brightgreen
+'
+
+fi
+
+###############################################################################
+# Help setting up environment and prevent script execution from repo root
+# Globals:
+#   DirName
+# Arguments:
+#
+# Returns:
+#
+###############################################################################
+# Function to check and assist in setting up splunk environments
+function environment_helper() {
+
+  if [[ ${DirName} =~ ${CcaRepo} ]] ; then
+
+cat <<EOF
+
+##############################################################
+#                                                            #
+#                     Welcome                                #
+#                                                            #
+#      Continuous Configuration Automation for Splunk        #
+#                                                            #
+#                  Inital info!                              #
+#                                                            #
+##############################################################
+
+
+* Before we start there is some important information that is
+  needed to outline.
+
+* Execution from within the root directory of the main repo
+
+     ${CcaRepo}
+
+  is not supported as it will alter the project files and
+  break future updates.
+
+* Therefore we will guide you to create a setup with all
+  custom settings outside the main repo root.
+  A set of wizards will help with recommendations and setup
+  of an environment that will work the best for both Splunk
+  infrastructure automation as well as Splunk onboarding
+  automation.
+
+* This script will now exit here and if you would like to
+  configure your environment run the script again with
+
+  ./cca_control --setup
+EOF
+
+exit 0
+
+fi
+
+}
+
+
+###############################################################################
+# Format and write out a confirmation box. Option to override default value of
+# yes/no.
+# Globals:
+#   BackTitle, WhiptailHight, WhiptailWidth, CheckModeText
+# Arguments:
+#   Title, Text, YesButton, NoButton
+# Returns:
+#   Text of Yes/No Button
+###############################################################################
+# Function to create a textbox with whiptail
+whiptail_confirmationbox () {
+
+  # Assign variables
+  local Title=${1}
+  shift
+  local Text=$1
+  shift
+  local YesButton=$1
+  shift
+  local NoButton=$1
+  local ScrollText=""
+
+  if [[ $(printf "$Text" | wc -l) > 20 ]] ; then
+
+     local ScrollText="--scrolltext"
+
+  fi
+
+  whiptail --title "${Title}${CheckModeText}"\
+           --backtitle "${BackTitle}"\
+           --defaultno\
+           --yes-button "${YesButton}"\
+           --no-button "${NoButton}"\
+           --yesno "${Text}"\
+           ${ScrollText}\
+           ${WhiptailHight}\
+           ${WhiptailWidth}\
+           3>&1 1>&2 2>&3
+
+  # Return value from selection, instaead of 0|1
+  ReturnValue=$?
+  if [[ $ReturnValue = 0 ]]; then
+
+    echo "${YesButton}"
+    exit
+
+  else
+
+    echo "${NoButton}"
+    exit
+
+  fi
+
+}
+
+
+###############################################################################
+# Textbox reads from file and displays text in a textbox.
+# Globals:
+#   BackTitle, WhiptailHight, WhiptailWidth
+# Arguments:
+#   Title (The title of the text box)
+#   File (The name of the file, content is inserted into the box)
+#   ButtonText (The text to show in screen button)
+###############################################################################
+function whiptail_text_box() {
+
+  # Assign variables
+  local Title=$1
+  shift
+  local File=$1
+  shift
+  local ButtonText=$1
+
+  if [[ a"${ButtonText}" == a ]] ; then
+
+    ButtonText="Ok"
+
+  fi
+
+  if [[ $(wc -l ${File} | awk '{ print $1 }') -ge 20 ]] ; then
+
+    local ScrollText="--scrolltext"
+
+  fi
+
+    whiptail --title "${Title}${CheckModeText}"\
+           --backtitle "${BackTitle}"\
+           --ok-button=${ButtonText}\
+           --textbox ${File}\
+           ${ScrollText}\
+           ${WhiptailHight}\
+           ${WhiptailWidth}\
+           3>&1 1>&2 2>&3
+
+}
+
+
+###############################################################################
+# Generate radiolist options from an array of 3 values per line
+# Globals:
+#   BackTitle, WhiptailHight, WhiptailWidth, ProcessPid
+# Arguments:
+#   Title
+#   Items array (Item, Description, On/Off) per line
+# Returns:
+#   Selected item
+###############################################################################
+function whiptail_radiolist () {
+
+  local Title=$1
+  shift
+  local Description=$1
+  shift
+  local Items=("$@")
+
+  # Limit radio list to 10 lines, then it should scroll
+  local RadioListLen=$(( ${#Items[@]} / 3))
+  if [[ $RadioListLen -gt 30 ]] ; then
+
+    RadioListLen=30
+
+  fi
+
+  local SelectedItem=$(whiptail --backtitle "${BackTitle}"\
+                                --title "${Title}${CheckModeText}"\
+                                --radiolist "${Description}"\
+                                --nocancel\
+                                --ok-button "Next"\
+                                ${WhiptailHight}\
+                                ${WhiptailWidth}\
+                                ${RadioListLen}\
+                                "${Items[@]}"\
+                                3>&1 1>&2 2>&3 )
+
+  if [[ a"${SelectedItem}" == a ]] ; then
+
+    Description="\n\n Nothing selected, what would you like to do?"
+    Answer=$(whiptail_confirmationbox "${Title}" "${Description}" "Back" "Cancel")
+    if [[ ${Answer} == "Cancel" ]] ; then
+
+      cancel
+
+    else
+
+      whiptail_radiolist "${Title}" "${Description}" "${Items[@]}"
+
+    fi
+
+  else
+
+       echo ${SelectedItem}
+       exit 0
+
+  fi
+
+}
+
+###############################################################################
+# Generate checklist options from an array of 3 values per line
+# Globals:
+#   BackTitle, WhiptailHight, WhiptailWidth, ProcessPid
+# Arguments:
+#   Title
+#   Items array (Item, Description, On/Off) per line
+# Returns:
+#   Selected item
+###############################################################################
+function whiptail_checklist () {
+
+  local Title=$1
+  shift
+  local Description=$1
+  shift
+  local Items=("$@")
+
+  # Limit check list to 10 lines before adding scrollbar
+  local CheckListLen=$(( ${#Items[@]} / 3))
+  if [[ $CheckListLen -gt 30 ]] ; then
+
+    CheckListLen=30
+
+  fi
+
+  local SelectedItem=$(whiptail --backtitle "${BackTitle}"\
+                                --title "${Title}${CheckModeText}"\
+                                --checklist "${Description}"\
+                                ${WhiptailHight}\
+                                ${WhiptailWidth}\
+                                ${CheckListLen}\
+                                "${Items[@]}"\
+                                3>&1 1>&2 2>&3 )
+
+  if [[ a"${SelectedItem}" == a ]] ; then
+
+    Description="\n\n Nothing selected, what would you like to do?"
+    Answer=$(whiptail_confirmationbox "${Title}" "${Description}" "Back" "Cancel")
+    if [[ ${Answer} == Cancel ]] ; then
+
+      cancel
+
+    else
+
+      whiptail_checklist "${Title}" "${Description}" "${Items[@]}"
+
+    fi
+
+  else
+
+       echo ${SelectedItem}
+       exit 0
+
+  fi
+
+}
+
+
+###############################################################################
+# Display a inputbox for collecting info or arguments
+# Globals:
+#   BackTitle
+#   WhiptailHight
+#   WhiptailWidth
+# Arguments:
+#   Title
+#   Description
+#   Init
+#   ButtonText
+# Outputs:
+#   InputResult
+#
+###############################################################################
+function whiptail_inputbox () {
+
+  local Title=$1
+  shift
+  local Description=$1
+  shift
+  local Init=$1
+  shift
+  local ButtonText=$1
+
+  local InputResults=$(whiptail --backtitle "${BackTitle}"\
+                                --title "${Title}${CheckModeText}"\
+                                --nocancel\
+                                --ok-button "${ButtonText}"\
+                                --inputbox "${Description}"\
+                                ${WhiptailHight}\
+                                ${WhiptailWidth}\
+                                ${Init}\
+                                3>&1 1>&2 2>&3 )
+
+  echo ${InputResults}
+
+}
+
+
+
+
+###############################################################################
+# Terminte the main process PID
+###############################################################################
+function cancel() {
+
+  echo "Exit script"
+  kill -s TERM  ${ProcessPid}
+  exit 1
+
+}
+
+###############################################################################
+# Calculates md5 of a file
+# Arguments:
+#   Filename
+# Returns:
+#   MD5 hash of supplied file
+###############################################################################
+function file_md5() {
+
+  # Assign variales
+  local FileName=$1
+
+  md5=$(md5sum ${FileName} | awk '{ print $1}')
+  if [[ $? -ne 0 ]] ; then
+
+     echo "NotFound"
+
+  fi
+
+  echo "${md5}"
+
+}
+
+###############################################################################
+# Gets stored md5 hash of a file by parsing the cockie file
+# Arguments:
+#   Filename, HashKey
+# Returns:
+#   MD5 hash of matching hash, or 1 if not found
+###############################################################################
+function get_cookie() {
+
+  # Parse variables
+  local FileName=$1
+  local HashKey=$2
+
+  if [[ -f $FileName ]] ; then
+
+    source $FileName
+    echo ${HashKey}
+
+  else
+
+    echo 1
+
+  fi
+
+}
+
+
+###############################################################################
+# Checks if an hash exists in the cookie file
+# Arguments:
+#   Filename, HashKey, Value
+# Returns:
+#   0 if found, 1 if not
+###############################################################################
+function has_cookie() {
+
+  # Parse variables
+  local FileName=$1
+  local HashKey=$2
+  local Value=$3
+  local Hash="${HashKey}=${Value}"
+
+  if [[ -f $FileName ]] ; then
+
+    grep -q "${Hash}" ${FileName}
+    echo $?
+
+  else
+
+    echo 1
+
+  fi
+
+}
+
+
+###############################################################################
+# Add or update stored value in cookie file, return info if value was ok
+# Arguments:
+#   CookieFile, HashedKey, Value
+# Returns:
+#   0 if present, 1 if updated
+###############################################################################
+function update_cookie() {
+
+  # Assign variables
+  local FileName=$1
+  local HashKey=$2
+  local Value=$3
+  local Hash="${HashKey}=${Value}"
+
+  [[ ! -f ${FileName} ]] && touch ${FileName}
+
+  if grep -q ${Hash} ${FileName} ; then
+
+    echo $?
+
+  else
+
+    if [[ $(has_cookie ${FileName} ${HashKey} ${Value}) -eq 0 ]] ; then
+
+      sed -i 's/${HashKey}=.*/${Hash}/' ${FileName}
+      echo 0
+
+    else
+
+      echo "${Hash}" >> ${FileName}
+      echo 0
+
+    fi
+
+  fi
+
+}
+
+
+###############################################################################
+# Handle display of license confirmation dialog. Exists script if license
+# is not accepted
+# Globals
+#   LicenseFile, CookieFile
+###############################################################################
+function accept_eula() {
+
+  local LicenseText="$(sed '$!s/$/\\n/' ${LicenseFile} | tr -d '\n')"
+
+  if [[ $(has_cookie ${CookieFile} "license_md5"\
+        $(file_md5 ${LicenseFile})) -ne 0  ]] ; then
+
+    LicenseAnswer=$(whiptail_confirmationbox "Accept  License"\
+                  "${LicenseText}" "Accept" "Reject")
+
+    if [[ a"${LicenseAnswer}" == aAccept ]] ; then
+
+     update_cookie ${CookieFile} "license_md5" "$(file_md5 ${LicenseFile})"
+
+    else
+
+     echo "License was not accepted, exiting script"
+     exit 1
+
+    fi
+
+  fi
+
+}
+
+
+###############################################################################
+# Handle display of info dialog
+# Globals:
+#   CookieFile
+#   InfoFile
+###############################################################################
+function info_dialog() {
+
+  local InfoText="$(sed '$!s/$/\\n/' ${InfoFile} | tr -d '\n')"
+  if [[ $(has_cookie ${CookieFile} "info_md5"\
+        $(file_md5 ${InfoFile})) -ne 0  ]] ; then
+
+    local InfoAnswer=$(whiptail_confirmationbox "CCA for Splunk Release Notes"\
+                  "${InfoText}" "Keep" "Got it")
+
+    if [[ a"${InfoAnswer}" == a"Got it" ]] ; then
+
+     update_cookie ${CookieFile} "info_md5" "$(file_md5 ${InfoFile})"
+
+    fi
+
+  fi
+
+}
+
+
+###############################################################################
+# Get a list of all playbooks that valid for Splunk CCA
+# Globals:
+#   SelectedPlaybook (Stores the selected playbook)
+# Variables:
+#   Reads repo_type from .cookie file and use it as a playbook filter
+###############################################################################
+function select_playbook() {
+
+  # Search through all playbooks and find those that have a matching REPO_TYPE
+  # The playbook also need to have a short MENU_DESC that is used in the
+  # menu and radio list selections
+
+  local PlaybookArray
+
+  cd ${ScriptPath}
+  Playbooks=$(find ../ -maxdepth 3 -type d -name "playbooks"\
+	            -o -name "*.yml" ${PlaybookFindOptions}\
+                    | grep -e ".*.yml"\
+                    | xargs grep "REPO_TYPE=${repo_type}"\
+                    | awk -F: '{ print $1 }' | sort -n )
+
+  if [[ $(wc -w <<< ${Playbooks}) -eq 1 ]] ; then RadioListItemStatus="ON" ; else RadioListItemStatus="OFF" ; fi
+
+  for Playbook in ${Playbooks} ; do
+
+    local MenuDesc=("$(grep MENU_DESC ${ScriptPath}/${Playbook} | awk -F= '{ print $2 }')")
+
+    # Add MenuDesc to Items array
+    if [[ a"${MenuDesc}" != a ]] ; then
+
+       PlaybookArray+=("$(echo ${Playbook}\
+                      | sed "s/${CcaRepo}/${CcaRepoShort}/g"\
+                      | sed "s/${DirName}/${repo_type}/g"\
+                      | sed "s/playbooks/.../g")")
+       PlaybookArray+=("${MenuDesc}")
+       PlaybookArray+=("${RadioListItemStatus}")
+       MenuDesc=""
+
+    else
+
+      echo "Playbook could not be added to radiolist as it was missing\
+           MENU_DESC"
+
+    fi
+
+  done
+
+  cd - > /dev/null
+
+  SelectedPlaybook=$(whiptail_radiolist "Select playbook"\
+         "  Only playbooks with REPO_TYPE(${repo_type}) and a MENU_DESC\
+ will be listed here."\
+         "${PlaybookArray[@]}")
+
+}
+
+###############################################################################
+# Get a list of all environments that is applicable for CCA for Splunk
+# Globals:
+#   SelectedEnvironment (Stores the selected environment)
+###############################################################################
+function select_environment() {
+
+  # Search through all environments
+
+  local EnvironmentArray
+
+  cd ${ScriptPath}
+  Environments=$( find environments -maxdepth 1 | grep "/" | xargs echo -n )
+
+  if [[ $(wc -w <<< ${Environments}) -eq 1 ]] ; then RadioListItemStatus="ON" ; else RadioListItemStatus="OFF" ; fi
+
+  for Environment in ${Environments} ; do
+
+  cd - > /dev/null
+
+    # Add Environments to Items array
+    EnvironmentArray+=("${Environment}")
+    EnvironmentArray+=("$(echo ${Environment} | awk -F/ '{ print $2 }') Environment")
+    EnvironmentArray+=("$RadioListItemStatus")
+
+  done
+
+  SelectedEnvironment=$(whiptail_radiolist "Select environment for ${SelectedPlaybook}"\
+         "Environments" "${EnvironmentArray[@]}")
+
+}
+
+###############################################################################
+# Select hosts based on playbook and environment
+# Globals:
+#   SelectedPlaybook (Read)
+#   SelectedEnvironment (Read)
+#   SelectedHosts (Create)
+###############################################################################
+function select_hosts() {
+
+  playbook_hosts
+
+  for Host in ${PlaybookHosts[@]} ; do
+
+    HostArray+=("${Host}")
+    HostArray+=("${SelectedEnvironment}")
+    HostArray+=("ON")
+
+  done
+
+  SelectedHosts=$(whiptail_checklist "Host Selection for ${SelectedPlaybook}"\
+     "Hosts that will be part of playbook execution " "${HostArray[@]}")
+  ${Debug} && echo "Playbook --limits are:" ${SelectedHosts}
+
+}
+
+
+###############################################################################
+# Parse output from playbook --list-hosts to build a valid host list
+# Globals:
+#   SelectedPlaybook (Read)
+#   SelectedEnvironment (Read)
+#   PlaybookHosts (Create Array)
+###############################################################################
+function playbook_hosts() {
+
+  local InSection=false
+  local Host
+  local HostArray
+  # Assign the HostArray, restrictive set -u needs it to be defined
+  HostArray=${HostArray[@]+"${HostArray[@]}"}
+  SelectedPlaybook=$(echo ${SelectedPlaybook} | sed "s:/infra/:/${DirName}/:g"\
+                    | sed "s:/${CcaRepoShort}/:/${CcaRepo}/:g"\
+                    | sed "s:/\.\.\./:/playbooks/:g")
+  IFS=$'\n'
+  for Line in $(ansible-playbook --check -i ${ScriptPath}/${SelectedEnvironment}\
+                  --list-hosts ${ScriptPath}/${SelectedPlaybook}) ; do
+
+    if [[ "${Line}" =~ hosts.\( ]] ; then
+
+      InSection=true
+      continue
+
+    elif [[ "${Line}" =~ play ]] ; then
+
+      InSection=false
+
+    fi
+
+    if ${InSection} ; then
+
+      Host=$(echo ${Line} | awk '{ print $1 }')
+      ${Debug} &&  echo "DEBUG: Host found in list-hosts output: ${Host}"
+
+      if [[ ! "${HostArray[*]}" =~ "${Host}" ]] ; then
+
+        HostArray+=("${Host}")
+
+      fi
+
+    fi
+
+  done
+
+  # Sort resulting array
+  PlaybookHosts=($(sort <<<"${HostArray[*]}"))
+  unset IFS
+
+  ${Debug} && echo "DEBUG: All playbook hosts: ${PlaybookHosts[@]}"
+
+}
+
+###############################################################################
+# Get extra vars to playbook from inpout dialog
+# Globals:
+#   ExtraVars (Create)
+###############################################################################
+function get_extra_vars() {
+
+# Get extra vars options from playbook
+local PlaybookVars=$(grep EXTRA_VARS ${ScriptPath}/${SelectedPlaybook} | cut -d"=" -f2)
+local Title="Extra vars for ${SelectedPlaybook}"
+local Description="  Here you can add extra variables for the playbook\n\n\
+  The supported extra-vars are read from the playbook as #EXTRA_VARS=\n\n\
+  Available default variables in this playbook are:\n\
+\n$(for Var in ${PlaybookVars}; do echo "    ${Var}" ; done)\n\n\
+  Change default values to alter the behaviour.
+  Correct syntax for the text box is:\n\
+  {\"text_var\": \"value\", \"boolean_var\":true}"
+local Init="{\"\":\"\"}"
+
+  ExtraVars=$(whiptail_inputbox "${Title}" "${Description}" "${Init}" "Run")
+
+  if [[ ${ExtraVars} == ${Init} ]] ; then
+
+    ExtraVars='""'
+
+  fi
+
+  ${Debug} && echo "Extra Vars --extra-vars are:" ${ExtraVars}
+
+}
+
+
+
+###############################################################################
+# Build final playbook command
+# Globals:
+#   SelectedPlaybook (Read)
+#   SelectedEnvironment (Read)
+#   SelectedHosts (Read)
+#   CheckMode
+###############################################################################
+function run_playbook () {
+
+  local User="--user=$(whoami)"
+  local VaultPasswordFile=""
+  local Become=""
+  local BecomeUser=""
+  local BecomeMethod=""
+  local ExtraVars="--extra-vars='${ExtraVars}'"
+  local Verbosity="-v"
+  local CheckMode=""
+  local AnsiblePlaybookArray
+
+  AnsiblePlaybookArray+=("${ScriptPath}/${SelectedPlaybook}")
+  if [[ "${repo_type}" != "main" ]] ; then
+      AnsiblePlaybookArray+=("-i ${ScriptPath}/${SelectedEnvironment}")
+  fi
+  AnsiblePlaybookArray+=("${User}")
+  AnsiblePlaybookArray+=("${VaultPasswordFile}")
+  AnsiblePlaybookArray+=("${Become}")
+  AnsiblePlaybookArray+=("${BecomeUser}")
+  AnsiblePlaybookArray+=("${BecomeMethod}")
+  AnsiblePlaybookArray+=("${ExtraVars}")
+  if [[ "${repo_type}" != "main" ]] ; then
+      AnsiblePlaybookArray+=("${Verbosity}")
+  fi
+  AnsiblePlaybookArray+=("${CheckModeArgument}")
+
+  # Convert SelectedHosts to a comma separated list of hosts to use in limit option
+  SelectedHostArray=$(echo ${SelectedHosts} | sed 's/"/ /g' | sed 's/  / /g' )
+  printf -v HostLimits ',%s' ${SelectedHostArray[@]}
+  HostLimits=${HostLimits:1}
+
+  echo ansible-playbook ${AnsiblePlaybookArray[@]} --limit ${HostLimits}
+  # TODO: extra-vars didn't parse correctly without eval
+  if [[ "${repo_type}" == main ]] ; then
+
+    unset ANSIBLE_LOG_PATH ; eval ansible-playbook ${AnsiblePlaybookArray[@]} --limit ${HostLimits}
+
+  else
+
+    eval ansible-playbook ${AnsiblePlaybookArray[@]} --limit ${HostLimits}
+
+  fi
+}
+
+
+###############################################################################
+# Prompt for yes or no response, colors invalid response in red
+# Returns:
+#   0 (If positive answer)
+#   terminate script if negative answer
+###############################################################################
+function confirmation_dialog() {
+
+  while true; do
+
+    read -r -n 1 -p "${1:-Continue?} [y/n]: " Answer
+    case ${Answer} in
+      [Yy]) echo ; return 0 ;;
+      [Nn]) echo ; return 1 ;;
+      *) printf " \033[31m %s \n\033[0m" "Invalid Option"
+    esac
+
+  done
+
+}
+
+
+###############################################################################
+# Check that current script is current
+# Globals:
+#   ScriptPath
+#   ScriptName
+#   CcaScriptName
+#   CcaRepo
+#   ScriptParams
+###############################################################################
+function validate_script_version () {
+
+set +e
+
+ test -f .storage/settings && source .storage/settings
+
+ if [[ $(file_md5 "${ScriptPath}/${ScriptName}") == \
+       $(file_md5 "${ScriptPath}/../${CcaRepo}/${CcaScriptName}") ]] ;\
+ then
+
+  ${Debug} &&  echo "Version OK"
+
+ else
+
+   if [[ ! -f "${ScriptPath}/../${CcaRepo}/${CcaScriptName}" ]] ; then
+
+     echo
+     echo "The main CCA repository or cca_ctlr file couldn't be found."
+     echo "Verify that ( ${CcaRepo} ) is the correct repo name"
+     echo "Verify that ( ${CcaScriptName} ) is the correct script name"
+     echo "Please copy the cca_ctrl from the CCA repo to this directory"
+     echo "and rerun the script again to see if this solves the issue"
+
+     trap_cancel "Exit"
+
+   fi
+
+   echo "You have an outdated version of the script"
+   echo "Do you want to update it?"
+   if $(confirmation_dialog) ; then
+
+     cp "${ScriptPath}/../${CcaRepo}/${ScriptName}" "${ScriptPath}/"
+     eval "bash ${ScriptPath}/${ScriptName} ${ScriptParams}"
+     exit 0
+
+   else
+
+     echo "\n You answered no, the Script will exit"
+     exit 1
+
+   fi
+
+ fi
+
+}
+
+
+###############################################################################
+# Trap Cancel from Whiptail dialog and kill process
+# Arguments:
+#   DialogOutput
+# Returns:
+#   0 (If other than cancel is recieved
+###############################################################################
+function trap_cancel () {
+
+  if [[ $1 == Cancel ]] ; then
+
+    echo "Cancel option recieved, exiting script"
+    kill -s TERM ${ProcessPid}
+
+  elif [[ $1 == Exit ]] ; then
+
+    echo "Exit recieved, exiting script"
+    kill -s TERM ${ProcessPid}
+
+  else
+
+    return 0
+
+  fi
+
+}
+
+###############################################################################
+# Validate and check if s´terminal multiplexer should be used for running
+# cca_control. .storage/settings has option to control multiplexer option,
+# default is enabled. MultiplexerControl=true|false
+# Arguments:
+#   None
+# Returns:
+#   0 If validation is ok
+#   13 if validation check is not ok
+###############################################################################
+function multiplexer_control () {
+
+  if [[ ${TERM} == screen ]] ; then
+
+    return 0
+
+  else
+
+    test -f .storage/settings && source .storage/settings
+    if ! ${EnforceMultiplexer}  ; then
+
+      :
+
+    else
+
+      echo
+      echo "Run cca_control in a screen or tmux session"
+      echo "If you would like to supress this message and run without using"
+      echo "terminal Multiplexer, set EnforceMultiplexer to False in .storage/settings"
+      exit 13
+
+    fi
+
+  fi
+
+}
+
+###############################################################################
+# Main part of script
+
+# Check that the lastest version of the script is used if executed outside the repo
+validate_script_version
+
+# If we are running cca_ctrl from main repo, trigger setup of new repo/env
+! $Setup && environment_helper
+
+# Check option if we should enforce tmux or screen sessions
+test -f .storage/settings && source .storage/settings
+multiplexer_control
+
+# Dialog to show the release notes and info text
+info_dialog
+
+# Dialog to accept license terms
+accept_eula
+
+# TODO Validate data in Splunk CCA and report errors before continuing
+
+
+# List of applicable playbooks, store selected playbook in SelectePlaybook
+# variable.
+select_playbook
+
+${Debug} && echo "${SelectedPlaybook}"
+
+# Select environment variables to use
+if [[ "${repo_type}" != main ]] ; then
+  select_environment
+  ${Debug} && echo "${SelectedEnvironment}"
+
+else
+
+  SelectedEnvironment="setup_wizard"
+
+  if [[ -v ANSIBLE_VAULT_PASSWORD_FILE ]]; then
+    echo -n "   ANSIBLE_VAULT_PASSWORD_FILE environment value is set to "
+    echo -n "${ANSIBLE_VAULT_PASSWORD_FILE}. "
+
+    vault_file=(${ANSIBLE_VAULT_PASSWORD_FILE})
+    vault_file=$(echo ${vault_file[0]} | sed 's/~//g')
+
+    if [[ ! -e "${HOME}${vault_file[0]}" ]] ; then
+
+      echo -n "But the file don't exists yet."
+      echo " Create the ${ANSIBLE_VAULT_PASSWORD_FILE} file and add this content to it. Generated with 'openssl rand -hex 32'"
+      echo "   $(openssl rand -hex 32)"
+      echo "   Script will now exit."
+      exit 1
+    fi
+
+  fi
+fi
+
+# List playbook hosts and give option to exclude hosts from execution
+select_hosts
+${Debug} && echo "${SelectedHosts}"
+
+# Option to add extra variables to playbook execution
+get_extra_vars
+
+# Run playbook in normal or check mode
+
+# Summary of what will be executed
+run_playbook
