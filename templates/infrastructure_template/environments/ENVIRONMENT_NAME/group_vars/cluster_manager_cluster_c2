@@ -128,6 +128,14 @@ splunk_conf_group_settings:
          comment: >-
           Disallow internet access from servers to stop error messages from servers without internet access
 
+    - section: 'kvstore'
+      options:
+       - option: 'disabled'
+         value: 'true'
+         comment: >-
+            Kvstore is not used on Indexers and hence disabled
+
+
  - name: Splunk inputs.conf for index peers
    filename: inputs.conf
    filepath: '{{ splunk_path }}/etc/master-apps/{{ app_name_index_peer_conf }}/local'
@@ -218,6 +226,13 @@ splunk_conf_group_settings:
           Review indexes.conf documentation for latest supported
           tsidxWritingLevel. In a multisite cluster it's important
           to update the value only after a completed indexer upgrade.
+       - option: 'journalCompression'
+         value: 'zstd'
+         comment: >-
+          "zstd" is only supported in Splunk Enterprise version 7.2.x
+          and higher. Do not enable that compression format if you
+          have an indexer cluster where some indexers run an earlier
+          version of Splunk Enterprise.
        - option: 'repFactor'
          value: 'auto'
          comment: >-
