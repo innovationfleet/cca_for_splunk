@@ -5,9 +5,10 @@
 #
 # Prerequisite:
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Author: André Enemark
 #
 # Release: 2022.2.1
+
  - name: Create directory if it don't exist
    ansible.builtin.file:
      path: "{{ item }}"
