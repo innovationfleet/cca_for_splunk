@@ -10,7 +10,7 @@ Automation Readiness is a playbook developed by us to help you determine how pre
 
 **Automation Readiness Score**
 
-The playbook outputs a score, referred as Automation Readiness Score.
+The playbook outputs a score, referred as Automation Readiness Score. 
 
 The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 2398 (fully!). At least a score of 2000 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps are required to perform to increase your Automation Readiness Score based on our best practices.
 
@@ -25,7 +25,7 @@ We have also described installation steps according to our best practices, follo
 
 ## Optional: CCA Manager Setup (Recommended)
 
-Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command.
+Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command. 
 
 Current the following Operating System (OS)'s are fully supported to run CCA for Splunk.
 
@@ -43,7 +43,7 @@ Minimum hardware requirements:
 Feel free to try and run these playbooks elsewhere but on your own responsibility.
 
 ### Splunk Enterprise version
-When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended.
+When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended. 
 
 For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable.
 
@@ -81,7 +81,7 @@ Here we list the different checks that are performed by the Automation Readiness
 As a user with `sudo` privileges execute `sudo yum install python39`
 
 ## Create Python virtual env and Install Ansible with collections
-Logon as the same user that executed the Automation Readiness Playbook. Execute the following commands to setup Python virtual environment variables & install Ansible
+Logon as the same user that executed the Automation Readiness Playbook. Execute the following commands to setup Python virtual environment variables & install Ansible  
 
 ```
 cd
