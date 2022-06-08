@@ -5,11 +5,6 @@ cca_infrastructure_linux_file_version: '2022.2.1'
 external_bootstrap_pre_roles:
 external_bootstrap_roles:
 external_bootstrap_post_roles:
-cca_splunk_manager_user: 'splunkmgr'
-cca_splunk_manager_user_uid: 'UPDATE_SPLUNK_MGR_UID'
-cca_splunk_manager_user_dir: '/home/{{ cca_splunk_manager_user }}'
-cca_splunk_manager_group_name: '{{ cca_splunk_manager_user }}'
-cca_splunk_manager_gid: 'UPDATE_SPLUNK_MGR_UID'
 splunk_user: 'splunk'
 splunk_user_uid: 'UPDATE_SPLUNK_UID'
 splunk_user_dir: '{{ splunk_path }}'
