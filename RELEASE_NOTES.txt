@@ -1,0 +1,73 @@
+               ____ ____    _       __              ____        _             _
+              / ___/ ___|  / \     / _| ___  _ __  / ___| _ __ | |_   _ _ __ | | __
+             | |  | |     / _ \   | |_ / _ \| '__| \___ \| '_ \| | | | | '_ \| |/ /
+             | |__| |___ / ___ \  |  _| (_) | |     ___) | |_) | | |_| | | | |   <
+              \____\____/_/   \_\ |_|  \___/|_|    |____/| .__/|_|\__,_|_| |_|_|\_\
+                                                         |_|
+
+
+    CCA for Splunk's user interface is a helper function that assists in creating and execute the
+    ansible-playbook commands for a give playbook and host selection. It gives full control
+    to see and select target hosts. Each ansible playbook has a set of configurable arguments,
+    on the page with extra vars, additional variables are listed with their default values.
+
+    You will be guided through playbook selection, host limits and options to configure the
+    additional variables.
+
+    Whiptail Help:
+     Tab key:   Move between fields
+     Spacebar:  Select/unselect item
+     Arrow key: Move up/down in list or scroll text
+     Enter:     Continue
+
+    Usage:  cca_ctrl [-d|--debug] [-c|--check] [-s|--setup] [-h|--help]
+            CCA for Splunk is a toolset used to automate infrastructure
+            and onboarding tasks using Ansible.
+
+            -d,--debug  Enable script debug
+            -c,--check  Configures Ansible to run in check mode
+            -s,--setup  Guided setup wizard to initially setup or upgrade CCA for Splunk
+            -h,--help   Print usage
+
+    Release notes:
+
+    2022.2.1 Initial Open Source release of CCA for Splunk
+             Framework roles for Splunk infrastructure management
+                cca.core.control
+                cca.splunk.enterprise-install
+                cca.splunk.ssl-certificates
+                cca.splunk.frontend
+                cca.core.splunk
+                cca.splunk.role-searchhead
+                cca.core.linux
+                cca.common.setup-wizard
+
+            Playbooks for Splunk infrastructure management
+                manage_all_in_one_servers.yml
+                manage_data_collection_nodes.yml
+                manage_deployment_servers.yml
+                manage_forwarders.yml
+                manage_hybrid_searchheads.yml
+                manage_index_clusters.yml
+                manage_license_managers.yml
+                manage_monitoring_consoles.yml
+                manage_searchhead_clusters.yml
+                manage_standalone_indexers.yml
+
+            Framework roles for Splunk onboarding of configuration and artifacts
+                cca.splunk.onboarding
+
+            Playbooks for Splunk onboarding of configuration and artifacts
+                deploy_apps.yml
+                deploy_deployment_apps.yml
+                deploy_fullstack.yml
+                deploy_master_apps.yml
+                deploy_shcluster_apps.yml
+
+            Playbooks for cca setup
+                automation_readiness_cca_manager.yml
+                setup_wizard.yml
+
+            Template structure for custom configuration and artifacts
+                infrastructure_template
+                onboarding_template
