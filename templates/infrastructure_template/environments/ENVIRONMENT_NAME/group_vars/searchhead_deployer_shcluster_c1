@@ -115,6 +115,11 @@ splunk_conf_group_settings:
    filename: limits.conf
    filepath: '{{ splunk_path }}/etc/shcluster/{{ app_name_shc_member_conf }}/default'
    sections:
+    - section: 'realtime'
+      options:
+       - option: 'indexed_realtime_use_by_default'
+         value: 'true'
+
     - section: ''
       options:
        - option: ''
