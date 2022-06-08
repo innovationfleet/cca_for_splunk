@@ -1,0 +1,368 @@
+#REPO_TYPE=
+#MENU_DESC=Check Automation Readiness
+#EXTRA_VARS=
+# ansible-playbook -i localhost, playbooks/automation_readiness_cca_manager.yml -v
+- hosts: all
+  connection: local
+  gather_facts: true
+  strategy: linear
+  any_errors_fatal: false
+  pre_tasks:
+    - name: Set CCA release version of readiness playbook
+      set_fact:
+        cca_release: "2022.2.1"
+
+    - name: START - Set target readiness score for CCA manager
+      set_fact:
+        max_readiness_score: 2398
+
+    - name: Set start score for manager
+      set_fact:
+        mgr_readiness_score: 0
+
+    - name: Set playbook fact
+      set_fact:
+        playbook_name: "{{ playbook_dir }}/automation_readiness_cca_manager.yml"
+
+    - name: Collect stats of this file
+      stat:
+        path: "{{ playbook_name }}"
+      register: stat_ansible_playbook
+
+    - name: Check if the CCA Manager has a OS version that is fully supported
+      assert:
+        that:
+          - ( ansible_distribution == 'RedHat' and
+              ansible_distribution_major_version == '8' and
+              ansible_architecture == 'x86_64' ) or
+
+            ( ansible_distribution == 'CentOS' and
+              ansible_distribution_major_version == '8' and
+              ansible_architecture == 'x86_64' ) or
+
+            ( ansible_distribution == 'Amazon' and
+              ansible_distribution_major_version == '2' and
+              ansible_architecture == 'x86_64' ) or
+
+            ( ansible_distribution == 'Ubuntu' and
+              ansible_distribution_major_version == '20' and
+              ansible_architecture == 'x86_64' )
+
+        fail_msg: >-
+          To currently use all feature of the CCA Manager, the OS version needs to be one of
+          the following. RedHat 8, CentOS 8 Stream, Amazon 2, Ubuntu. cca_for_splunk will still
+          be possible to use on other OS and versions, however not tested.
+        success_msg: >-
+          OK - Your CCA manager runs a fully supported OS ({{ ansible_distribution }}) and
+          Major Version ({{ ansible_distribution_major_version }})
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 600 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check ansible version
+      assert:
+        that:
+          - ansible_version.full is version('2.11.0', '>=')
+        fail_msg:
+          You need to have ansible-core version 2.11 or 2.12 on your control host to use
+          the automation framework. Detected version {{ ansible_version.full }}
+        success_msg: >-
+          You are running an validated ansible version {{ ansible_version.full }}
+          in {{ ansible_env.VIRTUAL_ENV | default('no VIRTUAL_ENV, a venv should be configured') }}
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if virtual env is defined
+      assert:
+        that:
+          - ansible_env.VIRTUAL_ENV is defined
+        fail_msg: >-
+          To ensure correct version of Python and Ansible, a virtual environment is needed
+          Create a virtual environment with python >= 3.9.0 and activate it
+        success_msg: >-
+          Virtual environment found, continue to validate it
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
+      when:
+        not assert_result.failed
+
+    - name: Get Python3 version from virtual environment
+      ansible.builtin.shell:
+        cmd: "{{ ansible_env.VIRTUAL_ENV }}/bin/python3 --version | awk '{ print $2 }'"
+      register: cca_python3_version_status
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+
+    - name: Check that required Python version is used in the virtual ENV
+      assert:
+        that:
+          - cca_python3_version_status.stdout is version('3.9.0', '>=')
+        fail_msg: >-
+          You need to have Python3 version 3.9+ on your control host to use
+          the automation framework. Detected version {{ cca_python3_version_status.stdout }}
+        success_msg: >-
+          You are running an validated Python3 version {{ cca_python3_version_status.stdout }}
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if ANSIBLE_PRIVATE_KEY_FILE is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_PRIVATE_KEY_FILE is defined
+        fail_msg: >-
+          Ansible needs a private key file to be able to access splunk infrastructure servers.
+          Add you private key to this server and add the env variable in this users profile.
+        success_msg: >-
+          ENV variable found for ANSIBLE_PRIVATE_KEY_FILE
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if ANSIBLE_ROLES_PATH is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_ROLES_PATH is defined
+        fail_msg: >-
+          Ansible needs a to proper roles path configured.
+          Add the env variable in this users profile and configure according to automation_readiness.md
+        success_msg: >-
+          ENV variable found for ANSIBLE_ROLES_PATH
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if ANSIBLE_VAULT_PASSWORD_FILE is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_VAULT_PASSWORD_FILE is defined
+        fail_msg: >-
+          Ansible needs a have a vault password file, add env variable only after files is created.
+          Add the env variable in this users profile and configure according to automation_readiness.md
+        success_msg: >-
+          ENV variable found for ANSIBLE_VAULT_PASSWORD_FILE
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if ANSIBLE_STRATEGY is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_STRATEGY is defined
+        fail_msg: >-
+          Missing recommended env variable to speed up playbook execution
+        success_msg: >-
+          ENV variable found for ANSIBLE_STRATEGY
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful recommended task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 99 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if ANSIBLE_STRATEGY_PLUGINS is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_STRATEGY_PLUGINS is defined
+        fail_msg: >-
+          Missing recommended env variable, specify strategy plugin
+        success_msg: >-
+          ENV variable found for ANSIBLE_STRATEGY_PLUGINS
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful recommended task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 99 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if ANSIBLE_CALLBACKS_ENABLED is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_CALLBACKS_ENABLED is defined
+        fail_msg: >-
+          Missing optional env variable to enable task profiling
+        success_msg: >-
+          ENV variable found for ANSIBLE_CALLBACKS_ENABLED
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful optional task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 50 }}"
+      when:
+        not assert_result.failed
+
+
+    - name: Check if ANSIBLE_STDOUT_CALLBACK is defined
+      assert:
+        that:
+          - ansible_env.ANSIBLE_STDOUT_CALLBACK is defined
+        fail_msg: >-
+          Missing optional env variable to change task output.
+        success_msg: >-
+          ENV variable found for ANSIBLE_STDOUT_CALLBACK
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for optional successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 50 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if we have a cca directories for splunk infrastructure config
+      shell:
+        cmd: 'find ~ -name "settings" -type f ! -path "*cca_for_splunk*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+      register:
+        cca_infra_companion_directory
+      ignore_errors: true
+
+    - name: Assert that a infra directory exists
+      assert:
+        that:
+          - cca_infra_companion_directory.stdout | default('Missing') != "Missing"
+        fail_msg: >-
+          A companion directory for Splunk Infrastructure is missing
+        success_msg: >-
+         Found a CCA Splunk Infrastructure directory
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if we have a cca directories for splunk onboarding config
+      shell:
+        cmd: 'find ~ -name "settings" -type f ! -path "*cca_for_splunk*" -exec grep "repo_type=onboarding" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+      register:
+        cca_onboarding_companion_directory
+      ignore_errors: true
+
+    - name: Assert that a onboarding directory exists
+      assert:
+        that:
+          - cca_onboarding_companion_directory.stdout | default('Missing') != "Missing"
+        fail_msg: >-
+          A companion directory for Splunk Onboarding is missing
+        success_msg: >-
+         Found a CCA Splunk Onboarding directory
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+      when:
+        not assert_result.failed
+
+    - name: Check if we have access to an Splunk Enterprise tgz file
+      ansible.builtin.shell:
+         cmd: 'find {{ playbook_dir }}/../../{{ cca_infra_companion_directory.stdout }} -name "splunk-8.*-Linux-x86_64.tgz" -type f'
+      register: splunk_enterprise_tgz
+      ignore_errors: true
+
+    - name: Assert that a Splunk enterprise file exists
+      assert:
+        that:
+          - splunk_enterprise_tgz.rc == 0
+          - splunk_enterprise_tgz.stdout != ""
+        fail_msg: >-
+          A Splunk enterprise tgz file is missing
+        success_msg: >-
+         Found a Splunk enterprise file
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
+      when:
+        not assert_result.failed
+
+    - name: END - Evaluate automation readiness score
+      assert:
+        that:
+          - not mgr_readiness_score | int < max_readiness_score | int
+        fail_msg: >-
+          Your Manager readiness score is {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
+          Please review the output and the documentation on how to improve your automation
+          readiness, so that you can start using CCA for Splunk from this host.
+          Readiness score: {{ mgr_readiness_score }}.
+          CCA Release: {{ cca_release }}. Ansible Playbook has checksum {{ stat_ansible_playbook.stat.checksum }}.
+        success_msg: >-
+          Good work, your manager host looks great, you are ready to start utilizing CCA for Splunk!
+          Readiness score: {{ mgr_readiness_score }}.
+          CCA Release: {{ cca_release }}. Ansible Playbook has checksum {{ stat_ansible_playbook.stat.checksum }}.
+      register: readiness_score
+      ignore_errors: true
+
+    - name: Post this summary
+      debug:
+        msg: "{{ readiness_score.msg }}"
