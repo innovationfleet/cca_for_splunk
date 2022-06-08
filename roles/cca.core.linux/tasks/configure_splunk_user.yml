@@ -12,18 +12,18 @@
   ansible.builtin.group:
     name: "{{ splunk_user_group_name }}"
     state: present
-    gid: "{{ splunk_user_gid }}"
+    gid: "{{ splunk_user_gid | int }}"
 
 - name: Create {{ splunk_user }} on system
-  ansible.builtin.user: 
+  ansible.builtin.user:
     name: "{{ splunk_user }}"
     comment: 'Splunk CCA created account, locked no passwd'
     home: '{{ splunk_path }}'
-    group: '{{ splunk_user_gid }}'
+    group: '{{ splunk_user_gid | int }}'
     shell: /bin/bash
     state: present
     password_lock: yes
-    uid: '{{ splunk_user_uid }}'
+    uid: '{{ splunk_user_uid | int }}'
 
 - name: Set password to never expire, despite no password is used
   ansible.builtin.command:

@@ -13,3 +13,5 @@
     dest: "/etc/sudoers.d/{{ cca_splunk_manager_user }}"
     mode: 0700
     content: "%{{ cca_splunk_manager_user }} ALL=(ALL) NOPASSWD:ALL"
+  when:
+    - cca_splunk_manager_user is defined

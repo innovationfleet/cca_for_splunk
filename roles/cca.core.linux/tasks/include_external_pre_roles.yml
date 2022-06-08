@@ -13,5 +13,5 @@
    name: '{{ external_bootstrap_role }}'
   loop_control:
     loop_var: external_bootstrap_role
-  loop: '{{ external_bootstrap_pre_roles default([]) if external_bootstrap_pre_roles is iterable else [] }}'
+  loop: '{{ external_bootstrap_pre_roles | default([]) if external_bootstrap_pre_roles | default([]) is iterable else [] }}'
 
