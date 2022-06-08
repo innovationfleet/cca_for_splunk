@@ -8,38 +8,55 @@ Automation Readiness is a playbook developed by us to help you determine how pre
 * Ansible environment variables
 * CCA for Splunk variables
 
-The playbook outputs a score, referred as Automation Readiness Score. The score tells you how well your environment will handle CCA for Splunk, as well as required steps to increase the Automation Readiness Score.
-
 **Automation Readiness Score**
 
-To assess the Automation Readiness of the environment, we have developed a Readiness score that determines how well the environment is prepared to run CCA for Splunk from 0 (not at all) to 2398 (fully!). When you reach a Readiness score above 2000 you should be ready to execute `./cca_ctrl --setup` from the main *cca_for_splunk* repo. See [Setup Wizard](#setup-wizard)
+The playbook outputs a score, referred as Automation Readiness Score.
+
+The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 2398 (fully!). At least a score of 2000 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps are required to perform to increase your Automation Readiness Score based on our best practices.
+
+Once you reach Automation Readiness Score above 2000 you should be ready to execute `./cca_ctrl --setup` from the main *cca_for_splunk* repo. See [Setup Wizard](#setup-wizard)
 
 ![Automation Readiness Score](media/automation_readiness_score_viz.png)
 
-CCA for Splunk typically need at least 2000 in Readiness score to be able to run (with some hard requirements of course)
+CCA for Splunk typically need at least 2000 in Automation Readiness Score to be able to run (with some hard requirements of course)
 We have also described installation steps according to our best practices, following these steps will increase your Automation Readiness Score.
  * [Python installation](#install-python-39)
  * [Virtual env and Ansible Installation](#create-python-virtual-env-and-install-ansible-with-collections)
 
-## Optional: CCA Manager setup (recommended)
+## Optional: CCA Manager Setup (Recommended)
 
-We recommend that you designate a central server that will have access to your Splunk infrastructure and that this server has a technical user that you access via `sudo`. The current fully supported OS's for running `cca_for_splunk` framework are RedHat 8, CentOS 8 Stream, Amazon Linux 2 and Ubuntu 20.
-Machine minimum requirements:
+Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command.
+
+Current the following Operating System (OS)'s are fully supported to run CCA for Splunk.
+
+* RedHat 8
+* CentOS 8 Stream
+* Amazon Linux 2
+* Ubuntu 20
+
+### Hardware requirements
+Minimum hardware requirements:
 * CPU: 2 CPU
 * RAM: 4GB RAM (Onboarding repository size depends on the apps you have stored in it)
 * Disk: 40 GB
 
 Feel free to try and run these playbooks elsewhere but on your own responsibility.
 
-A remote user that has SSH key based login enabled and has `sudo ALLl NO PASSWD` configured is also required on the Splunk Infrastructure servers you are going to manage.
+### Splunk Enterprise version
+When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended.
 
-Let's get started with automation readiness test.
+For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable.
+
+CCA for Splunk’s supported versions:
+* Splunk Enterprise 8.X
+
+### SSH Keys
+A remote user that has SSH key based login enabled and has `sudo ALLl NO PASSWD` configured is also required on the Splunk Infrastructure servers that CCA for Splunk will manage.
 
 ## Step 1: Clone cca_for_splunk repository
 
-Logon to a server where you will setup the CCA Manager.
+Logon to the server you have designated as CCA for Splunk Manager. First we will create directories where the cloned `cca_for_splunk`repository will reside. See example of commands below.
 
-Prepare your account with a directory where you will host your cloned `cca_for_splunk` repository. See example below.
 ```
 mkdir ~/master ~/secrets
 cd ~/master
@@ -48,6 +65,7 @@ cd cca_for_splunk
 ```
 
 ## Step 2: Execute Automation Readiness Playbook
+We will now execute the Automation Readiness Playbook with `ansible-playbook`command. The playbook will perform tests and assert that your server & account is setup as it should. For every successful assertion, points will be added to your Automation Readiness Score. In the end you will be presented with your final score.
 
 ```
 cd ~/master/cca_for_splunk
@@ -55,19 +73,15 @@ cd ~/master/cca_for_splunk
 ansible-playbook -i localhost, playbooks/automation_readiness_cca_manager.yml -v
 ```
 
-The playbook will test and assert that your account and server is setup as it should.
-For every successful assertion, points will be added to your readiness score. At the
-end you will see how far you have come on your readiness journey.
-
 # Correct Automation Readiness issues
 
-Here will list the different checks that we perform and what should be configured to correct them if they don't pass in your playbook.
+Here we list the different checks that are performed by the Automation Readiness Playbook and what should be configured to correct them if they didn't pass in your playbook execution.
 
-## Install Python 3.9
-As a user with sudo privileges execute `sudo yum install python39`
+## Python 3.9 Installation
+As a user with `sudo` privileges execute `sudo yum install python39`
 
 ## Create Python virtual env and Install Ansible with collections
-As the same user that runs the readiness playbook, execute the following commands to setup Python virtual env and Ansible.
+Logon as the same user that executed the Automation Readiness Playbook. Execute the following commands to setup Python virtual environment variables & install Ansible
 
 ```
 cd
@@ -82,18 +96,17 @@ ansible-galaxy collection install community.general
 ansible-galaxy collection install ansible.posix
 
 ```
-Add this line to your user profile to activate the Python virtual environment every time you login.
+Add the following line to your user profile to activate the Python virtual environment every time you login.
 
 ```
 source ~/tools/python-venv/ansible2.12/bin/activate
 ```
-Test it by logging out and in again and execute this command
+Perform a test by logging out & in again and execute the following command.
 ```
 if [[ -v VIRTUAL_ENV ]] ; then ansible --version ; else echo "VIRTUAL_ENV is not configured" ;  fi
  ```
 
-If you get an output similar to this you are ok.
-
+You should expect a similiar output as below. If you are not getting the expected result, review the previous steps.
 ```
 ansible [core 2.12.5]
   config file = /etc/ansible/ansible.cfg
@@ -105,7 +118,6 @@ ansible [core 2.12.5]
   jinja version = 3.1.2
   libyaml = True
   ```
-
 
 ## Required Environment variables
 
