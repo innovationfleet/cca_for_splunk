@@ -66,10 +66,6 @@
 # DCN   Data Collection Node     splunk-prod-dcn-101  Optional
 # AIO   All in one server        splunk-dev-aio-101   S
 #
-# Version parameter is used to validate this file
-# against cca_for_splunk framework requirements.
-cca_onboarding_hosts_file_version: '2022.2.1'
-
 
 # If custom groups are added to the inventory and they are a Splunk
 # Enterprise infrastructure server, add them to the splunk_servers
@@ -103,6 +99,9 @@ ansible_ssh_user="UPDATE_SSH_REMOTE_USER"
 s2s_tcp_port="9997"
 s2s_tcp_port_ssl="9998"
 splunk_enterprise_version="8.2.6"
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_hosts_file_version='2022.2.1'
 
 # Special groups dedicated to upgrade logics.
 # Clustered Splunk servers are all servers that
