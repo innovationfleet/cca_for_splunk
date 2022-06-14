@@ -6,7 +6,7 @@ That is precisely what we've done for years, and now it's time to share how you 
 
 See how you can manage certificates, upgrades & app deployments with full control and flexibility.
 
-Find the project presentation and Q&A in the [wiki](https://github.com/innovationfleet/cca_for_splunk/wiki)
+You can find the Project Presentation as well as a Q&A section in the [Wiki](https://github.com/innovationfleet/cca_for_splunk/wiki)
 
 # Do I need CCA for Splunk ?
 
