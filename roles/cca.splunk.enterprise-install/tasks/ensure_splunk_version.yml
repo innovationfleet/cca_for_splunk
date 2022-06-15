@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.2.2
 
 - name: Include task to get Splunk status
   include_tasks: splunk_status.yml

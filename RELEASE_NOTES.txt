@@ -31,6 +31,33 @@
 
     Release notes:
 
+    2022.2.2 Playbooks to manage Splunk Enterprise upgrades and CVE info
+             Splunk Deployment Servers with a versions earlier than 9.0 has
+             the following CVE-2022-32158, CVSSv3.1 Score: 9.0, Critical
+             https://www.splunk.com/en_us/product-security/announcements/svd-2022-0608.html
+
+             To upgrade just the Splunk Deployment Servers, add an explicit version in the
+             hosts inventory file.
+             [deployment_servers:vars]
+             splunk_enterprise_version='9.0.0'
+
+             Store the tgz file in the infrastructure repo at splunk/var/images.
+
+             Run ./cca_ctrl and select the playbook upgrade_non_clustered_splunk_servers.yml
+             and target only the Deployment Servers. Perform the upgrade in a test environment
+             before doing so in Production.
+
+             Playbooks added:
+                rolling_upgrade_splunk_clusters.yml
+                upgrade_non_clustered_splunk_servers.yml
+
+             Bug fixes:
+                * Corrected path for splunk in task ensure_splunk_version.yml
+                * Removed manifest files from diff cleanup files, manifest files
+                  are a great source of information to get insight on the historical
+                  upgrade path of an Splunk Server
+                * Shorten menu description for configure_linux_servers.yml
+
     2022.2.1 Initial Open Source release of CCA for Splunk
              Framework roles for Splunk infrastructure management
                 cca.core.control
