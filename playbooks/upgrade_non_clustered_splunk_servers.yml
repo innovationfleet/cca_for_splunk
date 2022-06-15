@@ -1,0 +1,78 @@
+---
+# REPO_TYPE=infra
+# MENU_DESC=Upgrade Splunk on all NON clustered servers.
+# EXTRA_VARS=cca_splunk_enterprise_upgrade(false),upgrade_check(true)
+
+
+# Upgrade non clustered servers in availability group 1
+#       _             _ _       _     _ _ _ _          ____                         _
+#      / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _ / ___|_ __ ___  _   _ _ __   / |
+#     / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | | |  _| '__/ _ \| | | | '_ \  | |
+#    / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| | |_| | | | (_) | |_| | |_) | | |
+#   /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |\____|_|  \___/ \__,_| .__/  |_|
+#                                               |___/                      |_|
+
+- hosts: non_clustered_splunk_servers:&ag1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          get_splunk_status.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      when:
+        - splunk_ok_status_flag | default(false)
+
+
+# Upgrade non clustered servers in availability group 2
+#       _             _ _       _     _ _ _ _          ____                         ____
+#      / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _ / ___|_ __ ___  _   _ _ __   |___ \
+#     / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | | |  _| '__/ _ \| | | | '_ \    __) |
+#    / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| | |_| | | | (_) | |_| | |_) |  / __/
+#   /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |\____|_|  \___/ \__,_| .__/  |_____|
+#                                               |___/                      |_|
+
+- hosts: non_clustered_splunk_servers:&ag2
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          get_splunk_status.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      when:
+        - splunk_ok_status_flag | default(false)
+
+# Upgrade non clustered servers in availability group 3
+
+#       _             _ _       _     _ _ _ _          ____                         _____
+#      / \__   ____ _(_) | __ _| |__ (_) (_) |_ _   _ / ___|_ __ ___  _   _ _ __   |___ /
+#     / _ \ \ / / _` | | |/ _` | '_ \| | | | __| | | | |  _| '__/ _ \| | | | '_ \    |_ \
+#    / ___ \ V / (_| | | | (_| | |_) | | | | |_| |_| | |_| | | | (_) | |_| | |_) |  ___) |
+#   /_/   \_\_/ \__,_|_|_|\__,_|_.__/|_|_|_|\__|\__, |\____|_|  \___/ \__,_| .__/  |____/
+#                                               |___/                      |_|
+
+- hosts: non_clustered_splunk_servers:&ag3
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          get_splunk_status.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      when:
+        - splunk_ok_status_flag | default(false)

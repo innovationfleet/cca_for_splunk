@@ -1,7 +1,7 @@
 # Playbook to configure linux servers
 #
 #REPO_TYPE=infra
-#MENU_DESC=Configure linux server to work with cca_for_splunk and Splunk Enterprise
+#MENU_DESC=Configure linux server to work with CCA and Splunk Enterprise
 #VARS=hide_password(true)
 
 # Configure all servers

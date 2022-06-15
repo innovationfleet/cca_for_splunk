@@ -1,0 +1,367 @@
+---
+# This playbook covers rolling upgrade of index cluster C1 and search head cluster C1.
+# If there is a need to upgrade more clusters, copy this file to your infrastructure
+# playbooks directory and add more clusters to it.
+#
+# REPO_TYPE=infra
+# MENU_DESC=Upgrade Splunk on all cluster dependent servers.
+# EXTRA_VARS=cca_splunk_enterprise_upgrade(false),shcluster_precheck(true),upgrade_check(true),shc_upgrade_method(rolling|[offline])
+
+
+# https://patorjk.com/software/taag/#p=display&c=bash&f=Standard&t=SearchHeads
+# Index Cluster upgrade
+# https://docs.splunk.com/Documentation/Splunk/8.2.6/Indexer/Searchablerollingupgrade
+# Disable deferred scheduled searches - Should be possible to configure on the Search heads prior to the upgrade
+
+
+#    ____            ____ _               _
+#   |  _ \ _ __ ___ / ___| |__   ___  ___| | _____
+#   | |_) | '__/ _ \ |   | '_ \ / _ \/ __| |/ / __|
+#   |  __/| | |  __/ |___| | | |  __/ (__|   <\__ \
+#   |_|   |_|  \___|\____|_| |_|\___|\___|_|\_\___/
+#
+# Perform status check on SearchHead clusters and Index clusters to validate that running status and Splunk
+# versions are consistent before the upgrade starts. Set playbook variable skip_upgrade_check to true if
+# the playbook has failed with the clusters in a degraded state and the upgrade needs to continue regardless
+# of the precheck status.
+
+- hosts: searchhead_members:searchhead_deployers:cluster_managers:cluster_peers:data_collection_nodes:monitoring_consoles
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster/get_shcluster_status.yml
+      when:
+        - inventory_hostname in groups.searchhead_members
+        - upgrade_check | default(true)
+
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster/precheck_upgrade_status.yml
+      when:
+        - inventory_hostname in groups.searchhead_members
+        - upgrade_check | default(true)
+
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cluster/get_cluster_status.yml
+      when:
+        - inventory_hostname in groups.cluster_managers
+        - upgrade_check | default(true)
+
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cluster/precheck_upgrade_status.yml
+      when:
+        - inventory_hostname in groups.cluster_managers
+        - upgrade_check | default(true)
+
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          get_splunk_status.yml
+      when:
+        - not inventory_hostname in groups.cluster_peers or
+          not inventory_hostname in groups.searchhead_members
+
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          precheck_upgrade_status.yml
+      when:
+        - not inventory_hostname in groups.cluster_peers or
+          not inventory_hostname in groups.searchhead_members
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_upgrade_tasks.yml
+
+
+# TODO Check that all instances has the same version.
+# TODO The host fact shcluster_splunk_version has the current splunk version
+# TODO Check that all instances has the latest kvstore engine
+# TODO The host fact kvstore_engine has the current kvstore engine
+# TODO Backup kvstore data
+
+
+# Upgrade the manager node
+#     ____ _           _            __  __
+#    / ___| |_   _ ___| |_ ___ _ __|  \/  | __ _ _ __   __ _  __ _  ___ _ __ ___
+#   | |   | | | | / __| __/ _ \ '__| |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__/ __|
+#   | |___| | |_| \__ \ ||  __/ |  | |  | | (_| | | | | (_| | (_| |  __/ |  \__ \
+#    \____|_|\__,_|___/\__\___|_|  |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|  |___/
+#                                                            |___/
+
+- hosts: cluster_managers
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      vars:
+        cca_splunk_enterprise_upgrade: true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+
+# Upgrade the search head tier
+# Upgrade standalone servers by stopping them and upgrade them all at once
+#    ____                      _     _   _                _
+#   / ___|  ___  __ _ _ __ ___| |__ | | | | ___  __ _  __| |___
+#   \___ \ / _ \/ _` | '__/ __| '_ \| |_| |/ _ \/ _` |/ _` / __|
+#    ___) |  __/ (_| | | | (__| | | |  _  |  __/ (_| | (_| \__ \
+#   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|___/
+#
+
+- hosts: data_collection_nodes:monitoring_consoles
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      vars:
+        cca_splunk_enterprise_upgrade: true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+# Upgrade of Search Head Clusters, if more than 2 search head clusters exists per environment
+# copy this playbook to your infrastructure playbooks folder and extend it with more clusters.
+# Member-by-member upgrade is purposely excluded as a upgrade method in this playbook.
+#    ____                      _     _   _                _  ____ _           _
+#   / ___|  ___  __ _ _ __ ___| |__ | | | | ___  __ _  __| |/ ___| |_   _ ___| |_ ___ _ __ ___
+#   \___ \ / _ \/ _` | '__/ __| '_ \| |_| |/ _ \/ _` |/ _` | |   | | | | / __| __/ _ \ '__/ __|
+#    ___) |  __/ (_| | | | (__| | | |  _  |  __/ (_| | (_| | |___| | |_| \__ \ ||  __/ |  \__ \
+#   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|\____|_|\__,_|___/\__\___|_|  |___/
+#
+
+- hosts: searchhead_members:&upgrade_shclusters_offline
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          offline_upgrade.yml
+      when:
+        - shc_upgrade_method | default('rolling') == 'offline'
+
+- hosts: searchhead_deployers:&upgrade_shclusters_offline
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      when:
+        - shc_upgrade_method | default('rolling') == 'offline'
+
+- hosts: searchhead_members_shcluster_c1
+  serial: 1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          shcluster/get_shcluster_status.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          shcluster/init_upgrade.yml
+
+  tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          shcluster_upgrade_handler.yml
+      when:
+        - shc_upgrade_method | default('rolling') == 'rolling'
+        - inventory_hostname != current_shcluster_captain
+
+  post_tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          shcluster_upgrade_handler.yml
+      when:
+        - shc_upgrade_method | default('rolling') == 'rolling'
+        - inventory_hostname == current_shcluster_captain
+
+- hosts: searchhead_deployer_shcluster_c1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+      vars:
+        cca_splunk_enterprise_upgrade: true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+
+- hosts: searchhead_members_shcluster_c1
+  serial: 1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          shcluster/finalize_upgrade.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+
+# https://docs.splunk.com/Documentation/Splunk/8.2.6/DistSearch/UpgradeaSHC
+# For SHC, perform the upgrade as per the documentation
+# Rolling upgrade
+# https://docs.splunk.com/Documentation/Splunk/8.2.6/DistSearch/SHCrollingupgrade
+# TODO: Support for member-by-member upgrades
+
+
+#    ___           _           ____
+#   |_ _|_ __   __| | _____  _|  _ \ ___  ___ _ __ ___
+#    | || '_ \ / _` |/ _ \ \/ / |_) / _ \/ _ \ '__/ __|
+#    | || | | | (_| |  __/>  <|  __/  __/  __/ |  \__ \
+#   |___|_| |_|\__,_|\___/_/\_\_|   \___|\___|_|  |___/
+
+
+- hosts: cluster_manager_cluster_c1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          cluster/init_upgrade.yml
+
+- hosts: cluster_peers_cluster_c1:&ag1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  serial: 20%
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cluster/splunk_offline.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      vars:
+        cca_splunk_enterprise_upgrade: true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+- hosts: cluster_peers_cluster_c1:&ag2
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  serial: 20%
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cluster/splunk_offline.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      vars:
+        cca_splunk_enterprise_upgrade: true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+- hosts: cluster_peers_cluster_c1:&ag3
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  serial: 20%
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          cluster/splunk_offline.yml
+
+    - include_role:
+        name: cca.splunk.enterprise-install
+      vars:
+        cca_splunk_enterprise_upgrade: true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
+
+- hosts: cluster_manager_cluster_c1
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+        tasks_from:
+          cluster/finalize_upgrade.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_upgrade_tasks.yml
