@@ -834,6 +834,3 @@ splunk/share/splunk/search_mrsparkle/templates/dashboardwizard/step3.html
 splunk/share/splunk/search_mrsparkle/templates/dashboardwizard/success.html
 splunk/share/splunk/search_mrsparkle/templates/debug/sso.html
 splunk/share/splunk/search_mrsparkle/templates/top/paths.html
-splunk/splunk-7.3.2-c60db69f8e32-linux-2.6-x86_64-manifest
-splunk/splunk-8.1.2-545206cc9f70-linux-2.6-x86_64-manifest
-splunk/splunk-8.1.3-63079c59e632-linux-2.6-x86_64-manifest
