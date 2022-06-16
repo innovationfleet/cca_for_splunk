@@ -3,7 +3,7 @@
 # group_vars/all/general_settings. Review those settings before applying
 # additional settings here.
 
-splunk_group_conf_settings:
+splunk_conf_group_settings:
 
  - name: Splunk serverclass.conf for deployment servers
    filename: serverclass.conf
@@ -13,6 +13,18 @@ splunk_group_conf_settings:
        options:
          - option: 'crossServerChecksum'
            value: 'true'
+         - option: 'disbled'
+           value: "{{ 'true'
+                      if
+                         current_splunk_enterprise_version is version('9.0.0', '<')
+                      else
+                       'false'
+                   }}"
+           comment: >-
+             Disables Deployment Server functionality if Splunk Enterprise runs on a version
+             prior to 9.0.0. Vulnerability description at Splunk.
+             https://www.splunk.com/en_us/product-security/announcements/svd-2022-0608.html
+
 
  - name: Splunk server.conf
    filename: server.conf

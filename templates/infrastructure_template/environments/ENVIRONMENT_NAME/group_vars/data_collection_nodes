@@ -3,7 +3,7 @@
 # group_vars/all/general_settings. Review those settings before applying
 # additional settings here.
 
-splunk_group_conf_settings:
+splunk_conf_group_settings:
 
  - name: Splunk server.conf
    filename: server.conf
