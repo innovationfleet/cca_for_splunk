@@ -31,6 +31,23 @@
 
     Release notes:
 
+    2022.2.3 Set current Splunk Enterprise version so that group_vars files can use it.
+             Updated deployment_server group_vars file, if current Splunk Enterprise
+             version is below 9.0.0, disable deployment server functionallity.
+
+             Bug fixes:
+                * Corrected splunk_conf_group_settings variable in 
+                  templates/infrastructure_template/environments/ENVIRONMENT_NAME/group_vars/
+                  for
+                     all_in_one_servers
+	             data_collection_nodes
+	             deployment_servers
+	             forwarders
+	             hybrid_searchheads
+                  Important: Copy these files to your environments/ENVIRONMENT_NAME/group_vars
+                             folder if you have already run the setup. If not, you don't need to
+                             do anything.
+
     2022.2.2 Playbooks to manage Splunk Enterprise upgrades and CVE info
              Splunk Deployment Servers with a versions earlier than 9.0 has
              the following CVE-2022-32158, CVSSv3.1 Score: 9.0, Critical
