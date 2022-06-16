@@ -12,8 +12,8 @@
 # Prerequisite:
 #
 # Roger Lindquist (github.com/rlinq)
-# META_DATE
-# META_VERSION
+#
+# Release: 2022.2.3
 - name: Include task for checking cca_for_splunk init state
   include_tasks: check_init.yml
 
@@ -25,6 +25,9 @@
 
 - name: Include task for checking certificate status
   include_tasks: ../../cca.splunk.ssl-certificates/tasks/validate_certificates.yml
+
+- name: Include task to calculate splunk enterprise version
+  include_tasks: get_splunk_version.yml
 
 - name: Run a precheck of the config to find errors
   include_tasks: precheck_settings.yml
