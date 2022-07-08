@@ -66,15 +66,15 @@ splunk_conf_group_settings:
        - option: 'manager_uri'
          value: '{{ cca_splunk_shcluster_c1_clustering_manager_uris }}'
          comment: >-
-           Each manger_uri specified above needs to match a section below with a definition
-           of a clustermanger
+           Each manager_uri specified above needs to match a section below with a definition
+           of a clustermanager
        - option: 'multisite'
          value: 'true'
 
     - section: 'clustermanager:cluster_manager_cluster_c1'
       options:
        - option: 'manager_uri'
-         value: "https://{{ groups['cluster_manager_cluster_c1'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+         value: "https://{{ groups['cluster_manager_cluster_c1'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
        - option: 'pass4SymmKey'
          value: '{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}'
        - option: 'multisite'
@@ -83,21 +83,21 @@ splunk_conf_group_settings:
 #    - section: 'clustermanager:cluster_manager_cluster_c2'
 #      options:
 #       - option: 'manager_uri'
-#         value: "https://{{ groups['cluster_manager_cluster_c2'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#         value: "https://{{ groups['cluster_manager_cluster_c2'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
 #       - option: 'pass4SymmKey'
 #         value: '{{ cca_splunk_cluster_c2_pass4SymmKey_hash }}'
 
 #    - section: 'clustermanager:cluster_manager_cluster_c3'
 #      options:
 #       - option: 'manager_uri'
-#         value: "https://{{ groups['cluster_manager_cluster_c3'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#         value: "https://{{ groups['cluster_manager_cluster_c3'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
 #       - option: 'pass4SymmKey'
 #         value: '{{ cca_splunk_cluster_c3_pass4SymmKey_hash }}'
 
 #    - section: 'clustermanager:cluster_manager_cluster_c4'
 #      options:
 #       - option: 'manager_uri'
-#         value: "https://{{ groups['cluster_manager_cluster_c4'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#         value: "https://{{ groups['cluster_manager_cluster_c4'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
 #       - option: 'pass4SymmKey'
 #         value: '{{ cca_splunk_cluster_c4_pass4SymmKey_hash }}'
 
