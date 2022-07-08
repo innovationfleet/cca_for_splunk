@@ -7,7 +7,7 @@
 #
 # Author: André Enemark
 #
-# Release: 2022.2.1
+# Release: 2022.2.4
 
 - name: Check if Splunk is installed in temp location
   ansible.builtin.stat:
@@ -26,6 +26,8 @@
     state: touch
   when:
     - not stat_splunk_secret.stat.exists
+    - cca_splunk_secret is defined and
+      cca_splunk_secret != ''
 
 - name: Ensure manged splunk.secret file for new installations
   ansible.builtin.copy:

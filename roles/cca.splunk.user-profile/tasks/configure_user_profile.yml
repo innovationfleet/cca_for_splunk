@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.2.4
 - name: Configure user profile
   ansible.builtin.template:
     src: user_profile/dot.profile.j2
@@ -44,8 +44,9 @@
     - '.scripts/pwd.sh'
 
 - name: Get local manager users home directory
-  become: no
-  local_action: command echo ~
+  become: false
+  ansible.builtin.command:
+    cmd: command echo ~
   register: homedir
   changed_when:
     - false
@@ -56,7 +57,7 @@
   register: manager_user_homedir
 
 - name:  Ensure directories exists for user profile files - manager user
-  become: no
+  become: false
   ansible.builtin.file:
     path: '{{ homedir.stdout }}'
     state: 'directory'
@@ -64,7 +65,7 @@
     - manager_user_homedir.stat.exists
 
 - name: Configure user profile - manager user
-  become: no
+  become: false
   ansible.builtin.template:
     src: user_profile/dot.profile.j2
     dest: '{{ homedir.stdout }}/.profile'
@@ -72,7 +73,7 @@
     - manager_user_homedir.stat.exists
 
 - name:  Ensure directories exists for user profile files - manager user
-  become: no
+  become: false
   ansible.builtin.file:
     path: '{{ homedir.stdout }}/.scripts'
     state: 'directory'
@@ -80,7 +81,7 @@
     - manager_user_homedir.stat.exists
 
 - name: Copy additional user profile files - manager user
-  become: no
+  become: false
   ansible.builtin.copy:
     src: 'user_profile/{{ item }}'
     dest: '{{ homedir.stdout }}'
@@ -92,7 +93,7 @@
     - manager_user_homedir.stat.exists
 
 - name: Copy additional user profile files - manager user
-  become: no
+  become: false
   ansible.builtin.copy:
     src: 'user_profile/{{ item }}'
     dest: '{{ homedir.stdout }}/.scripts'

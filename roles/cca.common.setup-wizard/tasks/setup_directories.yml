@@ -7,7 +7,7 @@
 #
 # Author: André Enemark
 #
-# Release: 2022.2.1
+# Release: 2022.2.4
 
  - name: Create directory if it don't exist
    ansible.builtin.file:
@@ -48,7 +48,6 @@
    loop:
      - "environments"
      - "splunk/etc/deployment-apps"
-     - "splunk/etc/apps"
      - "splunk/etc/shcluster"
      - "splunk/etc/master-apps"
 
@@ -59,7 +58,6 @@
    loop:
      - "environments"
      - "splunk/etc/deployment-apps"
-     - "splunk/etc/apps"
      - "splunk/etc/shcluster"
      - "splunk/etc/master-apps"
 

@@ -10,7 +10,7 @@ Automation Readiness is a playbook developed by us to help you determine how pre
 
 **Automation Readiness Score**
 
-The playbook outputs a score, referred as Automation Readiness Score. 
+The playbook outputs a score, referred as Automation Readiness Score.
 
 The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 2398 (fully!). At least a score of 2000 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps are required to perform to increase your Automation Readiness Score based on our best practices.
 
@@ -25,12 +25,13 @@ We have also described installation steps according to our best practices, follo
 
 ## Optional: CCA Manager Setup (Recommended)
 
-Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command. 
+Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command.
 
 Current the following Operating System (OS)'s are fully supported to run CCA for Splunk.
 
 * RedHat 8
 * CentOS 8 Stream
+* Rocky Linux 8
 * Amazon Linux 2
 * Ubuntu 20
 
@@ -43,7 +44,7 @@ Minimum hardware requirements:
 Feel free to try and run these playbooks elsewhere but on your own responsibility.
 
 ### Splunk Enterprise version
-When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended. 
+When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended.
 
 For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable.
 
@@ -81,7 +82,7 @@ Here we list the different checks that are performed by the Automation Readiness
 As a user with `sudo` privileges execute `sudo yum install python39`
 
 ## Create Python virtual env and Install Ansible with collections
-Logon as the same user that executed the Automation Readiness Playbook. Execute the following commands to setup Python virtual environment variables & install Ansible  
+Logon as the same user that executed the Automation Readiness Playbook. Execute the following commands to setup Python virtual environment variables & install Ansible
 
 ```
 cd
@@ -106,7 +107,7 @@ Perform a test by logging out & in again and execute the following command.
 if [[ -v VIRTUAL_ENV ]] ; then ansible --version ; else echo "VIRTUAL_ENV is not configured" ;  fi
  ```
 
-You should expect a similiar output as below. If you are not getting the expected result, review the previous steps.
+You should expect a similar output as below. If you are not getting the expected result, review the previous steps.
 ```
 ansible [core 2.12.5]
   config file = /etc/ansible/ansible.cfg
@@ -178,7 +179,7 @@ export ANSIBLE_STRATEGY_PLUGINS="~/tools/mitogen-0.3.2/ansible_mitogen/plugins/s
 export ANSIBLE_STRATEGY="mitogen_linear"
 export ANSIBLE_CALLBACKS_ENABLED="ansible.posix.profile_tasks"
 export ANSIBLE_STDOUT_CALLBACK="yaml"
-export ANSIBLE_VAULT_PASSWORD_FILE="~/secrets/cca_splunk_ansible_vault.secret
+export ANSIBLE_VAULT_PASSWORD_FILE="~/secrets/cca_splunk_ansible_vault.secret"
 
 source ~/tools/python-venv/ansible2.12/bin/activate
 ```

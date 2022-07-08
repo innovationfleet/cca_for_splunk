@@ -4,7 +4,7 @@
 #
 #REPO_TYPE=infra
 #MENU_DESC=Manage Search Head Deployers and Members
-#EXTRA_VARS=hide_password(true),force_splunkd_restart(false)
+#EXTRA_VARS=hide_password(true), force_splunkd_restart(false)
 
 # Initialize playbook run on manager server
 - hosts: manager
@@ -121,10 +121,7 @@
         name: cca.splunk.user-profile
         tasks_from:
           configure_user_profile.yml
-    - name: Start splunk on command line
-      command:
-        cmd: "timeout 120 {{ start_command }}"
-      changed_when: false
+
 
 # Configure the searchhead cluster members
 - hosts: searchhead_members_shcluster_c1

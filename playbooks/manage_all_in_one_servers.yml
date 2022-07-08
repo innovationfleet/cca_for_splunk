@@ -2,7 +2,7 @@
 #
 #REPO_TYPE=infra
 #MENU_DESC=Manage All in One servers
-#EXTRA_VARS=hide_password(true),debug(false)
+#EXTRA_VARS=hide_password(true), debug(false)
 
 # Initialize playbook run on manager server
 - hosts: manager

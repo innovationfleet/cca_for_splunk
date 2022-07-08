@@ -33,7 +33,7 @@ splunk_conf_group_settings:
         - option: 'mode'
           value: 'peer'
         - option: 'manager_uri'
-          value: "https://{{ groups['cluster_manager_cluster_c1'] | first | default('NoC1ClusterMangerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+          value: "https://{{ groups['cluster_manager_cluster_c1'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
         - option: 'pass4SymmKey'
           value: "{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}"
 

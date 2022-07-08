@@ -40,6 +40,10 @@
               ansible_distribution_major_version == '8' and
               ansible_architecture == 'x86_64' ) or
 
+            ( ansible_distribution == 'Rocky' and
+              ansible_distribution_major_version == '8' and
+              ansible_architecture == 'x86_64' ) or
+
             ( ansible_distribution == 'Amazon' and
               ansible_distribution_major_version == '2' and
               ansible_architecture == 'x86_64' ) or
@@ -50,8 +54,9 @@
 
         fail_msg: >-
           To currently use all feature of the CCA Manager, the OS version needs to be one of
-          the following. RedHat 8, CentOS 8 Stream, Amazon 2, Ubuntu. cca_for_splunk will still
-          be possible to use on other OS and versions, however not tested.
+          the following. RedHat 8, CentOS 8 Stream, Rocky Linux 8, Amazon 2, Ubuntu.
+          cca_for_splunk will still be possible to use on other OS and versions, however
+          not tested.
         success_msg: >-
           OK - Your CCA manager runs a fully supported OS ({{ ansible_distribution }}) and
           Major Version ({{ ansible_distribution_major_version }})

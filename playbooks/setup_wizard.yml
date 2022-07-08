@@ -60,6 +60,10 @@
 
     - setup:
 
+    - name: Set sed command for linux/OSx
+      ansible.builtin.set_fact:
+        sed_cmd: "{% if ansible_os_family=='Darwin' %}gsed{% else %}sed{% endif %}"
+
     - name: Prompt for initial names
       ansible.builtin.include_role:
         name: cca.common.setup-wizard
@@ -91,7 +95,7 @@
     - name: Find Splunk install file in tmp directory
       ansible.builtin.find:
         paths: "{{ cca_splunk_var_tmp }}"
-        patterns: "splunk-{{ splunk_enterprise_version }}-*-Linux-x86_64.tgz"
+        patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
       register: find_splunk_tgz
 
     - name: Assert that only a single splunk package is matched
@@ -167,7 +171,7 @@
 
     - name: Vault the secret password
       ansible.builtin.shell:
-        cmd: "ansible-vault encrypt_string '{{ splunk_secret_result.stdout }}' | sed ':a; N; $!ba; s/\\n/#/g' | sed 's/[[:space:]]*//g' | sed 's/|#/ \"/' | sed 's/$/\"/'"
+        cmd: "ansible-vault encrypt_string '{{ splunk_secret_result.stdout }}' | {{ sed_cmd }} ':a; N; $!ba; s/\\n/#/g' | {{ sed_cmd }} 's/[[:space:]]*//g' | {{ sed_cmd }} 's/|#/ \"/' | {{ sed_cmd }} 's/$/\"/'"
       register: shell_vault_secret
 
     - name: Vault the splunk.secret value

@@ -8,6 +8,7 @@
 - hosts: splunk_servers:!localhost
   become: true
   become_method: sudo
+  strategy: linear
   pre_tasks:
     - include_role:
         name: cca.core.linux
