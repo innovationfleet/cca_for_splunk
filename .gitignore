@@ -10,6 +10,9 @@
 *lock.hcl
 plan.tfplan
 
+# Terraform environment temporary files
+network_zone_to_subnet_id.csv
+
 # VS Code
 .vs
 .vscode
@@ -17,3 +20,6 @@ plan.tfplan
 *.log
 *.mdproj
 *.sln
+
+# Misc ignored files
+._*
