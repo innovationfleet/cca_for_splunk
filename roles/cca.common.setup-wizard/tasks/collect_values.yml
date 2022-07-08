@@ -7,7 +7,7 @@
 #
 # Author: André Enemark
 #
-# Release: 2022.2.1
+# Release: 2022.2.4
 
  - ansible.builtin.set_fact:
      repo_base_path: "{{ cca_environment.default_repo_base_path }}"
@@ -18,7 +18,7 @@
    register: wizard_infra_repo_path
 
  - ansible.builtin.set_fact:
-     infra_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_infra_repo_name if wizard_infra_repo_path.user_input | length == 0 else wizard_infra_repo_path.user_input }}"
+     infra_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_infra_repo_name if wizard_infra_repo_path.user_input | length == 0 else repo_base_path +'/'+ wizard_infra_repo_path.user_input }}"
 
  - ansible.builtin.set_fact:
      absolute_infra_repo_path: "{{ infra_repo_path }}"
@@ -29,7 +29,7 @@
    register: wizard_onboarding_repo_path
 
  - ansible.builtin.set_fact:
-     onboarding_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_onboarding_repo_name if wizard_onboarding_repo_path.user_input | length == 0 else wizard_onboarding_repo_path.user_input }}"
+     onboarding_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_onboarding_repo_name if wizard_onboarding_repo_path.user_input | length == 0 else repo_base_path +'/'+ wizard_onboarding_repo_path.user_input }}"
 
  - name: Prompt for environment name where to store initial templates
    ansible.builtin.pause:
