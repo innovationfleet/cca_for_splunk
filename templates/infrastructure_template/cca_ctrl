@@ -43,11 +43,12 @@ ScriptParams=$@
 Setup=false
 EnforceMultiplexer=true
 PlaybookFindOptions=""
+sed_cmd="sed"
 
 test -f .storage/settings && source .storage/settings
 
 # Define other globals
-if [[ $(tput cols) >  130 ]] ; then
+if [[ $(tput cols) -gt  130 ]] ; then
 
   WhiptailWidth=130
 
@@ -68,7 +69,7 @@ else
 fi
 
 WhiptailHight=30
-BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2022.2.3"
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2022.2.4"
 CookieFile="${ScriptPath}/.cookie"
 LicenseFile="${ScriptPath}/../${CcaRepo}/LICENSE"
 InfoFile="${ScriptPath}/../${CcaRepo}/RELEASE_NOTES.txt"
@@ -261,7 +262,7 @@ whiptail_confirmationbox () {
   local NoButton=$1
   local ScrollText=""
 
-  if [[ $(printf "$Text" | wc -l) > 20 ]] ; then
+  if [[ $(printf "$Text" | wc -l) -gt 20 ]] ; then
 
      local ScrollText="--scrolltext"
 
@@ -355,11 +356,11 @@ function whiptail_radiolist () {
   shift
   local Items=("$@")
 
-  # Limit radio list to 10 lines, then it should scroll
+  # Limit radio list to 21 lines, then it should scroll
   local RadioListLen=$(( ${#Items[@]} / 3))
-  if [[ $RadioListLen -gt 30 ]] ; then
+  if [[ $RadioListLen -gt 21 ]] ; then
 
-    RadioListLen=30
+    RadioListLen=21
 
   fi
 
@@ -611,15 +612,13 @@ function update_cookie() {
 
   else
 
-    if [[ $(has_cookie ${FileName} ${HashKey} ${Value}) -eq 0 ]] ; then
+    if grep -q ${HashKey} ${FileName} ; then
 
-      sed -i 's/${HashKey}=.*/${Hash}/' ${FileName}
-      echo 0
+      ${sed_cmd} -i "s/${HashKey}=.*/${Hash}/" ${FileName}
 
     else
 
       echo "${Hash}" >> ${FileName}
-      echo 0
 
     fi
 
@@ -636,7 +635,7 @@ function update_cookie() {
 ###############################################################################
 function accept_eula() {
 
-  local LicenseText="$(sed '$!s/$/\\n/' ${LicenseFile} | tr -d '\n')"
+  local LicenseText="$(${sed_cmd} '$!s/$/\\n/' ${LicenseFile} | tr -d '\n')"
 
   if [[ $(has_cookie ${CookieFile} "license_md5"\
         $(file_md5 ${LicenseFile})) -ne 0  ]] ; then
@@ -668,7 +667,7 @@ function accept_eula() {
 ###############################################################################
 function info_dialog() {
 
-  local InfoText="$(sed '$!s/$/\\n/' ${InfoFile} | tr -d '\n')"
+  local InfoText="$(${sed_cmd} '$!s/$/\\n/' ${InfoFile} | tr -d '\n')"
   if [[ $(has_cookie ${CookieFile} "info_md5"\
         $(file_md5 ${InfoFile})) -ne 0  ]] ; then
 
@@ -718,9 +717,9 @@ function select_playbook() {
     if [[ a"${MenuDesc}" != a ]] ; then
 
        PlaybookArray+=("$(echo ${Playbook}\
-                      | sed "s/${CcaRepo}/${CcaRepoShort}/g"\
-                      | sed "s/${DirName}/${repo_type}/g"\
-                      | sed "s/playbooks/.../g")")
+                      | ${sed_cmd} "s/${CcaRepo}/${CcaRepoShort}/g"\
+                      | ${sed_cmd} "s/${DirName}/${repo_type}/g"\
+                      | ${sed_cmd} "s/playbooks/.../g")")
        PlaybookArray+=("${MenuDesc}")
        PlaybookArray+=("${RadioListItemStatus}")
        MenuDesc=""
@@ -738,7 +737,7 @@ function select_playbook() {
 
   SelectedPlaybook=$(whiptail_radiolist "Select playbook"\
          "  Only playbooks with REPO_TYPE(${repo_type}) and a MENU_DESC\
- will be listed here."\
+ will be listed here. List supports scrolling, arrow <down>"\
          "${PlaybookArray[@]}")
 
 }
@@ -815,9 +814,9 @@ function playbook_hosts() {
   local HostArray
   # Assign the HostArray, restrictive set -u needs it to be defined
   HostArray=${HostArray[@]+"${HostArray[@]}"}
-  SelectedPlaybook=$(echo ${SelectedPlaybook} | sed "s:/infra/:/${DirName}/:g"\
-                    | sed "s:/${CcaRepoShort}/:/${CcaRepo}/:g"\
-                    | sed "s:/\.\.\./:/playbooks/:g")
+  SelectedPlaybook=$(echo ${SelectedPlaybook} | ${sed_cmd} "s:/infra/:/${DirName}/:g"\
+                    | ${sed_cmd} "s:/${CcaRepoShort}/:/${CcaRepo}/:g"\
+                    | ${sed_cmd} "s:/\.\.\./:/playbooks/:g")
   IFS=$'\n'
   for Line in $(ansible-playbook --check -i ${ScriptPath}/${SelectedEnvironment}\
                   --list-hosts ${ScriptPath}/${SelectedPlaybook}) ; do
@@ -925,7 +924,7 @@ function run_playbook () {
   AnsiblePlaybookArray+=("${CheckModeArgument}")
 
   # Convert SelectedHosts to a comma separated list of hosts to use in limit option
-  SelectedHostArray=$(echo ${SelectedHosts} | sed 's/"/ /g' | sed 's/  / /g' )
+  SelectedHostArray=$(echo ${SelectedHosts} | ${sed_cmd} 's/"/ /g' | ${sed_cmd} 's/  / /g' )
   printf -v HostLimits ',%s' ${SelectedHostArray[@]}
   HostLimits=${HostLimits:1}
 
@@ -1020,6 +1019,31 @@ set +e
 
 }
 
+###############################################################################
+# Validate OS and required tools
+# Arguments:
+# Returns:
+###############################################################################
+function validate_os () {
+
+   if [ "$(uname -s)" == "Darwin" ]; then
+
+      sed_cmd="gsed"
+      if which ${sed_cmd} ; then
+
+         :
+
+      else
+
+        echo "Your OS is $(uname -s), normal sed command is not sufficient. 'gsed' is needed on Mac, you can install it with homebrew."
+        echo "The script will terminate"
+        exit 1
+
+     fi
+
+   fi
+
+}
 
 ###############################################################################
 # Trap Cancel from Whiptail dialog and kill process
@@ -1091,6 +1115,9 @@ function multiplexer_control () {
 # Check that the lastest version of the script is used if executed outside the repo
 validate_script_version
 
+# Validate that we have a supported OS and we have the required tools.
+validate_os
+
 # If we are running cca_ctrl from main repo, trigger setup of new repo/env
 ! $Setup && environment_helper
 
@@ -1127,9 +1154,9 @@ else
     echo -n "${ANSIBLE_VAULT_PASSWORD_FILE}. "
 
     vault_file=(${ANSIBLE_VAULT_PASSWORD_FILE})
-    vault_file=$(echo ${vault_file[0]} | sed 's/~//g')
+    vault_file=$(echo ${vault_file[0]} | ${sed_cmd} 's/~//g')
 
-    if [[ ! -e "${HOME}${vault_file[0]}" ]] ; then
+    if [[ ! -e "${vault_file[0]}" ]] ; then
 
       echo -n "But the file don't exists yet."
       echo " Create the ${ANSIBLE_VAULT_PASSWORD_FILE} file and add this content to it. Generated with 'openssl rand -hex 32'"
