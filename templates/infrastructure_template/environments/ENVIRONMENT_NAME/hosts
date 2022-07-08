@@ -52,7 +52,7 @@
 # Clustered Servers
 # Code  Splunk Role                  Example with 2 ag's   VA's
 # -----------------------------------------------------------------
-# CLM   Index Cluster Manger         splunk-prod-clm-1101  C,M
+# CLM   Index Cluster Manager        splunk-prod-clm-1101  C,M
 # CLP   Index Cluster Peer           splunk-prod-clp-1202  C,M
 # SHD   Search Head Cluster Deployer splunk-prod-shd-1201  D,M
 # SHM   Search Head Cluster Member   splunk-prod-shm-1103  D,M
@@ -106,7 +106,9 @@ s2s_tcp_port_ssl="9998"
 splunk_enterprise_version="8.2.6"
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_hosts_file_version='2022.2.1'
+cca_infrastructure_hosts_file_version='2022.2.4'
+# Set python interpreter on target servers
+ansible_python_interpreter=/usr/bin/python3
 
 # Special groups dedicated to upgrade logics.
 # Clustered Splunk servers are all servers that should be part
@@ -170,15 +172,39 @@ all_in_one_servers
 cluster_manager_cluster_c1_ag1
 cluster_manager_cluster_c2_ag1
 cluster_manager_cluster_c3_ag1
+cluster_manager_cluster_c4_ag1
+cluster_manager_cluster_c5_ag1
+cluster_manager_cluster_c6_ag1
+cluster_manager_cluster_c7_ag1
+cluster_manager_cluster_c8_ag1
+cluster_manager_cluster_c9_ag1
 cluster_peers_cluster_c1_ag1
 cluster_peers_cluster_c2_ag1
 cluster_peers_cluster_c3_ag1
+cluster_peers_cluster_c4_ag1
+cluster_peers_cluster_c5_ag1
+cluster_peers_cluster_c6_ag1
+cluster_peers_cluster_c7_ag1
+cluster_peers_cluster_c8_ag1
+cluster_peers_cluster_c9_ag1
 searchhead_deployer_shcluster_c1_ag1
 searchhead_deployer_shcluster_c2_ag1
 searchhead_deployer_shcluster_c3_ag1
+searchhead_deployer_shcluster_c4_ag1
+searchhead_deployer_shcluster_c5_ag1
+searchhead_deployer_shcluster_c6_ag1
+searchhead_deployer_shcluster_c7_ag1
+searchhead_deployer_shcluster_c8_ag1
+searchhead_deployer_shcluster_c9_ag1
 searchhead_members_shcluster_c1_ag1
 searchhead_members_shcluster_c2_ag1
 searchhead_members_shcluster_c3_ag1
+searchhead_members_shcluster_c4_ag1
+searchhead_members_shcluster_c5_ag1
+searchhead_members_shcluster_c6_ag1
+searchhead_members_shcluster_c7_ag1
+searchhead_members_shcluster_c8_ag1
+searchhead_members_shcluster_c9_ag1
 hybrid_searchheads_ag1
 standalone_searchheads_ag1
 standalone_indexers_ag1
@@ -193,15 +219,39 @@ all_in_one_servers_ag1
 cluster_manager_cluster_c1_ag2
 cluster_manager_cluster_c2_ag2
 cluster_manager_cluster_c3_ag2
+cluster_manager_cluster_c4_ag2
+cluster_manager_cluster_c5_ag2
+cluster_manager_cluster_c6_ag2
+cluster_manager_cluster_c7_ag2
+cluster_manager_cluster_c8_ag2
+cluster_manager_cluster_c9_ag2
 cluster_peers_cluster_c1_ag2
 cluster_peers_cluster_c2_ag2
 cluster_peers_cluster_c3_ag2
+cluster_peers_cluster_c4_ag2
+cluster_peers_cluster_c5_ag2
+cluster_peers_cluster_c6_ag2
+cluster_peers_cluster_c7_ag2
+cluster_peers_cluster_c8_ag2
+cluster_peers_cluster_c9_ag2
 searchhead_deployer_shcluster_c1_ag2
 searchhead_deployer_shcluster_c2_ag2
 searchhead_deployer_shcluster_c3_ag2
+searchhead_deployer_shcluster_c4_ag2
+searchhead_deployer_shcluster_c5_ag2
+searchhead_deployer_shcluster_c6_ag2
+searchhead_deployer_shcluster_c7_ag2
+searchhead_deployer_shcluster_c8_ag2
+searchhead_deployer_shcluster_c9_ag2
 searchhead_members_shcluster_c1_ag2
 searchhead_members_shcluster_c2_ag2
 searchhead_members_shcluster_c3_ag2
+searchhead_members_shcluster_c4_ag2
+searchhead_members_shcluster_c5_ag2
+searchhead_members_shcluster_c6_ag2
+searchhead_members_shcluster_c7_ag2
+searchhead_members_shcluster_c8_ag2
+searchhead_members_shcluster_c9_ag2
 hybrid_searchheads_ag2
 standalone_searchheads_ag2
 standalone_indexers_ag2
@@ -216,15 +266,39 @@ all_in_one_servers_ag2
 cluster_manager_cluster_c1_ag3
 cluster_manager_cluster_c2_ag3
 cluster_manager_cluster_c3_ag3
+cluster_manager_cluster_c4_ag3
+cluster_manager_cluster_c5_ag3
+cluster_manager_cluster_c6_ag3
+cluster_manager_cluster_c7_ag3
+cluster_manager_cluster_c8_ag3
+cluster_manager_cluster_c9_ag3
 cluster_peers_cluster_c1_ag3
 cluster_peers_cluster_c2_ag3
 cluster_peers_cluster_c3_ag3
+cluster_peers_cluster_c4_ag3
+cluster_peers_cluster_c5_ag3
+cluster_peers_cluster_c6_ag3
+cluster_peers_cluster_c7_ag3
+cluster_peers_cluster_c8_ag3
+cluster_peers_cluster_c9_ag3
 searchhead_deployer_shcluster_c1_ag3
 searchhead_deployer_shcluster_c2_ag3
 searchhead_deployer_shcluster_c3_ag3
+searchhead_deployer_shcluster_c4_ag3
+searchhead_deployer_shcluster_c5_ag3
+searchhead_deployer_shcluster_c6_ag3
+searchhead_deployer_shcluster_c7_ag3
+searchhead_deployer_shcluster_c8_ag3
+searchhead_deployer_shcluster_c9_ag3
 searchhead_members_shcluster_c1_ag3
 searchhead_members_shcluster_c2_ag3
 searchhead_members_shcluster_c3_ag3
+searchhead_members_shcluster_c4_ag3
+searchhead_members_shcluster_c5_ag3
+searchhead_members_shcluster_c6_ag3
+searchhead_members_shcluster_c7_ag3
+searchhead_members_shcluster_c8_ag3
+searchhead_members_shcluster_c9_ag3
 hybrid_searchheads_ag3
 standalone_searchheads_ag3
 standalone_indexers_ag3
@@ -653,6 +727,8 @@ cluster_manager_cluster_c9_ag3
 # within this group.
 [cluster_peers_cluster_c1:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c1:children]
 cluster_peers_cluster_c1_ag1
@@ -678,6 +754,8 @@ cluster_peers_cluster_c1_ag3
 # within this group.
 [cluster_peers_cluster_c2:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c2:children]
 cluster_peers_cluster_c2_ag1
@@ -701,6 +779,8 @@ cluster_peers_cluster_c2_ag3
 # within this group.
 [cluster_peers_cluster_c3:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c3:children]
 cluster_peers_cluster_c3_ag1
@@ -724,6 +804,8 @@ cluster_peers_cluster_c3_ag3
 # within this group.
 [cluster_peers_cluster_c4:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c4:children]
 cluster_peers_cluster_c4_ag1
@@ -747,6 +829,8 @@ cluster_peers_cluster_c4_ag3
 # within this group.
 [cluster_peers_cluster_c5:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c5:children]
 cluster_peers_cluster_c5_ag1
@@ -770,6 +854,8 @@ cluster_peers_cluster_c5_ag3
 # within this group.
 [cluster_peers_cluster_c6:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c6:children]
 cluster_peers_cluster_c6_ag1
@@ -793,6 +879,8 @@ cluster_peers_cluster_c6_ag3
 # within this group.
 [cluster_peers_cluster_c7:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
  [cluster_peers_cluster_c7:children]
 cluster_peers_cluster_c7_ag1
@@ -816,6 +904,8 @@ cluster_peers_cluster_c7_ag3
 # within this group.
 [cluster_peers_cluster_c8:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c8:children]
 cluster_peers_cluster_c8_ag1
@@ -839,6 +929,8 @@ cluster_peers_cluster_c8_ag3
 # within this group.
 [cluster_peers_cluster_c9:vars]
 configure_inputs_ssl=true
+splunk_volume_path_hot=""
+splunk_volume_path_cold=""
 
 [cluster_peers_cluster_c9:children]
 cluster_peers_cluster_c9_ag1
@@ -1467,7 +1559,7 @@ deployment_servers_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
-# One license manager needs to have the is_license_manger
+# One license manager needs to have the is_license_manager
 # variable set to true for license files to be configured.
 [license_managers:vars]
 default_tcpout=cluster_peers_cluster_c1
