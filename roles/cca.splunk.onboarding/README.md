@@ -12,29 +12,29 @@ Apps are split into several different types and directories in CCA. We have the 
 
 
 ## Apps
-The apps directory holds multiple sub directories, one is `generic` and then one or more that reflect your environment name.
+The apps directory holds multiple sub directories, one for `versioned` and one for `selectable` apps.
 
-### Apps - generic
-In the `apps/generic` directory all Splunkbase apps should be stored. The apps are extracted using a supplied script `build_appFile_from_splunk_app.sh` located in this directory.
+### Apps - versioned
+In the `apps/versioned` directory all Splunkbase apps should be stored. The apps are extracted using a supplied script `build_appFile_from_splunk_app.sh` located in this directory.
 The script extracts the real directory name from the app and uses that together with the version information to store the app with a new name, `appFile-SPLUNKBASE_APP_vAPP_VERSION`. Now multiple versions of the same app can be stored side by side and makes it easy to upgrade and even downgrade an app using CCA.
 
-### Apps - environment
-In the `apps/ENVIRONMENT_NAME` directory, apps that is purposely build for this environment should be store here. This can for example be, db inputs, HEC inputs, etc. The name of the app in these environment directories doesn't need to be the same as the app has when deployed to a Splunk instance.
+### Apps - selectable
+In the `apps/selectable` directory, apps that is purposely build for an environment should be store here. This can for example be, db inputs, HEC inputs, etc. The name of the app in these environment directories doesn't need to be the same as the app has when deployed to a Splunk instance.
 
-If we take a look at `splunk_httpinput` this is a default app in Splunk Enterprise, so Splunk request that the app is named like this when installed on the Splunk instance. However CCA allows us to name it different on the CCA manager server, for example `cloud_metrics-splunk_httpinput` or `dmz-splunk_httpinput`.
+If we take a look at `splunk_httpinput` this is a default app in Splunk Enterprise, so Splunk requires that the app has the proper name in Splunk. Luckily CCA allows us to name it different on the CCA manager server, for example `cloud_metrics-splunk_httpinput` or `dmz-splunk_httpinput`.
 The mapping of source and destination name of an app is handled when configuring app allocation in `environments/ENVIRONMENT_NAME/group_vars/ANSIBLE_GROUP`
 
-In the group_vars template structure there is only one forwarders group, if additional granularity is needed, target option can be set for each app and then that specific app will only be deployed onto that host.
+When you look in the inventory directory and in the group_vars directory structure there is only one forwarders group. If you different group of forwarders, target option can be set for each app. This enables full control of which apps that should be deployed where.
 
 ## Deployment-apps
-Deployment-apps are essential if your infrastructure has any Universal Forwarders that are managed via one or more Deployment Servers. All apps that should be distributed to the Deployment Servers should be stored in either the `deployment-apps/generic` or `deployment-apps/ENVIRONMENT_NAME` directory.
+Deployment-apps are essential if your infrastructure has any Universal Forwarders that are managed via one or more Deployment Servers. All apps that should be distributed to the Deployment Servers should be stored in either the `deployment-apps/selectable` or `deployment-apps/ENVIRONMENT_NAME` directory.
 
-Any controlling `serverclass.conf` file should be configured in a dedicated app and stored in `apps/ENVIRONMENT_NAME` as it's destined for the Deployment Servers app directory.
+Any controlling `serverclass.conf` file should be configured in a dedicated app and stored in `apps/ENVIRONMENT_NAME` or as it's destined for the Deployment Servers app directory.
 
 In the group_vars template structure there is only one deployment-servers group, if additional granularity is needed, target option can be set for each app and then that specific app will only be deployed onto that host.
 
-### Deployment-apps - generic
-Apps in the generic directory needs to be cherry picked by specifying them in `environments/ENVIRONMENT_NAME/group_vars/ANSIBLE_GROUP` for relevant deployment_servers group_vars file.
+### Deployment-apps - selectable
+Apps in the selectable directory needs to be cherry picked by specifying them in `environments/ENVIRONMENT_NAME/group_vars/ANSIBLE_GROUP` for relevant deployment_servers group_vars file.
 
 ### Deployment-apps - environment
 All apps in the environments directory will be deployed to the deployment servers, based on those servers included in the playbook run.
@@ -44,7 +44,7 @@ Shcluster apps needs a bit extra care, CCA supports up to 9 parallel search head
 
 `splunk/etc/shcluster/ENVIRONMENT_NAME/CLUSTER_NAME` CLUSTER_NAME must match the `shcluster` name in the `hosts` inventory file. The default names are shcluster_c1-c9 and can be changed to anything that has a name with alphanumeric english characters as well as hyphen (`-`) and underscore (`_`). The CLUSTER_NAME value will also be used as the Search Head Cluster label on the Search heads and visible in the Monitoring Console.
 
-### Shcluster - env_specific
+### Shcluster - selectable
 Store environment specific apps here and cherry pick those that should be deployed to respective search head cluster by specifying them in `environments/ENVIRONMENT_NAME/searchhead_deployer_shcluster_cX`
 
 ### Shcluster - environment - cluster name
@@ -55,8 +55,8 @@ Master apps needs a bit extra care, CCA supports up to 9 parallel index clusters
 
 `splunk/etc/cluster/ENVIRONMENT_NAME/CLUSTER_NAME` CLUSTER_NAME must match the `cluster` name in the `hosts` inventory file. The default names are cluster_c1-c9 and can be changed to anything that has a name with alphanumeric english characters as well as hyphen (`-`) and underscore (`_`). The CLUSTER_NAME value will also be used as the Cluster label on the Index Cluster and be visible in the Monitoring Console.
 
-### Master-apps - env_specific
-Store environment specific apps here and cherry pick those that should be deployed to respective search head cluster by specifying them in `environments/ENVIRONMENT_NAME/cluster_manger_cluster_cX`
+### Master-apps - selectable
+Store environment specific apps here and cherry pick those that should be deployed to respective search head cluster by specifying them in `environments/ENVIRONMENT_NAME/cluster_manager_cluster_cX`
 
 ### Master-apps - environment - cluster name
 All apps stored in a `splunk/etc/cluster/ENVIRONMENT_NAME/CLUSTER_NAME` directory will be merged with any cherry picked apps and deployed to the search head deployer. This eases configuration management of apps where custom apps can just be added to this directory and deployed.
@@ -227,17 +227,19 @@ CCA onboarding repo holds a directory structure for all different apps. This pic
 │   ├── prod
 │   │   ├── innovationfleet_serverclass_conf
 │   │   └── innovationfleet-splunk_httpinput
-│   └── generic
+│   └── versioned
 │       ├── appFile-splunk_app_db_connect_v370
 │       ├── appFile-Splunk_ML_Toolkit_v531
 │       └── build_appFile_from_splunk_app.sh
 ├── deployment-apps
+|   |── selectable
+|   │   └── innovationfleet-prod_outputs_conf
 │   └── prod
-│       ├── selectable
-│       │   └── prod_innovationfleet_outputs_conf
 │       ├── innovationfleet_sql_uf_inputs
 │       └── innovationfleet_iis_uf_inputs
 ├── master-apps
+|   |── selectable
+|   │   └── innovationfleet-props_conf
 │   └── prod
 │       ├── cluster_c1
 │       │   └── innovationfleet_indexes_conf
@@ -248,13 +250,11 @@ CCA onboarding repo holds a directory structure for all different apps. This pic
 │       ├── cluster_c6
 │       ├── cluster_c7
 │       ├── cluster_c8
-│       ├── cluster_c9
-│       └── selectable
-│           └── innovationfleet_props_conf
+│       └── cluster_c9
 └── shcluster
+    |── selectable
+    │   └── innovationfleet-sh_landing_page
     └── prod
-        ├── selectable
-        │   └── innovationfleet-sh_landing_page
         ├── shcluster_c1
         │   └── apps
         |       ├── sh_frontend_team
