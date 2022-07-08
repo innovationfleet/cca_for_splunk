@@ -88,7 +88,7 @@ The below variables are defined per environment in `environments/ENVIRONMENT_NAM
   * Connection timeout can be changed if the default value is not sufficient. Add updated values to your env_specific file.
 * `cluster_bundle_status_command_retries`
   * Bundle status retries be changed if the default value is not sufficient. Add updated values to your env_specific file.
-* `cluster_peers_rolling_restart_preflight_retries`
+* `cluster_peer_rolling_restart_preflight_retries`
   * Preflight retries can be changed if the default value is not sufficient. Add updated values to your env_specific file.
 * `wait_time_cluster_peers_report`
   * Wait time for cluster peer report, can be changed if default value is not sufficient. Add updated values to your env_specific file.

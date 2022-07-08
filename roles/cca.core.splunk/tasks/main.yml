@@ -13,7 +13,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.3
+# Release: 2022.2.4
 - name: Include task for checking cca_for_splunk init state
   include_tasks: check_init.yml
 
@@ -58,7 +58,27 @@
   when:
     - result_splunk_secret_replace.changed == true
 
-- name: Ensure splunk is running
-  command:
-    cmd: "timeout 120 {{ start_command }}"
+- name: Check for first time run
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/var/run/splunk"
+  register: stat_var_run_splunk
+
+- name: Ensure splunk is running on non searchhead members
+  ansible.builtin.command:
+    cmd: "timeout 240 {{ start_command }}"
   changed_when: false
+  when:
+    - not inventory_hostname in groups.searchhead_members
+
+- name: Wait for a rolling restart on search head cluster to complete
+  ansible.builtin.import_tasks: ../../cca.splunk.role-searchhead/tasks/wait_for_shcluster.yml
+  when:
+    - inventory_hostname in groups.searchhead_members
+    - stat_var_run_splunk.stat.exists
+
+- name: Ensure splunk is running on searchhead members
+  ansible.builtin.command:
+    cmd: "timeout 240 {{ start_command }}"
+  changed_when: false
+  when:
+    - inventory_hostname in groups.searchhead_members
