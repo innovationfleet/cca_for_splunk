@@ -14,15 +14,15 @@ splunk_conf_group_settings:
          - option: 'crossServerChecksum'
            value: 'true'
          - option: 'disbled'
-           value: "{{ 'true'
+           value: "{{ 'false'
                       if
-                         current_splunk_enterprise_version is version('9.0.0', '<')
+                         current_splunk_enterprise_version is version('8.2.6', '>')
                       else
-                       'false'
+                       'true'
                    }}"
            comment: >-
-             Disables Deployment Server functionality if Splunk Enterprise runs on a version
-             prior to 9.0.0. Vulnerability description at Splunk.
+             Only enable Deployment Server functionality if Splunk Enterprise runs on a version
+             more recent than 8.2.6. Vulnerability description at Splunk.
              https://www.splunk.com/en_us/product-security/announcements/svd-2022-0608.html
 
 
