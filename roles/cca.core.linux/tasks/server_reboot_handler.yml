@@ -8,7 +8,7 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2022.2.1
-- name: Include role to check if there is a pending reb oot
+- name: Include role to check if there is a pending reboot
   ansible.builtin.include_tasks: check_pending_actions.yml
   when:
     - not cca_skip_server_reboot | default(false)
@@ -40,7 +40,7 @@
 
     - name: Delete statefile based on reboot status
       ansible.builtin.file:
-        path: "{{ server_reboot_peding | default('/tmp/server_reboot.pending') }}"
+        path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
         state: 'absent'
       when:
         - server_reboot_status.rebooted

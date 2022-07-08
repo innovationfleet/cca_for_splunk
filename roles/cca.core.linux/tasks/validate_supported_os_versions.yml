@@ -39,6 +39,14 @@
       ansible_distribution_major_version == "8"
     - ansible_architecture == "x86_64"
 
+- name: List of supported Rocky Linux versions
+  ansible.builtin.set_fact:
+     rocky_support: true
+  when:
+    - ansible_distribution == "Rocky"
+    - ansible_distribution_major_version == "8"
+    - ansible_architecture == "x86_64"
+
 - name: List of supported Amazon Linux versions
   ansible.builtin.set_fact:
     amazon_al2_support: true
@@ -52,6 +60,7 @@
     that:
       - redhat_support is defined or
         centos_support is defined or
+        rocky_support is defined or
         amazon_al2_support is defined
     fail_msg: >-
         This Ansible framework has not been against the following OS/Version combination:
