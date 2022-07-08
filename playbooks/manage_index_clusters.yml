@@ -2,7 +2,7 @@
 #
 #REPO_TYPE=infra
 #MENU_DESC=Manage Cluster Manager and Cluster Peers
-#EXTRA_VARS=hide_password(true),preflight_command_retries(90),skip_preflight_check(false),skip_bundle_push(false),force_splunkd_restart(false)
+#EXTRA_VARS=hide_password(true), preflight_command_retries(90), skip_preflight_check(false), skip_bundle_push(false), force_splunkd_restart(false)
 
 # Initialize playbook on manager server
 - hosts: manager
@@ -186,7 +186,7 @@
         tasks_from:
           cluster_peer_rolling_restart.yml
       when:
-        - stat_cluster_bundle_push_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists == true
 
 # TODO, add something to the main bundle that will trigger a rolling restart when it's first pushed
 
