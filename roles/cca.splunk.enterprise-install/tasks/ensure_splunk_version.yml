@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.2
+# Release: 2022.2.4
 
 - name: Include task to get Splunk status
   include_tasks: splunk_status.yml
@@ -28,7 +28,7 @@
 - name: Find Splunk install file in tmp directory
   ansible.builtin.find:
     paths: "{{ cca_splunk_var_tmp }}"
-    patterns: "splunk-{{ splunk_enterprise_version }}-*-Linux-x86_64.tgz"
+    patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
   register: find_splunk_tgz
 
 - name: Assert that only a single splunk package is matched
