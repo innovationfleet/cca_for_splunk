@@ -55,7 +55,7 @@ Let ansible run under a technical user on the manager server and have users `sud
 
 ### Repositories:
 
-![CCA Overview](media/cca_overview.png)
+![CCA Overview](media/CCA_for_Splunk_framework_overview.jpg)
 
 - **CORE - cca_for_splunk** : This is the main repository where the core code of CCA for Splunk is stored. Treat this repository as read-only, do not store any custom playbooks or roles in this repo as that will break future updates. Custom roles and playbooks can easily be added to the below repositories in their respective `roles` and `playbooks` directory. Inclusion of the custom playbooks are automatic in `cca_ctrl`
 
