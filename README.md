@@ -203,3 +203,5 @@ Now when your Splunk infrastructure is running smooth, it's time to onboard data
 * [cca.core.linux](/roles/cca.core.linux/README.md)
 * [cca.common.setup-wizard](/roles/cca.common.setup-wizard/README.md)
 * [cca.splunk.onboarding](/roles/cca.splunk.onboarding/README.md)
+* [cca.splunk.user-profiles](/roles/cca.splunk.user-profiles/README.md)
+* [cca.setup.cca-manager](/roles/cca.setup.cca-manager/README.md)
