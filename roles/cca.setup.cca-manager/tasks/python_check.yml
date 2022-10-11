@@ -38,7 +38,7 @@
 - name: Assert if we should break installation
   ansible.builtin.assert:
     that:
-      - valid_python_installed
+      - valid_python_installed | default(false)
     fail_msg: >-
       No valid Python version was found. Please install Python with package
       manager or from source.

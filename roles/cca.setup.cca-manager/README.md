@@ -28,8 +28,15 @@ Run this command after updating ssh config file. Note the comma after the host n
 
 `ansible-playbook -i <destination_host>, playbooks/setup_cca_manager.yml -v --become --become-user=<cca_manager_user> --become-method=sudo`
 
-### Example ###
+### Example for remote cca manager with sudo to a cca_manager user ###
 `ansible-playbook -i splunk-prod-mgr-101, playbooks/setup_cca_manager.yml -v --become --become-user=cca_manager --become-method=sudo`
+
+### Example for remote cca manager with the logged-in user ###
+`ansible-playbook -i splunk-prod-mgr-101, playbooks/setup_cca_manager.yml -v`
+
+
+### Example for settings up current user on localhost ###
+`ansible-playbook -i localhost, playbooks/setup_cca_manager.yml --connection=local -v`
 
 
 To simplify the required parameters for ansible connections configuration can easily be added to your local `~/.ssh/config`

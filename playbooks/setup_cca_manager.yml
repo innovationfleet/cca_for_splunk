@@ -8,4 +8,4 @@
     - setup:
         gather_subset: 'network'
     - include_role:
-        name: cca.setup.cca-manager
+        name: ./roles/cca.setup.cca-manager
