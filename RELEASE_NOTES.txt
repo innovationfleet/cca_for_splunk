@@ -31,6 +31,99 @@
 
     Release notes:
 
+    2022.3.1 - CCA can handle parallel execution of playbooks and wait until a playbook
+               has been completed until a new one starts. .../group_vars/env_specific are
+               updated with new control parameters. Default disabled.
+                  parallel_execution_control: false
+                  parallel_execution_control_timeout: '60' (Minutes)
+             - Recommended Splunk Enterprise version updated to 8.2.8 for production use.
+             - CCA Manager setup is now supported by a dedicated role and playbook, see main
+               README.md file for instruction.
+             - CCA can check for new versions of your template files at execution start,
+               activate by setting {"validate_cca_infrastructure_files": true} in env_specific file.
+               ( Beta function )
+             - File version added to onboarding and infrastructure template files.
+             - Added a unique cca_runid in cca_ctrl as an extra-vars to be used in the future.
+             - Updated automation readiness score to match performed checks.
+             - Ansible lint updates.
+             - Updated main README and automation_readiness guide.
+             - Converted .storage/settings to proper ini_file format for other tools to parse it.
+             - Clarify where to write out random vault password sting.
+             - Bumped version on changed files to 2022.3.1.
+             - Included control variables to include licensed CCA features.
+             - Updated names of onboarding apps and variables in README file for
+               cca.splunk.onboarding to match new structure.
+             - Added option to convert extracted apps directories to versioned apps.
+               build_appFile_from_splunk_app.sh
+             - A lot of updates has been done in the template files. Add all files in
+               your CCA infrastructure and onboarding repo to git. Check file content
+               against cca_for_splunk/templates files to get the latest templates.
+
+
+               Bug fixes:
+                  * Updated splunk_login.yml task to handle forced splunkd restart. Useful when
+                    a config error that prevented splunkd to start has been fixed but splunkd
+                    restart has not been triggered.
+                  * Corrected onboarding variable names in cca.splunk.onboarding tasks.
+                  * Corrected searchhead_deployer_shcluster_c* in templates/infrastructure_template/
+                    environments/ENVIRONMENT_NAME/group_vars. Please update your local files with the updates.
+                  * Corrected variables in setup_wizard to work with proper ENV variables and limited
+                    tmpfs space.
+                  * Corrected the wizard that runs via `cca_ctrl --setup` as it didn't generate random
+                    password for the c2 to c8 index and search head cluster. Re-run the setup to
+                    produce new random pass4SymmKeys.
+                  * Updated env variables to not quote stings for paths as it prevented shell expansions.
+                  * Fixed scroll text option in cca_ctrl playbook selection.
+                  * Added `connection: local` when `delegate_to: localhost` is used on the manager server as that
+                    connection is for localhost.
+                  * Changed instruction to store splunk binaries for setup_wizard in /var/tmp/
+                  * Corrected logic in manage_searchhead_clusters.yml that prevented SH Cluster C2-> to run.
+                  * Changed variables to track multiple Search Head Cluster captain init status during
+                    cluster bootstrap.
+
+
+    2022.2.4 - CCA is now supporting Rocky Linux 8, automation_readiness_cca_manager.yml is
+               updated with the new OS support.
+             - Added ansible_python_interpreter=/usr/bin/python3 variable to hosts file in
+               ansible inventory.
+             - Updated template hosts file with availability groups that now covers all index
+               and search head clusters. Copy template files or update your hosts file manually.
+             - Added splunk_volume_path_hot and splunk_volume_path_cold to
+               cluster_peers_cluster_c* where they were missing.
+             - Initial work to get CCA for Splunk to run on Mac OSX. Setup Wizard can run on
+               a Mac. cca.splunk.enterprise-install/tasks/ensure_splunk_version.yml updated
+               to work with Linux and Darwin Splunk Enterprise binaries.
+             - cca_ctrl is updated to detect Darwin OS and require that 'gsed' is installed.
+             - CCA Splunk secrets is now a one-line variable with ansible-vault. Updates can
+               now be done, full wizard run is required. Specific updates can be supported.
+             - Updated versions where deployment server can be enabled. Splunk has backported
+               the fix for svd-2022-0608 to Splunk Enterprise 8.2.6.1 and 8.2.7.
+             - Reformatted EXTRA_VARS so they will be presented as a column list instead of
+               long string.
+
+
+             Bug fixes:
+                * Changed to linear strategy in configure_linux_servers.yml playbook.
+                * Removed splunk start from manage_searchhead_clusters.yml. Caused race
+                  condition on a earlier initial startup task. Seen on high performance
+                  servers.
+                * Updated roles/*/meta/main.yml to correct meta information that was missing.
+                * Renamed variable for rolling peer restart retries, new variable is
+                  cluster_peer_rolling_restart_preflight_retries.
+                * Removed manual prompt of rolling restart verification in
+                  cca.core.splunk/tasks/cluster_peers_rolling_restart.yml
+                * Added check and wait function so that a Search Head Cluster rolling restart
+                  can complete if it's in progress when the playbooks runs.
+                  cca.splunk.role-searchhead/tasks/splunk_login.yml updated with extended
+                  retry to wait for a Search Head Member to start up, might be in a rolling
+                  restart phase.
+                * Updated cca.splunk.onboarding/README.md to match directory structure
+                  in data onboarding repo.
+                * cca_ctrl - fix scroll function to be able to read release notes in the UI.
+                * Increased timeout for initial start of Splunk from 120 to 180 seconds to
+                  handle lab environments with lower specs.
+                * General correction of spelling errors.
+
     2022.2.3 Set current Splunk Enterprise version so that group_vars files can use it.
              Updated deployment_server group_vars file, if current Splunk Enterprise
              version is below 9.0.0, disable deployment server functionallity.
