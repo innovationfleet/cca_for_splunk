@@ -1,0 +1,16 @@
+---
+# tasks file for cca.setup.cca-manager
+#
+# Description: Creates python virtual environment and names it with ansible minor version
+#
+# Prerequisite: Required python version is installed
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
+- name: Create a Python Virtual environment
+  ansible.builtin.command:
+    cmd: "python{{ cca_python_minor_version }} -m venv ansible{{ cca_ansible_minor_version }}"
+  args:
+    chdir: "{{ cca_manager_user_dir }}/tools/python-venv"

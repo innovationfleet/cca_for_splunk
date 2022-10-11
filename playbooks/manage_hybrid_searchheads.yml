@@ -1,8 +1,8 @@
 # Playbook to handle hybrid search heads
 #
-#REPO_TYPE=infra
-#MENU_DESC=Manage Hybrid Searchheads
-#EXTRA_VARS=hide_password(true)
+# REPO_TYPE=infra
+# MENU_DESC=Manage Hybrid Searchheads
+# EXTRA_VARS=hide_password(true)
 
 # Initialize playbook run on manager server
 - hosts: manager

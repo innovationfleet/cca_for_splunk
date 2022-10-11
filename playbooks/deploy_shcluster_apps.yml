@@ -1,8 +1,8 @@
 # Playbook to deploy apps to Search Head Cluster
 #
-#REPO_TYPE=onboarding
-#MENU_DESC=Deploy to SHC
-#EXTRA_VARS=hide_password(true),accept_shc_app_removal(false)
+# REPO_TYPE=onboarding
+# MENU_DESC=Deploy to SHC
+# EXTRA_VARS=hide_password(true) accept_shc_app_removal(false) force_bundle_push(false)
 
 # Initialize playbook run on manager server
 - hosts: manager

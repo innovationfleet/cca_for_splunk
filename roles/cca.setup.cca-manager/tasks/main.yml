@@ -1,0 +1,14 @@
+---
+# tasks file for cca.setup.cca-manager
+
+- include_tasks: python_check.yml
+- include_tasks: configure_cca_manager_user.yml
+- include_tasks: create_python_venv.yml
+- include_tasks: install_ansible_venv.yml
+- include_tasks: install_mitogen.yml
+  when:
+    - cca_install_mitogen | default(true)
+- include_tasks: install_cca_for_splunk.yml
+  when:
+    - clone_cca_for_splunk | default(true)
+

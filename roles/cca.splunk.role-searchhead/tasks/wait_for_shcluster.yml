@@ -10,7 +10,64 @@
 # Release: 2022.2.1
 
 - name: Include task to login
-  include_tasks: splunk_login.yml
+  ansible.builtin.include_tasks: splunk_login.yml
+
+- name: Include task to check if Search head cluster is boot strapped
+  ansible.builtin.include_tasks: ../../cca.splunk.role-searchhead/tasks/check_captain_init_status.yml
+
+- name: Set fact if shcluster C1 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+
+- name: Set fact if shcluster C2 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+
+- name: Set fact if shcluster C3 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c3
+
+- name: Set fact if shcluster C4 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c4
+
+- name: Set fact if shcluster C5 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c5
+
+- name: Set fact if shcluster C6 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c6
+
+- name: Set fact if shcluster C7 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c7
+
+- name: Set fact if shcluster C8 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c8
+
+- name: Set fact if shcluster C9 is bootstrapped
+  ansible.builtin.set_fact:
+    status_shc_init: true
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c9
 
 - name: Wait until shcluster status is ok
   ansible.builtin.command:
@@ -22,6 +79,8 @@
   failed_when: false
   changed_when: false
   check_mode: false
+  when:
+    - not status_shc_init
 
 - name: Wait until rolling restart is completed
   ansible.builtin.command:
@@ -33,3 +92,5 @@
   failed_when: false
   changed_when: false
   check_mode: false
+  when:
+    - not status_shc_init

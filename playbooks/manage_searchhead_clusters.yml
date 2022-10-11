@@ -2,9 +2,9 @@
 # This playbook is configured to handle 9 parallel search head
 # clusters.
 #
-#REPO_TYPE=infra
-#MENU_DESC=Manage Search Head Deployers and Members
-#EXTRA_VARS=hide_password(true), force_splunkd_restart(false)
+# REPO_TYPE=infra
+# MENU_DESC=Manage Search Head Deployers and Members
+# EXTRA_VARS=hide_password(true) force_splunkd_restart(false)
 
 # Initialize playbook run on manager server
 - hosts: manager
@@ -182,8 +182,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -224,8 +222,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -266,8 +262,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -308,8 +302,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -350,8 +342,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -392,8 +382,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -434,8 +422,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers
@@ -476,8 +462,6 @@
       include_role:
         name: cca.splunk.role-searchhead
         tasks_from: bootstrap_search_head_captain.yml
-      when:
-        - bootstrap_captain | default(false)
 
     - name: Trigger restart if pending from bootstrap
       meta: flush_handlers

@@ -7,4 +7,35 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
+
+- name: Include tasks to validate template file versions
+  ansible.builtin.include_tasks: validate_cca_infrastructure_file_versions.yml
+  when:
+    - target is defined
+    - target == "all_in_one_servers" or
+      target ==  "cluster_managers-cluster_peers" or
+      target ==  "data_collection_nodes" or
+      target ==  "deployment_servers" or
+      target ==  "forwarders" or
+      target ==  "hybrid_searchheads" or
+      target ==  "license_managers" or
+      target ==  "searchhead_deployers-searchhead_members"
+    - validate_cca_infrastructure_files | default(false)
+
+- name: Include task to validate onboarding file versions
+  ansible.builtin.include_tasks: validate_cca_onbarding_file_versions.yml
+  when:
+    - TODO | default(false)
+
+- name: Include task to add lockfile
+  ansible.builtin.include_tasks: add_lockfile.yml
+
+- name: Include licensed CCA init tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_initialize.role }}"
+    tasks_from:
+      "{{ cca_control_initialize.task }}"
+  loop_control:
+    loop_var: cca_control_initialize
+  loop: '{{ cca_control_initialize_tasks | default([]) if cca_control_initialize_tasks | default([]) is iterable else [] }}'

@@ -1,5 +1,17 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
 - name: Cleanup manager before staging apps
   become: false
+  connection: local
   ansible.builtin.file:
     path: '/tmp/{{ inventory_hostname }}/{{ environment_name }}'
     state: absent
@@ -9,6 +21,7 @@
 
 - name: Check existence of deployment apps directory for this environment
   become: false
+  connection: local
   ansible.builtin.stat:
     path: "{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}"
   register: stat_environment_specific_path
@@ -24,9 +37,10 @@
 
 - name: Stage manager with deployment apps from environment directory
   become: false
+  connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/deployment_server/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -35,9 +49,10 @@
 
 - name: Stage manager with deployment server selected apps
   become: false
+  connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ selected_deployment_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/{{ item.name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/deployment_server/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -51,17 +66,39 @@
 
 - name: Stage manager with versioned apps
   become: false
+  connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ apps_generic_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/{{ item.name }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/deployment_server/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - apps_generic_sourcedir is defined
+    - versioned_apps_sourcedir is defined
+    - item.dest_dir is defined
+    - item.dest_dir == 'deployment-apps'
     - item.state is defined
     - item.state != 'absent'
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
+  changed_when: false
+  check_mode: false
+
+- name: Stage manager with selected apps
+  become: false
+  connection: local
+  ansible.builtin.copy:
+    src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/deployment_server/{{ item.name }}/'
+    remote_src: true
+    mode: 'preserve'
+  delegate_to: localhost
+  when:
+    - selected_apps_sourcedir is defined
+    - item.dest_dir is defined
+    - item.dest_dir == 'deployment-apps'
+    - item.state is defined
+    - item.state != 'absent'
+  loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
 

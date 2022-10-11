@@ -1,0 +1,15 @@
+---
+# tasks file for cca.setup.cca-manager
+#
+# Description: Installs cca_for_splunk on the CCA manager server
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
+- name: Git checkout the latest CCA for Splunk release
+  ansible.builtin.git:
+    repo: '{{ cca_for_splunk_repo_url }}'
+    dest: '{{ cca_manager_cca_for_splunk_path }}'

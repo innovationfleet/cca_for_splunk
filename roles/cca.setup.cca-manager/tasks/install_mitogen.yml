@@ -1,0 +1,29 @@
+---
+# tasks file for cca.setup.cca-manager
+#
+# Description: Installs mitogen framework onto the CCA manager server
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
+- name: Git checkout a mitogen version that is tested with CCA
+  ansible.builtin.git:
+    repo: '{{ cca_manager_mitogen_repo_url }}'
+    dest: '{{ cca_manager_mitogen_path }}'
+    version: '{{ cca_manager_mitogen_release }}'
+
+- name: Add Mitogen settings to .profile_local for CCA usage
+  ansible.builtin.lineinfile:
+    dest: "{{ cca_manager_user_dir }}/.profile_local"
+    regex: "{{ item.regex }}"
+    line: "{{ item.value }}"
+    firstmatch: true
+    state: 'present'
+  with_items:
+    - { regex: '^-f .profile', value: 'if [ -d "{{ cca_manager_mitogen_path }}/ansible_mitogen/plugins/strategy" ]; then export ANSIBLE_STRATEGY_PLUGINS={{ cca_manager_mitogen_path }}/ansible_mitogen/plugins/strategy; fi' }
+    - { regex: 'ANSIBLE_STRATEGY=', value: 'if [ -d "{{ cca_manager_mitogen_path }}/ansible_mitogen/plugins/strategy" ]; then export ANSIBLE_STRATEGY=mitogen_linear; fi' }
+  when:
+    - cca_use_mitogen_strategy | default(true)

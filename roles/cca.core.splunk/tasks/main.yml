@@ -2,7 +2,7 @@
 # tasks file for cca.core.splunk
 #
 # Description:
-#   The data-model handles everything that comes around settings paramters for
+#   The data-model handles everything that comes around settings parameters for
 #   Splunk instances based on their role. A Splunk role is mapped to an inventory
 #   group in Ansible.
 #   Functions for creating, updating and deleting sections, options and values
@@ -13,7 +13,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.4
+# Release: 2022.3.1
 - name: Include task for checking cca_for_splunk init state
   include_tasks: check_init.yml
 
@@ -52,9 +52,22 @@
   when:
     - is_license_manager | default(false)
 
+- name: Include licensed CCA infrastructure tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_infrastructure.role }}"
+    tasks_from:
+      "{{ cca_control_infrastructure.task }}"
+  loop_control:
+    loop_var: cca_control_infrastructure
+  loop: '{{ cca_control_infrastructure_tasks | default([]) if cca_control_infrastructure_tasks | default([]) is iterable else [] }}'
+
 - name: Restart Splunkd if splunk.secret is replaced
   ansible.builtin.command:
-    cmd: "{{ restart_command }}"
+    cmd: "timeout 120 {{ restart_command }}"
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
   when:
     - result_splunk_secret_replace.changed == true
 
@@ -65,7 +78,11 @@
 
 - name: Ensure splunk is running on non searchhead members
   ansible.builtin.command:
-    cmd: "timeout 240 {{ start_command }}"
+    cmd: "timeout 120 {{ start_command }}"
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
   changed_when: false
   when:
     - not inventory_hostname in groups.searchhead_members
@@ -79,6 +96,10 @@
 - name: Ensure splunk is running on searchhead members
   ansible.builtin.command:
     cmd: "timeout 240 {{ start_command }}"
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
   changed_when: false
   when:
     - inventory_hostname in groups.searchhead_members

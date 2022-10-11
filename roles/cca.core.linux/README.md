@@ -15,7 +15,7 @@ The servers OS and version needs to be one of the supported ones.
   - Amazon Linux 2
 
 Mount points needs to be created for the `splunk_path` on all Splunk servers, a separate filesystem is recommended but not enforced.
-On Cluster Index peers two additional mount points are need, align with `splunk_volume_path_hot` and `splunk_volume_path_cold` defined in `environments/ENVIRONMENT_NAME/group_vars/all/env_specific`. Same here, separate file systems is highly recommended but not enforced.
+On Cluster Index peers two additional mount points are need, align with `splunk_volume_path_hot` and `splunk_volume_path_cold` defined in `environments/ENVIRONMENT_NAME/hosts`. Same here, separate file systems is highly recommended but not enforced.
 
 The initial account that is used to setup the server with users and services needs to have SUDO ALL access to the server. If you don't have it at this point, the server team could possibly run the ansible playbook that include this role and handover the server when completed.
 

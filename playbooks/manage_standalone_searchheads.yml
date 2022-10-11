@@ -1,0 +1,114 @@
+# Playbook to handle standalone Splunk Search Heads
+#
+# REPO_TYPE=infra
+# MENU_DESC=Manage Standalone Search Heads
+# EXTRA_VARS=hide_password(true)
+
+# Initialize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          initialize.yml
+      vars:
+        target: "license_managers"
+
+
+# Verify that connection to all servers are ok before we start
+- hosts: standalone_searchheads
+  gather_facts: false
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_tasks.yml
+
+# Configure standalone indexers
+- hosts: standalone_searchheads
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  serial: 1
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+
+    - name: Debug all vars
+      debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+      when:
+        debug | default(false)
+
+  tasks:
+    - include_role:
+        name: cca.splunk.enterprise-install
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          server_certificate.yml
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          web_certificate.yml
+    - include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          inputs_certificate.yml
+    - include_role:
+        name: cca.splunk.frontend
+    - include_role:
+        name: cca.core.splunk
+    - include_role:
+        name: cca.splunk.user-profile
+        tasks_from:
+          configure_user_profile.yml
+
+  post_tasks:
+    - name: Add file to inform that this host is managed by ansible
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          ansible_managed.yml
+
+    - name: Check if there is any pending actions
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists == true
+
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          post_tasks.yml
+
+
+# Finalize playbook run on manager server
+- hosts: manager
+  connection: local
+  strategy: linear
+  pre_tasks:
+    - include_role:
+        name: cca.core.control
+        tasks_from:
+          finalize.yml
+      vars:
+        target: "license_managers"
+

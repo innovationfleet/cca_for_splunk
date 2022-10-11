@@ -1,0 +1,490 @@
+---
+# tasks file for cca.core.control
+#
+# Description: Validate template file versions for infrastructure files.
+#              This task can be executed against all hosts of as part of a
+#              infrastructure playbook.
+#
+# Prerequisite: None
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+- name: Assert file version in infrastructure repo files
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/all/general_settings', 'parameter_name': 'cca_infrastructure_general_settings_file_version' , 'version': '2022.2.1' }
+    - { 'file_name': 'group_vars/all/cca_splunk_settings', 'parameter_name': 'cca_infrastructure_settings_file_version' , 'version': '2022.2.1' }
+    - { 'file_name': 'group_vars/all/defaults', 'parameter_name': 'cca_infrastructure_defaults_file_version' , 'version': '2022.2.4' }
+    - { 'file_name': 'group_vars/all/general_settings', 'parameter_name': 'cca_infrastructure_general_settings_file_version' , 'version': '2022.2.1' }
+    - { 'file_name': 'group_vars/all/linux', 'parameter_name': 'cca_infrastructure_linux_file_version' , 'version': '2022.2.1' }
+    - { 'file_name': 'group_vars/all/env_specific', 'parameter_name': 'cca_infrastructure_env_specific_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined or item.failed
+  when:
+    - item.skipped is defined or item.failed
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/cluster_manager_cluster_c1 ', 'parameter_name ': 'cca_infrastructure_cluster_manager_cluster_c1_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.cluster_manager_cluster_c1
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.cluster_manager_cluster_c1
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/cluster_manager_cluster_c2', 'parameter_name': 'cca_infrastructure_cluster_manager_cluster_c2_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.cluster_manager_cluster_c2
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.cluster_manager_cluster_c2
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/cluster_peers_cluster_c1', 'parameter_name': 'cca_infrastructure_cluster_peers_cluster_c1_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.cluster_peers_cluster_c1
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.cluster_peers_cluster_c1
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/cluster_peers_cluster_c2', 'parameter_name': 'cca_infrastructure_cluster_peers_cluster_c2_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.cluster_peers_cluster_c2
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.cluster_peers_cluster_c2
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/data_collection_nodes', 'parameter_name': 'cca_infrastructure_data_collection_nodes_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.data_collection_nodes
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.data_collection_nodes
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/deployment_servers', 'parameter_name': 'cca_infrastructure_deployment_servers_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.deployment_servers
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.deployment_servers
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/forwarders', 'parameter_name': 'cca_infrastructure_forwarders_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.forwarders
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.forwarders
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/hybrid_searchheads', 'parameter_name': 'cca_infrastructure_hybrid_searchheads_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.hybrid_searchheads
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.hybrid_searchheads
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/license_managers', 'parameter_name': 'cca_infrastructure_license_managers_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.license_managers
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.license_managers
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/monitoring_consoles', 'parameter_name': 'cca_infrastructure_monitoring_consoles_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.monitoring_consoles
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.monitoring_consoles
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/searchhead_deployer_shcluster_c1', 'parameter_name': 'cca_infrastructure_searchhead_deployer_shcluster_c1_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.searchhead_deployer_shcluster_c1
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.searchhead_deployer_shcluster_c1
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/searchhead_deployer_shcluster_c2', 'parameter_name': 'cca_infrastructure_searchhead_deployer_shcluster_c2_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.searchhead_deployer_shcluster_c2
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.searchhead_deployer_shcluster_c2
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/searchhead_members_shcluster_c1', 'parameter_name': 'cca_infrastructure_searchhead_members_shcluster_c2_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/searchhead_members_shcluster_c2', 'parameter_name': 'cca_infrastructure_searchhead_deployer_shcluster_c2_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/standalone_indexers', 'parameter_name': 'cca_infrastructure_standalone_indexers_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.standalone_indexers
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.standalone_indexers
+    - item.skipped is defined
+
+- name: Assert file version for group vars file
+  ansible.builtin.assert:
+    that:
+      - 'vars[item.parameter_name] == "{{ item.version }}"'
+    fail_msg:
+      "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
+      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      template directory and do necessary updates"
+  loop:
+    - { 'file_name': 'group_vars/standalone_searchheads', 'parameter_name': 'cca_infrastructure_standalone_searchheads_file_version' , 'version': '2022.3.1' }
+  ignore_errors: true
+  register: infrastructure_assert_result
+  when:
+    - inventory_hostname in groups.standalone_searchheads
+    - vars[item.parameter_name] is defined
+
+- name: Fail task if a assert parameter is missing, indicates old template files
+  debug:
+    msg: >-
+     The file ({{ item.item.file_name }}) is missing the parameter {{ item.item.parameter_name }}.
+     Please update the file from the template file.
+  with_items: "{{ infrastructure_assert_result.results }}"
+  failed_when:
+    - item.skipped is defined
+  when:
+    - inventory_hostname in groups.standalone_searchheads
+    - item.skipped is defined

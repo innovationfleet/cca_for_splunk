@@ -7,10 +7,10 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
 - name: Deploy the apps from the apps directory to the splunk servers
   ansible.posix.synchronize:
-    src: '{{ absolute_file_store_path }}/etc/{{ apps_selectable_sourcedir }}/{{ item.source_app }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
     dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
     copy_links: true
     recursive: true
@@ -22,18 +22,19 @@
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: 'sudo -u {{ splunk_user }} rsync'
-    rsync_opts: '{{ apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else apps_rsync_opts }}'
+    rsync_opts: '{{ selectable_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else selectable_apps_rsync_opts }}'
   notify: notify standalone splunkd restart
-  loop: '{{ apps | default([]) if apps | default([]) is iterable else [] }}'
+  loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
-    - item.dest_dir is not defined
+    - item.dest_dir is not defined or
+      item.dest_dir == "etc"
     - item.target is defined and item.target == inventory_hostname or
       item.target is not defined
 
 - name: Deploy generic apps from the apps generic directory to the splunk servers
   ansible.posix.synchronize:
-    src: '{{ absolute_file_store_path }}/etc/{{ apps_generic_sourcedir }}/{{ item.source_app }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
     dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
     copy_links: true
     recursive: true
@@ -69,7 +70,7 @@
     path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
     state: 'absent'
   notify: notify standalone splunkd restart
-  loop: '{{ apps | default([]) if apps | default([]) is iterable else [] }}'
+  loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'
     - item.dest_dir is not defined

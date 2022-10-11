@@ -1,8 +1,8 @@
 # Playbook to deploy apps to Index cluster
 #
-#REPO_TYPE=onboarding
-#MENU_DESC=Deploy to Cluster Manager
-#EXTRA_VARS=hide_password(true),accept_master_app_removal(false)
+# REPO_TYPE=onboarding
+# MENU_DESC=Deploy to Cluster Manager
+# EXTRA_VARS=hide_password(true) accept_master_app_removal(false)
 
 # Initialize playbook run on manager server
 - hosts: manager

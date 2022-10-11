@@ -1,3 +1,6 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_cluster_peers_cluster_c2_file_version: '2022.3.1'
 
 splunk_conf_group_settings:
 - name: Splunk server.conf for cluster peers
@@ -35,7 +38,7 @@ splunk_conf_group_settings:
         - option: 'manager_uri'
           value: "https://{{ groups['cluster_manager_cluster_c2'] | first | default('NoC2ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
         - option: 'pass4SymmKey'
-          value: "{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}"
+          value: "{{ cca_splunk_cluster_c2_pass4SymmKey_hash }}"
 
 - name: Splunk web.conf
   filename: web.conf
@@ -45,3 +48,4 @@ splunk_conf_group_settings:
       options:
         - option: 'startwebserver'
           value: '0'
+

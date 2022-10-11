@@ -1,5 +1,12 @@
-# See README.md for description and optional parameters
-#
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_onboarding_deployment_server_file_version: '2022.3.1'
+
+# See README.md for description and optional parameters. Especially rsync_opts
+# need to be added for selected_apps and versioned_apps to achieve a good
+# deployment experience, see README for example.
+# Set optional parameter dest_dir to 'deployment-apps' to deploy apps to
+# Deployment Servers.
 
 selected_apps:
 #  - name: ''
@@ -11,6 +18,7 @@ versioned_apps:
 #    source_app: ''
 #    state: ''
 
+# Apps destined for deployment-apps on deployment server
 selected_deployment_apps:
 #  - name: ''
 #    source_app: ''

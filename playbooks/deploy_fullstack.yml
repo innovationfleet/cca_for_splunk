@@ -1,7 +1,7 @@
 ---
-#MENU_DESC=Deploy onboarding apps towards all instances
-#REPO_TYPE=onboarding
-#EXTRA_VARS=hide_password(true),accept_master_app_removal(false),accept_shc_app_removal(false),accept_deployment_app_removal(false)
+# MENU_DESC=Deploy onboarding apps towards all instances
+# REPO_TYPE=onboarding
+# EXTRA_VARS=hide_password(true) accept_master_app_removal(false) accept_shc_app_removal(false) accept_deployment_app_removal(false) force_bundle_push(false)
 #
 
 - import_playbook: deploy_master_apps.yml

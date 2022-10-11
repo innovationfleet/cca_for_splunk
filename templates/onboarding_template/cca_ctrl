@@ -44,8 +44,9 @@ Setup=false
 EnforceMultiplexer=true
 PlaybookFindOptions=""
 sed_cmd="sed"
+CcaRunId=\"cca_runid\":\"${ProcessPid}\"
 
-test -f .storage/settings && source .storage/settings
+test -f .storage/settings && source <(grep = .storage/settings)
 
 # Define other globals
 if [[ $(tput cols) -gt  130 ]] ; then
@@ -69,7 +70,7 @@ else
 fi
 
 WhiptailHight=30
-BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2022.2.4"
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2022.3.1"
 CookieFile="${ScriptPath}/.cookie"
 LicenseFile="${ScriptPath}/../${CcaRepo}/LICENSE"
 InfoFile="${ScriptPath}/../${CcaRepo}/RELEASE_NOTES.txt"
@@ -355,12 +356,14 @@ function whiptail_radiolist () {
   local Description=$1
   shift
   local Items=("$@")
+  local ScrollText=""
 
   # Limit radio list to 21 lines, then it should scroll
   local RadioListLen=$(( ${#Items[@]} / 3))
   if [[ $RadioListLen -gt 21 ]] ; then
 
     RadioListLen=21
+    local ScrollText="--scrolltext"
 
   fi
 
@@ -369,6 +372,7 @@ function whiptail_radiolist () {
                                 --radiolist "${Description}"\
                                 --nocancel\
                                 --ok-button "Next"\
+                                ${ScrollText}\
                                 ${WhiptailHight}\
                                 ${WhiptailWidth}\
                                 ${RadioListLen}\
@@ -856,7 +860,8 @@ function playbook_hosts() {
 }
 
 ###############################################################################
-# Get extra vars to playbook from inpout dialog
+# Get extra vars to playbook from input dialog
+# Add CCA Run ID to ansible extra-vars to be used by CCA
 # Globals:
 #   ExtraVars (Create)
 ###############################################################################
@@ -878,7 +883,11 @@ local Init="{\"\":\"\"}"
 
   if [[ ${ExtraVars} == ${Init} ]] ; then
 
-    ExtraVars='""'
+    ExtraVars="{${CcaRunId}}"
+
+  else
+
+    ExtraVars=$(echo ${ExtraVars} | sed "s/\}/,${CcaRunId}\}/g")
 
   fi
 
@@ -977,7 +986,7 @@ function validate_script_version () {
 
 set +e
 
- test -f .storage/settings && source .storage/settings
+ test -f .storage/settings && source <(grep = .storage/settings)
 
  if [[ $(file_md5 "${ScriptPath}/${ScriptName}") == \
        $(file_md5 "${ScriptPath}/../${CcaRepo}/${CcaScriptName}") ]] ;\
@@ -1090,7 +1099,7 @@ function multiplexer_control () {
 
   else
 
-    test -f .storage/settings && source .storage/settings
+    test -f .storage/settings && source <(grep = .storage/settings)
     if ! ${EnforceMultiplexer}  ; then
 
       :
@@ -1122,7 +1131,7 @@ validate_os
 ! $Setup && environment_helper
 
 # Check option if we should enforce tmux or screen sessions
-test -f .storage/settings && source .storage/settings
+test -f .storage/settings && source <(grep = .storage/settings)
 multiplexer_control
 
 # Dialog to show the release notes and info text
@@ -1154,13 +1163,14 @@ else
     echo -n "${ANSIBLE_VAULT_PASSWORD_FILE}. "
 
     vault_file=(${ANSIBLE_VAULT_PASSWORD_FILE})
-    vault_file=$(echo ${vault_file[0]} | ${sed_cmd} 's/~//g')
+    vault_file=$(echo ${vault_file[0]})
+    vault_file="${vault_file/#\~/$HOME}"
 
-    if [[ ! -e "${vault_file[0]}" ]] ; then
+    if [[ ! -e "${vault_file[0]}" ]]; then
 
       echo -n "But the file don't exists yet."
       echo " Create the ${ANSIBLE_VAULT_PASSWORD_FILE} file and add this content to it. Generated with 'openssl rand -hex 32'"
-      echo "   $(openssl rand -hex 32)"
+      echo " echo \"$(openssl rand -hex 32)\" > ${ANSIBLE_VAULT_PASSWORD_FILE}"
       echo "   Script will now exit."
       exit 1
     fi

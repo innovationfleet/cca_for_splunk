@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_env_specific_file_version: '2022.2.1'
+cca_infrastructure_env_specific_file_version: '2022.3.1'
 
 # Playbook tuning parameters
 # TUNE: Adapt settings to match performance or setup of your environment.
@@ -10,6 +10,8 @@ splunk_cli_user_password: '{{ cca_splunk_admin_password }}'
 inventory_dir_array: "{{ inventory_dir.split('/') }}"
 environment_name: "{{ inventory_dir_array[-1] }}"
 absolute_infra_repo_path: '{{ inventory_dir }}/../..'
+parallel_execution_control: false
+cca_infra_lock_wait_sec: 1800
 
 # License Information, it's highly recommended to use a DNS alias as
 # reference to the host that serves as the license manager
@@ -27,9 +29,14 @@ cca_splunk_shcluster_c2_clustering_manager_uris: 'clustermanager:cluster_manager
 # SMTP server info, with or without port information, default port 25 and no SSL
 cca_splunk_alert_action_smtp: 'UPDATE_SMTP_SERVER_FQDN'
 
-# Comma separated list of email addresses that will recieve health reports
+# Comma separated list of email addresses that will receive health reports
 cca_splunk_health_alert_action_email_to: 'UPDATE_ALERT_EMAIL_ADDRESS'
 
+# If a load balancer or dns alias (CNAME) is used in front of one or several Splunk Servers,
+# add that fqdn name in the inventory file. Configure the settings on a group:vars level or
+# individual host with fqdn= in the hosts file.
+# Domain name that is used in this environment to resolve hosts in the inventory file.
+domain_name: 'UPDATE_DOMAIN.NAME'
 
 # Configure certificate method
 # See README in cca.splunk.ssl-certificates for documentation

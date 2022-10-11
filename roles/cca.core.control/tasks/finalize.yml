@@ -7,4 +7,16 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
+
+- name: Include task to delete lockfile
+  ansible.builtin.include_tasks: remove_lockfile.yml
+
+- name: Include licensed CCA finalize tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_finalize.role }}"
+    tasks_from:
+      "{{ cca_control_finalize.task }}"
+  loop_control:
+    loop_var: cca_control_finalize
+  loop: '{{ cca_control_finalize_tasks | default([]) if cca_control_finalize_tasks | default([]) is iterable else [] }}'

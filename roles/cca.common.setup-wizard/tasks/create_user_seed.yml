@@ -7,7 +7,7 @@
 #
 # Author: André Enemark
 #
-# Release: 2022.2.4
+# Release: 2022.3.1
 
 
 - ansible.builtin.set_fact:
@@ -60,7 +60,7 @@
 - name: Save the clear text secret as an ansible vault in infra and onboarding repo
   ansible.builtin.lineinfile:
     path: "{{ item }}"
-    line: "cca_splunk_admin_password: {{ vault_secret_result.stdout | replace('#','\\r\\n')}}"
+    line: "cca_splunk_admin_password: {{ vault_secret_result.stdout | replace('#','\\r\\n') }}"
     regex: '^cca_splunk_admin_password:'
   loop:
     - "{{ infra_repo_path }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"

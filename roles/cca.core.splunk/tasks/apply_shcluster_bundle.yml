@@ -35,7 +35,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c1
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C2
@@ -56,7 +56,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c2
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 #
 # Apply bundle on Search Head Cluster C3
 #
@@ -76,7 +76,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c3
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C4
@@ -97,7 +97,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c4
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C5
@@ -118,7 +118,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c5
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C6
@@ -139,7 +139,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c6
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C6
@@ -160,7 +160,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c6
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C7
@@ -181,7 +181,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c7
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C8
@@ -202,7 +202,7 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c8
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
 #
 # Apply bundle on Search Head Cluster C9
@@ -223,5 +223,5 @@
         state: absent
   when:
     - inventory_hostname in groups.searchhead_deployer_shcluster_c9
-    - stat_shcluster_bundle_push_pending.stat.exists == true
+    - stat_shcluster_bundle_push_pending.stat.exists
 
