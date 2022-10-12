@@ -80,6 +80,7 @@
                   * Corrected logic in manage_searchhead_clusters.yml that prevented SH Cluster C2-> to run.
                   * Changed variables to track multiple Search Head Cluster captain init status during
                     cluster bootstrap.
+                  * Corrected static repo type reference in cca_ctrl host list function.
 
 
     2022.2.4 - CCA is now supporting Rocky Linux 8, automation_readiness_cca_manager.yml is

@@ -818,7 +818,7 @@ function playbook_hosts() {
   local HostArray
   # Assign the HostArray, restrictive set -u needs it to be defined
   HostArray=${HostArray[@]+"${HostArray[@]}"}
-  SelectedPlaybook=$(echo ${SelectedPlaybook} | ${sed_cmd} "s:/infra/:/${DirName}/:g"\
+  SelectedPlaybook=$(echo ${SelectedPlaybook} | ${sed_cmd} "s:/${repo_type}/:/${DirName}/:g"\
                     | ${sed_cmd} "s:/${CcaRepoShort}/:/${CcaRepo}/:g"\
                     | ${sed_cmd} "s:/\.\.\./:/playbooks/:g")
   IFS=$'\n'
