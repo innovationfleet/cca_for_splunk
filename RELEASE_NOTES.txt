@@ -55,9 +55,9 @@
                cca.splunk.onboarding to match new structure.
              - Added option to convert extracted apps directories to versioned apps.
                build_appFile_from_splunk_app.sh
-             - A lot of updates has been done in the template files. Add all files in
-               your CCA infrastructure and onboarding repo to git. Check file content
-               against cca_for_splunk/templates files to get the latest templates.
+             - Many updates has been done in the template files. Start by adding all files in
+               your local CCA infrastructure and onboarding repo to git. Then check file contents
+               against cca_for_splunk/templates files and update where needed.
 
 
                Bug fixes:

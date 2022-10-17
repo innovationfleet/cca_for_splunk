@@ -27,7 +27,7 @@ We have also described installation steps according to our best practices, follo
 
 ## Optional: CCA Manager Setup (Recommended)
 
-Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command.
+Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo` command.
 
 Current the following Operating System (OS)'s are fully supported to run CCA for Splunk.
 
@@ -49,11 +49,12 @@ Feel free to try and run these playbooks elsewhere but on your own responsibilit
 Necessary packages installed on operating system
 * rsync
 * git
+* openssl
 
 ### Splunk Enterprise version
 When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended.
 
-For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable.
+For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable. Except for when a new major release, then the CCA compatibility and production stability will be assessed before that release is recommended to use in CCA.
 
 CCA for Splunk’s supported versions:
 * Splunk Enterprise 8.X
