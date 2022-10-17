@@ -39,11 +39,7 @@ splunk_conf_group_settings:
          value: 'true'
        - option: 'site_replication_factor'
          value: "{{ site_replication_factor }}"
-       - option: "{{ 'replication_factor'
-                     if
-                        groups['cluster_peers_cluster_c2'] | length < 3
-                     else
-                        None }}"
+       - option: 'replication_factor'
          value: "{{ groups['cluster_peers_cluster_c2'] | length }}"
          state: "{{ 'present'
                     if
