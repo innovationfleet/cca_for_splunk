@@ -1,9 +1,9 @@
 # Playbook to deploy apps to standalone splunk instances
 # Initial
 #
-#REPO_TYPE=onboarding
-#MENU_DESC=Deploy apps to Deployment Servers
-#EXTRA_VARS=hide_password(true),accept_deployment_app_removal(false)
+# REPO_TYPE=onboarding
+# MENU_DESC=Deploy apps to Deployment Servers
+# EXTRA_VARS=hide_password(true) accept_deployment_app_removal(false)
 
 ## Initialize playbook run on manager server
 - hosts: manager

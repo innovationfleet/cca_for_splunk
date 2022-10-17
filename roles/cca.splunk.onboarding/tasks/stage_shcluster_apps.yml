@@ -7,11 +7,13 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
 # TODO: Make staging of files independent on check mode, i.e., set checkmode on all tasks
 # TODO: Add a random variable to the temp directories so that we avoid race conditions
+
 - name: Cleanup manager before staging apps
   become: false
+  connection: local
   ansible.builtin.file:
     path: '/tmp/{{ inventory_hostname }}/{{ shcluster }}'
     state: absent
@@ -23,6 +25,7 @@
 
 - name: Stage manager with shcluster apps from shcluster directory
   become: false
+  connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ shcluster_apps_sourcedir }}/'
     dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/'
@@ -34,36 +37,58 @@
   changed_when: false
   check_mode: false
 
-- name: Stage manager with shcluster generic apps
+- name: Stage manager with shcluster selected apps
   become: false
+  connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ shcluster_generic_sourcedir }}/{{ item.source_app }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ selected_shcluster_apps_sourcedir }}/{{ item.source_app }}/'
     dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - shcluster_generic_sourcedir is defined
+    - selected_shcluster_apps_sourcedir is defined
     - item.state is defined
     - item.state != 'absent'
-  loop: '{{ generic_shcluster_apps | default([]) if generic_shcluster_apps | default([]) is iterable else [] }}'
+  loop: '{{ selected_shcluster_apps | default([]) if selected_shcluster_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
 
-- name: Stage manager with generic apps
+- name: Stage manager with versioned apps destined for search head cluster
   become: false
+  connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ apps_generic_sourcedir }}/{{ item.source_app }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
     dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - apps_generic_sourcedir is defined
+    - versioned_apps_sourcedir is defined
+    - item.dest_dir is defined
+    - item.dest_dir == 'shcluster/apps'
     - item.state is defined
     - item.state != 'absent'
-    - item.dest_dir == 'shcluster/apps'
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
+  changed_when: false
+  check_mode: false
+
+- name: Stage manager with selected apps destined for search head cluster
+  become: false
+  connection: local
+  ansible.builtin.copy:
+    src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/{{ item.name }}/'
+    remote_src: true
+    mode: 'preserve'
+  delegate_to: localhost
+  when:
+    - selected_apps_sourcedir is defined
+    - item.dest_dir is defined
+    - item.dest_dir == 'shcluster/apps'
+    - item.state is defined
+    - item.state != 'absent'
+  loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
 

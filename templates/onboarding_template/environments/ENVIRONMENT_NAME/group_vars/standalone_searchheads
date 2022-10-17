@@ -1,11 +1,11 @@
-########################## Apps #####################################
-# Customer apps that has environment specific information in them are
-# stored in ONBOARDING_REPO/splunk/etc/apps/ENVIRONMENT_NAME/. Here
-# the name and source_app values are usually the same.
-# Generic apps, typically splunkbase apps, are stored with version
-# information in ONBOARDING_REPO/splunk/etc/apps/generic. For these
-# apps the prefix "appFile-" and the suffix "v101" should be removed
-# in the value for the name variable.
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_onboarding_standalone_searchheads_file_version: '2022.3.1'
+
+# See README.md for description and optional parameters. Especially rsync_opts
+# need to be added for selected_apps and versioned_apps to achieve a good
+# deployment experience, see README for example.
+
 selected_apps:
 #  - name: ''
 #    source_app: ''

@@ -1,0 +1,28 @@
+---
+# tasks file for cca.setup.cca-manager
+#
+# Description: Installs ansible in virtual environment with required collections
+#
+# Prerequisite: Python virtual environment is created.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
+- name: Build CCA Ansible install script to install in venv
+  ansible.builtin.copy:
+    dest: "{{ cca_manager_user_dir }}/tools/build_ansible_venv.sh"
+    backup: true
+    content: |
+      #!/usr/bin/env bash
+      cd {{ cca_manager_user_dir }}/tools/python-venv
+      source ansible{{ cca_ansible_minor_version }}/bin/activate
+      {{ cca_manager_user_dir }}/tools/python-venv/ansible{{ cca_ansible_minor_version }}/bin/python{{ cca_python_minor_version }} -m pip install --upgrade pip
+      pip install ansible-core=={{ cca_ansible_release }}
+      ansible-galaxy collection install community.general
+      ansible-galaxy collection install ansible.posix
+    mode: 0755
+
+- name: Run script to install ansible in virtual environment
+  ansible.builtin.command:
+    cmd: "{{ cca_manager_user_dir }}/tools/build_ansible_venv.sh"

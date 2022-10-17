@@ -7,4 +7,18 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
+
+- name: Include task to validate infrastructure file versions
+  ansible.builtin.include_tasks: validate_cca_infrastructure_file_versions.yml
+  when:
+    - validate_cca_infrastructure_files | default(false)
+
+- name: Include licensed CCA pre tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_pre.role }}"
+    tasks_from:
+      "{{ cca_control_pre.task }}"
+  loop_control:
+    loop_var: cca_control_pre
+  loop: '{{ cca_control_pre_tasks | default([]) if cca_control_pre_tasks | default([]) is iterable else [] }}'

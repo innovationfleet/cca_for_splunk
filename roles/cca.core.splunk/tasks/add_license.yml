@@ -7,9 +7,10 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
 - name: Find GUID from stored license file
   become: false
+  connection: local
   ansible.builtin.shell:
     cmd: "grep guid {{ cca_splunk_extension_licenses_path }}/{{ item }} | awk -F '>' '{ print $2 }' | awk -F '<' '{ print $1 }'"
   register: license_file_guid

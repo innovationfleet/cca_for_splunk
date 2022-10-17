@@ -70,6 +70,10 @@
 - name: Splunkd standalone restart handler on any server
   ansible.builtin.command:
     cmd: '{{ restart_command }}'
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
   listen: notify standalone splunkd restart
 
 - name: Splunk deployment-server reload handler on Deployment Server

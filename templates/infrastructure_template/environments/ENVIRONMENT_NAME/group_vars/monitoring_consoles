@@ -1,3 +1,7 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_monitoring_consoles_file_version: '2022.3.1'
+
 # This group_vars file holds a skeleton to custom Splunk configuration
 # CCA already have the essential configuration covered in
 # group_vars/all/general_settings. Review those settings before applying
@@ -9,6 +13,14 @@ splunk_conf_group_settings:
    filename: server.conf
    filepath: '{{ splunk_path }}/etc/system/local'
    sections:
+    - section: 'license'
+      options:
+       - option: 'master_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
+         comment: >-
+          Configure license master uri with a DNS alias, to ease future license master migration
+
     - section: ''
       options:
        - option: ''
@@ -64,3 +76,4 @@ splunk_conf_group_settings:
        - option: ''
          value: ''
          comment: >-
+

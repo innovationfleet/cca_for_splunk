@@ -7,4 +7,30 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
+
+- name: Delete lock file to manage multi user execution
+  ansible.builtin.file:
+    path: "/tmp/.cca_data_onboarding_lock-{{ environment_name }}"
+    state: 'absent'
+  when:
+    - target is defined
+    - target == "deploy_apps" or
+      target == "deploy_deployment-apps" or
+      target == "deploy_master-apps" or
+      target == "deploy_shcluster_apps"
+
+- name: Delete lock file to manage multi user execution
+  ansible.builtin.file:
+    path: "/tmp/.cca_infra_lock-{{ environment_name }}"
+    state: 'absent'
+  when:
+    - target is defined
+    - target == "all_in_one_servers" or
+      target == "cluster_managers-cluster_peers" or
+      target == "data_collection_nodes" or
+      target == "deployment_servers" or
+      target == "forwarders" or
+      target == "hybrid_searchheads" or
+      target == "license_managers" or
+      target == "searchhead_deployers-searchhead_members"

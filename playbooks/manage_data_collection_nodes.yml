@@ -1,8 +1,8 @@
 # Playbook to handle data collection nodes
 #
-#REPO_TYPE=infra
-#MENU_DESC=Manage Data Collection Nodes
-#EXTRA_VARS=hide_password(true)
+# REPO_TYPE=infra
+# MENU_DESC=Manage Data Collection Nodes
+# EXTRA_VARS=hide_password(true)
 
 # Initialize playbook run on manager server
 - hosts: manager

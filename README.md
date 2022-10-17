@@ -45,17 +45,44 @@ We base our configuration and naming standard on [Splunk Validated Architecture]
 
 # Architecture
 ## Prerequisites
-Before you can initiate CCA for Splunk, the environments needs to fulfil some basic requirements. The easiest way to see how well you comply with these are to follow the instructions provided in [Automation Readiness](/automation_readiness.md).
+Before you can initiate CCA for Splunk, the environments needs to fulfil some basic requirements.
+
+The easiest way to setup a CCA manager is to use the `setup_cca_manager.yml` playbook from a device that is suitable. The following perquisites is needed:
+* Access to a server where you would like to deploy CCA Manager.
+* Python 3.9 installed on that server.
+* Ansible locally installed on your device from where you run the setup playbook, any recent ansible version should be good to use.
+* Preferably a dedicated user account e.g. `cca_manager` created on the server, accessible either directly of via sudo. The `cca_manager` user don't need any sudo rights.
+* Authentication via SSH key to a account on the server, the account needs sudo right to switch to `cca_manager` if it's not already authenticated as the `cca_manager` user.
+* Internet access to download pip packages, ansible-core, ansible collections, mitogen framework and cca_for_splunk repository.
+
+Follow the instructions in [README - Setup CCA Manager](/roles/cca.setup.cca-manager/README.md) on how to run the standalone playbook.
+
+To validate the basic requirements, follow instructions provided in [Automation Readiness](/automation_readiness.md). If you have used the `setup_cca_manager.yml` to setup your environment you should be good to continue to next step. If not, then follow the instructions in the [Automation Readiness](/automation_readiness.md) file and continue when you have reached an appropriate readiness score.
 
 ## The Manager server
+Let CCA run under a technical user e.g. `cca_manager` on the manager server and have users `sudo` to this user from their personal ones.
+
 CCA for Splunk uses 3 repositories:
-One original repo and two that will be automatically created at launch. The repositories sits on the Manager server. Using a central server where all Splunk configurations will be kept and up to date with your upstream repositories, is a really good start for a successful and secure management of your Splunk infrastructure.
+One original repo `cca_for_splunk` and two that will be automatically created first time `./cca_ctrl --setup` is executed from the within the `cca_for_splunk` repo.
 
-Let ansible run under a technical user on the manager server and have users `sudo` to this user from their personal ones.
+All the repositories sits on the Manager server. Recommendation is to use a central git server where all Splunk configurations is stored and kept up to date the local repositories. This is a really good start for a successful and secure management of your Splunk infrastructure.
 
-### Repositories:
+**CCA for Splunk**
 
-![CCA Overview](media/CCA_for_Splunk_framework_overview.jpg)
+Original repo that don't have any user or environment changes in it, don't need to be stored centrally. Always safe to pull the latest version from github.
+
+**Infrastructure Repo**
+
+The repository that holds all infrastructure configurations and the ansible hosts inventory file. This repo has user specific configuration and should be connected to a central remote repository. Secrets are stored in ansible vaults and can thus be safely store in the repo.
+
+**Onboarding Repo**
+
+The repository holds all data onboarding related configuration and aps. This repo has user specific configurations and apps and should be connected to a central remote repository. Secrets are stored in ansible vaults and can thus be safely store in the repo.
+
+
+### Repository overview
+
+![CCA Overview](media/cca_overview.jpeg)
 
 - **CORE - cca_for_splunk** : This is the main repository where the core code of CCA for Splunk is stored. Treat this repository as read-only, do not store any custom playbooks or roles in this repo as that will break future updates. Custom roles and playbooks can easily be added to the below repositories in their respective `roles` and `playbooks` directory. Inclusion of the custom playbooks are automatic in `cca_ctrl`
 
@@ -67,13 +94,13 @@ Let ansible run under a technical user on the manager server and have users `sud
 
 - **Optional - Custom Roles & Playbooks**: If you want to create your own custom Roles & Playbooks it´s easy to do so, and they will operate together with the default from within CCA for Splunk.
 
-- **Optional - Custom Extension**: If you want to extend the functionality of CCA for Splunk to cover a completely new capability, that´s also possible - the extentions instructs custom Roles & Playbooks and gets picked up by CCA for Splunk.
+- **Optional - Custom Extension**: If you want to extend the functionality of CCA for Splunk to cover a completely new capability, that´s also possible - the extensions instructs custom Roles & Playbooks and gets picked up by CCA for Splunk.
 
 # How to get started
 
 **Step 1: Plan your architecture**
- CCA for Splunk can deploy from standalone servers to multisite clusters, and up to 9 clusters, controlled by the same automation framework.
- A proper planning is key to define the type of architure(s) will be created, their environment, individual specifications and requirements.
+ CCA for Splunk can deploy anything from standalone servers to multisite clusters, and up to 9 clusters in each environment, controlled by the same automation framework.
+ A proper planning is key to define the type of architure(s) that will be created, their environment, individual specifications and requirements.
 
 **Step 2: Install the Manager and pull CCA for Splunk**
 Machine minimum requirements:
@@ -83,6 +110,7 @@ Machine minimum requirements:
  preferred OS: RHEL 8 or higher, CentOS 8 stream or higher
 
 **a)** from the cca_for_splunk repo, run the Readiness playbooks to ensure that you have the prerequisites and install missing tools/packages:
+Follow the instructions in [Setup CCA Manager](#prerequisites)
 Read up on our [Automation Readiness](/automation_readiness.md) page.
 
 These playbooks will check your automation readiness of both the Manager server, and your Splunk infrastructure in simple assert tasks. When you have passed all assert checks, your environment is ready for the automation journey to start.
@@ -99,7 +127,7 @@ When this information is collected a temporary splunk installation will be perfo
 * The password for the admin user, a random password is generated. Store it if you choose to use it.
 * The general pass4SymmKey that is used by Splunk for S2S communication, like communication to license managers. If you have an existing infrastructure, use that pass4SymmKey. If not keep the random key.
 
-Next comes a generation of 4 different sslpasswords, server, web, inputs and outputs. CCA for Splunk can deploy used 4 unique certificates to the infrastructure. If you already have certificates that can be used, use the password that correlates to the respective private key. Read more about [certificates](/roles/cca.splunk.ssl-certificates/README.md).
+Next comes a generation of 4 different sslpasswords, server, web, inputs and outputs. CCA for Splunk can deploy 4 unique certificates to the infrastructure. If you already have certificates that can be used, use the password that correlates to the respective private key. Read more about [certificates](/roles/cca.splunk.ssl-certificates/README.md). Otherwise use the given passwords when generating the encrypted private keys.
 
 * Password for Server Certificate
 * Password for Inputs Certificate
@@ -175,3 +203,5 @@ Now when your Splunk infrastructure is running smooth, it's time to onboard data
 * [cca.core.linux](/roles/cca.core.linux/README.md)
 * [cca.common.setup-wizard](/roles/cca.common.setup-wizard/README.md)
 * [cca.splunk.onboarding](/roles/cca.splunk.onboarding/README.md)
+* [cca.splunk.user-profiles](/roles/cca.splunk.user-profiles/README.md)
+* [cca.setup.cca-manager](/roles/cca.setup.cca-manager/README.md)

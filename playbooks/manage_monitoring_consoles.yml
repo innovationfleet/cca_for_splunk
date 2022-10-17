@@ -1,8 +1,8 @@
 # Playbook to handle DMC
 #
-#REPO_TYPE=infra
-#MENU_DESC=Manage Monitoring Consoles (DMC)
-#EXTRA_VARS=hide_password(true), debug(false)
+# REPO_TYPE=infra
+# MENU_DESC=Manage Monitoring Consoles (DMC)
+# EXTRA_VARS=hide_password(true) debug(false)
 
 # Initialize playbook run on manager server
 - hosts: manager

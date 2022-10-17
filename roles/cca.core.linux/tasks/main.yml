@@ -14,8 +14,8 @@
 #   is to keep the default /opt/splunk and configure it as own LVM.
 #
 # Roger Lindquist (github.com/rlinq)
-# META_DATE
-# META_VERSION
+#
+# Release: 2022.3.1
 
 - name: Load OS specific variables if found, else default
   ansible.builtin.include_vars: '{{ item }}'

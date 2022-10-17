@@ -1,3 +1,6 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_cluster_manager_cluster_c1_file_version: '2022.3.1'
 
 splunk_conf_group_settings:
 
@@ -14,6 +17,7 @@ splunk_conf_group_settings:
       options:
        - option: 'master_uri'
          value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
          comment: >-
           Configure license master uri with a DNS alias, to ease future license master migration
 
@@ -35,6 +39,21 @@ splunk_conf_group_settings:
          value: 'true'
        - option: 'site_replication_factor'
          value: "{{ site_replication_factor }}"
+       - option: "{{ 'replication_factor'
+                     if
+                        groups['cluster_peers_cluster_c1'] | length < 3
+                     else
+                        None }}"
+         value: "{{ groups['cluster_peers_cluster_c1'] | length }}"
+         state: "{{ 'present'
+                    if
+                       groups['cluster_peers_cluster_c1'] | length < 3
+                    else
+                  'absent' }}"
+         comment: >-
+           Dynamic calculation of site replication factor. The option replication_factor
+           should not need to be used in a multisite cluster. Possible a bug in splunk
+           and this dynamic calculation solves the issue on small cluster architectures.
        - option: 'site_search_factor'
          value: "{{ site_search_factor }}"
        - option: 'available_sites'
@@ -386,3 +405,4 @@ splunk_conf_group_settings:
          value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
          comment: >-
            Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+

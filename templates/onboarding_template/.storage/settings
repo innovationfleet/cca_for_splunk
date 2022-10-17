@@ -1,3 +1,5 @@
+[default]
+cca_onboarding_storage_settings_file_version="2022.3.1"
 repo_type=onboarding
 template_source=
 EnforceMultiplexer=false

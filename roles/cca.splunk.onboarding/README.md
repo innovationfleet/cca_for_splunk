@@ -107,10 +107,10 @@ Description
   * Default rsync options for shcluster apps
 * `master_apps_rsync_opts`
   * Default rsync options for master-apps
-* `apps_rsync_opts`
+* `selectable_apps_rsync_opts`
   * Default rsync options for apps
 * `versioned_apps_rsync_opts`
-  * Default rsync options for generic apps
+  * Default rsync options for versioned splunkbase apps
 
 ### group_vars/INVENTORY_GROUP
 * `forwarders`

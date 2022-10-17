@@ -1,6 +1,6 @@
-#MENU_DESC=Setup Wizard
-#REPO_TYPE=main
-#EXTRA_VARS=splunk_enterprise_version(8.2.6),cca_splunk_var_tmp(/tmp/splunk_tmp)
+# MENU_DESC=Setup Wizard
+# REPO_TYPE=main
+# EXTRA_VARS=splunk_enterprise_version(8.2.8) cca_splunk_var_tmp(/var/tmp)
 - name: Wizard - Setup and aid user to copy and create necessary directories
   hosts: localhost
   connection: local
@@ -8,8 +8,8 @@
 # TODO: Prompt for reusing, recreating or adding a new vault secret.
 
   vars:
-    cca_splunk_var_tmp: "/tmp/splunk_tmp"
-    splunk_path: "/tmp/splunk"
+    cca_splunk_var_tmp: "/var/tmp/"
+    splunk_path: "/var/tmp/splunk_tmp"
     stop_command: "{{ splunk_path }}/bin/splunk stop"
     start_command: "{{ splunk_path }}/bin/splunk start --accept-license --answer-yes --no-prompt"
     dot_managed_by_ansible: "{{ splunk_path }}/.ansible_managed"
@@ -18,7 +18,7 @@
     pwd_array: "{{ script_cwd.split('/') }}"
     repo_base: "{{ pwd_array[:-1] | join('/') }}"
     systemd_enterprise_name: "NA_Service"
-    splunk_enterprise_version: "8.2.6"
+    splunk_enterprise_version: "8.2.8"
     splunk_user: "{{ ansible_user_id }}"
     splunk_group: "{{ ansible_user_id }}"
 

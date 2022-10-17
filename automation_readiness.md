@@ -12,9 +12,11 @@ Automation Readiness is a playbook developed by us to help you determine how pre
 
 The playbook outputs a score, referred as Automation Readiness Score.
 
-The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 2398 (fully!). At least a score of 2000 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps are required to perform to increase your Automation Readiness Score based on our best practices.
+The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 2898 (fully!). At least a score of 2498 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps are required to perform to increase your Automation Readiness Score based on our best practices.
 
-Once you reach Automation Readiness Score above 2000 you should be ready to execute `./cca_ctrl --setup` from the main *cca_for_splunk* repo. See [Setup Wizard](#setup-wizard)
+If you have run the playbook `setup_cca_manager.yml` you should reach a readiness score of 2498 without any extra steps and be ready to continue with the setup wizard.
+
+Once you reach Automation Readiness Score above 2498 you should be ready to execute `./cca_ctrl --setup` from the main *cca_for_splunk* repo. See [Setup Wizard](#setup-wizard)
 
 ![Automation Readiness Score](media/automation_readiness_score_viz.png)
 
@@ -25,7 +27,7 @@ We have also described installation steps according to our best practices, follo
 
 ## Optional: CCA Manager Setup (Recommended)
 
-Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo`command.
+Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo` command.
 
 Current the following Operating System (OS)'s are fully supported to run CCA for Splunk.
 
@@ -43,16 +45,22 @@ Minimum hardware requirements:
 
 Feel free to try and run these playbooks elsewhere but on your own responsibility.
 
+### Software requirements
+Necessary packages installed on operating system
+* rsync
+* git
+* openssl
+
 ### Splunk Enterprise version
 When it comes to determining which Splunk Enterprise version to use, our recommendation would be avoid latest versions for production environment. The latest version can be unknown to many and contain several bugs. Using CCA for Splunk to try out latest versions in development environments is recommended.
 
-For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable.
+For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable. Except for when a new major release, then the CCA compatibility and production stability will be assessed before that release is recommended to use in CCA.
 
 CCA for Splunk’s supported versions:
 * Splunk Enterprise 8.X
 
 ### SSH Keys
-A remote user that has SSH key based login enabled and has `sudo ALLl NO PASSWD` configured is also required on the Splunk Infrastructure servers that CCA for Splunk will manage.
+A remote user that has SSH key based login enabled and has `sudo ALL NO PASSWD` configured is also required on the Splunk Infrastructure servers that CCA for Splunk will manage.
 
 ## Step 1: Clone cca_for_splunk repository
 
@@ -67,6 +75,7 @@ cd cca_for_splunk
 
 ## Step 2: Execute Automation Readiness Playbook
 We will now execute the Automation Readiness Playbook with `ansible-playbook`command. The playbook will perform tests and assert that your server & account is setup as it should. For every successful assertion, points will be added to your Automation Readiness Score. In the end you will be presented with your final score.
+In order to perform the execution of this playbook, you need to perform the steps below to "create Python virtual env and Install Ansible with collections"
 
 ```
 cd ~/master/cca_for_splunk
@@ -126,18 +135,18 @@ Experience have proven that we have much more control and less errors using envi
 
 ### ANSIBLE_PRIVATE_KEY_FILE
 
-Ansible needs a reference to the private ssh key file that shall be used to access Splunk infrastructure servers. Add `export ANSIBLE_PRIVATE_KEY_FILE="path_to_private_key_file"` to your user profile and source it when you are done and before next automation readiness run.
+Ansible needs a reference to the private ssh key file that shall be used to access Splunk infrastructure servers. Add `export ANSIBLE_PRIVATE_KEY_FILE=path_to_private_key_file` to your user profile and source it when you are done and before next automation readiness run.
 
 ### ANSIBLE_ROLES_PATH
 
 Ansible needs how to find roles, this is required for `cca_for_splunk` where the playbooks are called from outside the repository. Verify that the directory below match your setup. Add
-`export ANSIBLE_ROLES_PATH="./roles:~/master/cca_for_splunk/roles"` to your user profile and source it when you are done and before next automation readiness run.
+`export ANSIBLE_ROLES_PATH=./roles:~/master/cca_for_splunk/roles` to your user profile and source it when you are done and before next automation readiness run.
 
 ### ANSIBLE_VAULT_PASSWORD_FILE
 
 Use `openssl rand -hex 32` to output a random string that you then add to your `ANSIBLE_VAULT_PASSWORD_FILE` file. See proposed file name below.
 
-Add `export ANSIBLE_VAULT_PASSWORD_FILE="~/secrets/cca_splunk_ansible_vault.secret"` to your user profile and source it when you are done and before next automation readiness run.
+Add `export ANSIBLE_VAULT_PASSWORD_FILE=~/secrets/cca_splunk_ansible_vault.secret` to your user profile and source it when you are done and before next automation readiness run.
 
 
 ## Recommended Environment variables
@@ -188,7 +197,7 @@ Wait with ANSIBLE_VAULT_PASSWORD_FILE until it exists.
 ### Splunk Enterprise Package
 
 `cca_for_splunk` uses Splunk Enterprise tgz files for installing Splunk on target Splunk servers. The tgz files is also used by the setup wizard to temporary install.
-Store the Splunk Enterprise for Linux tar file in `/tmp/splunk_tmp/`. If you are missing the directory, create it and it will later on be used during the setup wizard.
+Store the Splunk Enterprise for Linux tar file in `/var/tmp/splunk_tmp/`. If you are missing the directory, create it and it will later on be used during the setup wizard.
 
 # Setup Wizard
 When you have reached a automation readiness score above 2000 then you are ready to run the setup wizard. Read up on what the setup_wizard playbook does [here](/README.md) and **step 2b.**

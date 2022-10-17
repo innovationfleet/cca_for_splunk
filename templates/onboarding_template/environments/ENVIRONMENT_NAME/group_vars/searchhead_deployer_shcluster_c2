@@ -1,3 +1,7 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_onboarding_searchhead_deployer_shcluster_c2_file_version: '2022.3.1'
+
 # See README.md for description and optional parameters.
 # Set optional parameter dest_dir to 'shcluster/apps' to
 # deploy apps to Search Head Cluster members.
@@ -12,6 +16,7 @@ versioned_apps:
 #    source_app: ''
 #    state: ''
 
+# Apps destined for etc/shcluster on deployer
 selected_shcluster_apps:
 #  - name: ''
 #    source_app: ''

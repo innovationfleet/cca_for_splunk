@@ -1,0 +1,11 @@
+# Configure the manager server
+# Run the playbook with
+# ansible-playbook -i HOST_IP, setup_cca_manager.yml
+- hosts: all
+  gather_facts: 'no'
+  serial: 1
+  pre_tasks:
+    - setup:
+        gather_subset: 'network'
+    - include_role:
+        name: ./roles/cca.setup.cca-manager

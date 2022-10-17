@@ -1,0 +1,19 @@
+---
+# tasks file for cca.core.control
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
+- name: Include licensed CCA post tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_post.role }}"
+    tasks_from:
+      "{{ cca_control_post.task }}"
+  loop_control:
+    loop_var: cca_control_post
+  loop: '{{ cca_control_post_tasks | default([]) if cca_control_post_tasks | default([]) is iterable else [] }}'

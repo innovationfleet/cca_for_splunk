@@ -7,7 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
+
+- name: Execute a splunkd stop, start when in force mode
+  ansible.builtin.command:
+    cmd: "{{ item }}"
+  loop:
+    - "{{ stop_command }}"
+    - "sleep 5"
+    - "{{ start_command }}"
+  when:
+    - force_splunkd_restart | default(false)
 
 - name: Verify that Splunk is running
   ansible.builtin.command:
@@ -24,6 +34,9 @@
     cmd: "timeout 60 {{ splunk_path }}/bin/splunk login --accept-license --answer-yes --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'"
   register: splunk_login_result
   no_log: "{{ hide_password }}"
+  until: splunk_login_result.rc == 0
+  retries: 5
+  delay: 10
   failed_when: false
   changed_when: false
   check_mode: false
@@ -36,6 +49,7 @@
       Splunk command or login failed with the reason (
       {{ splunk_login_result.stderr | default('Skipped task, disregard this stderr message') }} )
       Splunk command had an unexpected result if this is not blank (
-      {{ splunk_login_result.stdout | default('Skipped task, disregard this stderr message') }} )
+      {{ splunk_login_result.stdout | default('Skipped task, disregard this stderr message') }}
+      Return code ={{ splunk_login_result.rc }} )
     success_msg: >-
       Login successful

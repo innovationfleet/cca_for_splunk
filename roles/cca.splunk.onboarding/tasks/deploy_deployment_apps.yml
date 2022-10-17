@@ -1,3 +1,13 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
 - name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
   become: false
   ansible.posix.synchronize:
@@ -31,7 +41,7 @@
 - name: Deploy the apps from the staging directory to the deployment server
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/'
+    src: '/tmp/{{ inventory_hostname }}/{{ environment_name }}/deployment_server/'
     dest: '{{ splunk_path }}/etc/deployment-apps/'
     copy_links: true
     recursive: true

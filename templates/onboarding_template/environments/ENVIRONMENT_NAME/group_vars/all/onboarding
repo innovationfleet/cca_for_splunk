@@ -38,7 +38,7 @@ master_apps_rsync_opts:
   - '--exclude={{ app_name_index_peer_conf }}'
   - '--exclude=_cluster'
 
-apps_rsync_opts:
+selectable_apps_rsync_opts:
   - '--perms'
   - "--exclude=metadata"
   - "--exclude=metadata/local.meta"
@@ -51,3 +51,4 @@ versioned_apps_rsync_opts:
   - "--exclude=metadata/local.meta"
   - "--exclude=*.pyc"
   - "--exclude=__pycache__"
+

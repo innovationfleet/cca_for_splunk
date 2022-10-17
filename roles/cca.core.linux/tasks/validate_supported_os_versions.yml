@@ -2,23 +2,15 @@
 # tasks file for cca.core.linux
 #
 # Description:
-#
-# Prerequisite:
-#
-# Author: Roger Lindquist (github.com/rlinq)
-#
-# Release: 2022.2.1
-
-# tasks file for cca.core.linux
-#
-# Description:
 #   Validates that the managed host is running on a tested and supported
 #   OS version.
 #
 # Prerequisite:
 #   Gather at least network facts from the target host
 #
-# Author: Roger Lindquist (Orange Cyberdefense)
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.2.4
 #
 
 - name: List of supported RedHat versions

@@ -1,3 +1,7 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_searchhead_members_shcluster_c2_file_version: '2022.3.1'
+
 splunk_conf_group_settings:
 
  - name: Splunk server.conf
@@ -74,9 +78,9 @@ splunk_conf_group_settings:
     - section: 'clustermanager:cluster_manager_cluster_c2'
       options:
        - option: 'manager_uri'
-         value: "https://{{ groups['cluster_manager_cluster_c2'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+         value: "https://{{ groups['cluster_manager_cluster_c2'] | first | default('NoC2ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
        - option: 'pass4SymmKey'
-         value: '{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}'
+         value: '{{ cca_splunk_cluster_c2_pass4SymmKey_hash }}'
        - option: 'multisite'
          value: 'true'
 
@@ -86,18 +90,24 @@ splunk_conf_group_settings:
 #         value: "https://{{ groups['cluster_manager_cluster_c1'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
 #       - option: 'pass4SymmKey'
 #         value: '{{ cca_splunk_cluster_c1_pass4SymmKey_hash }}'
+#       - option: 'multisite'
+#         value: 'true'
 
 #    - section: 'clustermanager:cluster_manager_cluster_c3'
 #      options:
 #       - option: 'manager_uri'
-#         value: "https://{{ groups['cluster_manager_cluster_c3'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#         value: "https://{{ groups['cluster_manager_cluster_c3'] | first | default('NoC3ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
 #       - option: 'pass4SymmKey'
 #         value: '{{ cca_splunk_cluster_c3_pass4SymmKey_hash }}'
+#       - option: 'multisite'
+#         value: 'true'
 
 #    - section: 'clustermanager:cluster_manager_cluster_c4'
 #      options:
 #       - option: 'manager_uri'
-#         value: "https://{{ groups['cluster_manager_cluster_c4'] | first | default('NoC1ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
+#         value: "https://{{ groups['cluster_manager_cluster_c4'] | first | default('NoC4ClusterManagerFoundInInventory') }}:{{ splunk_enterprise_mgmt_port }}"
 #       - option: 'pass4SymmKey'
 #         value: '{{ cca_splunk_cluster_c4_pass4SymmKey_hash }}'
+#       - option: 'multisite'
+#         value: 'true'
 

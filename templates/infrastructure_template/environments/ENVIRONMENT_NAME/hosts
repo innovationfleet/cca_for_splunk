@@ -103,10 +103,12 @@ all_in_one_servers
 ansible_ssh_user="UPDATE_SSH_REMOTE_USER"
 s2s_tcp_port="9997"
 s2s_tcp_port_ssl="9998"
-splunk_enterprise_version="8.2.6"
+web_server_port="8000"
+web_server_port_ssl="8000"
+splunk_enterprise_version="8.2.8"
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_hosts_file_version='2022.2.4'
+cca_infrastructure_hosts_file_version='2022.3.1'
 # Set python interpreter on target servers
 ansible_python_interpreter=/usr/bin/python3
 
@@ -309,7 +311,7 @@ forwarders_ag3
 data_collection_nodes_ag3
 all_in_one_servers_ag3
 
-# All of the cluster_manager children groups needs to be defined in
+# All of the cluster_managers children groups needs to be defined in
 # this inventory file even if they are not used. Logic in handlers
 # and tasks refer to these groups.
 [cluster_managers:children]
@@ -323,7 +325,7 @@ cluster_manager_cluster_c7
 cluster_manager_cluster_c8
 cluster_manager_cluster_c9
 
-# All of the cluster peers children groups needs to be defined in
+# All of the cluster_peers children groups needs to be defined in
 # this inventory file even if they are not used. Logic in handlers
 # and tasks refer to these groups.
 [cluster_peers:children]
@@ -337,8 +339,8 @@ cluster_peers_cluster_c7
 cluster_peers_cluster_c8
 cluster_peers_cluster_c9
 
-# All of the searchhead deployer children groups needs to be defined
-# in this inventory file even if they are not used. Logic in handlers
+# All of the searchhead_deployers children groups needs to be defined in
+# this inventory file even if they are not used. Logic in handlers
 # and tasks refer to these groups.
 [searchhead_deployers:children]
 searchhead_deployer_shcluster_c1
@@ -351,8 +353,8 @@ searchhead_deployer_shcluster_c7
 searchhead_deployer_shcluster_c8
 searchhead_deployer_shcluster_c9
 
-# All of the searchhead members children groups needs to be defined
-# in this inventory file even if they are not used. Logic in handlers
+# All of the searchhead_members children groups needs to be defined in
+# this inventory file even if they are not used. Logic in handlers
 # and tasks refer to these groups.
 [searchhead_members:children]
 searchhead_members_shcluster_c1
@@ -364,7 +366,6 @@ searchhead_members_shcluster_c6
 searchhead_members_shcluster_c7
 searchhead_members_shcluster_c8
 searchhead_members_shcluster_c9
-
 
 #
 # Cluster Manager Cluster C1
@@ -414,22 +415,25 @@ cluster_manager_cluster_c1_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c2:vars]
-default_tcpout=cluster_peers_cluster_c2
+#default_tcpout=
 cluster=cluster_c2
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c2_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c2"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c2:children]
 cluster_manager_cluster_c2_ag1
@@ -440,6 +444,7 @@ cluster_manager_cluster_c2_ag3
 # availability groups
 # Proposed server name PREFIX-clm-2101
 [cluster_manager_cluster_c2_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-2201
 [cluster_manager_cluster_c2_ag2]
@@ -453,22 +458,25 @@ cluster_manager_cluster_c2_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c3:vars]
-default_tcpout=cluster_peers_cluster_c3
+#default_tcpout=
 cluster=cluster_c3
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c3_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c3"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c3:children]
 cluster_manager_cluster_c3_ag1
@@ -479,6 +487,7 @@ cluster_manager_cluster_c3_ag3
 # availability groups
 # Proposed server name PREFIX-clm-3101
 [cluster_manager_cluster_c3_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-3201
 [cluster_manager_cluster_c3_ag2]
@@ -492,22 +501,25 @@ cluster_manager_cluster_c3_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c4:vars]
-default_tcpout=cluster_peers_cluster_c4
+#default_tcpout=
 cluster=cluster_c4
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c4_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c4"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c4:children]
 cluster_manager_cluster_c4_ag1
@@ -518,6 +530,7 @@ cluster_manager_cluster_c4_ag3
 # availability groups
 # Proposed server name PREFIX-clm-4101
 [cluster_manager_cluster_c4_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-4201
 [cluster_manager_cluster_c4_ag2]
@@ -531,22 +544,25 @@ cluster_manager_cluster_c4_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c5:vars]
-default_tcpout=cluster_peers_cluster_c5
+#default_tcpout=
 cluster=cluster_c5
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c5_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c5"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c5:children]
 cluster_manager_cluster_c5_ag1
@@ -557,6 +573,7 @@ cluster_manager_cluster_c5_ag3
 # availability groups
 # Proposed server name PREFIX-clm-5101
 [cluster_manager_cluster_c5_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-5201
 [cluster_manager_cluster_c5_ag2]
@@ -570,22 +587,25 @@ cluster_manager_cluster_c5_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c6:vars]
-default_tcpout=cluster_peers_cluster_c6
+#default_tcpout=
 cluster=cluster_c6
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c6_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c6"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c6:children]
 cluster_manager_cluster_c6_ag1
@@ -596,6 +616,7 @@ cluster_manager_cluster_c6_ag3
 # availability groups
 # Proposed server name PREFIX-clm-6101
 [cluster_manager_cluster_c6_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-6201
 [cluster_manager_cluster_c6_ag2]
@@ -609,22 +630,25 @@ cluster_manager_cluster_c6_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c7:vars]
-default_tcpout=cluster_peers_cluster_c7
+#default_tcpout=
 cluster=cluster_c7
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c7_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c7"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c7:children]
 cluster_manager_cluster_c7_ag1
@@ -635,6 +659,7 @@ cluster_manager_cluster_c7_ag3
 # availability groups
 # Proposed server name PREFIX-clm-7101
 [cluster_manager_cluster_c7_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-7201
 [cluster_manager_cluster_c7_ag2]
@@ -648,22 +673,25 @@ cluster_manager_cluster_c7_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c8:vars]
-default_tcpout=cluster_peers_cluster_c8
+#default_tcpout=
 cluster=cluster_c8
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c8_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c8"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c8:children]
 cluster_manager_cluster_c8_ag1
@@ -674,6 +702,7 @@ cluster_manager_cluster_c8_ag3
 # availability groups
 # Proposed server name PREFIX-clm-8101
 [cluster_manager_cluster_c8_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-8201
 [cluster_manager_cluster_c8_ag2]
@@ -687,21 +716,25 @@ cluster_manager_cluster_c8_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# UPDATE search and replication factor to match your environment
+# UPDATE available sites to match your environment
 [cluster_manager_cluster_c9:vars]
-default_tcpout=cluster_peers_cluster_c9
+#default_tcpout=
 cluster=cluster_c9
+configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c9_indexer_conf"
-site_replication_factor=""
-site_search_factor=""
-available_sites=""
+site_replication_factor="origin:2,total:3"
+site_search_factor="origin:1,total:2"
+available_sites="site1,site2"
 cluster_label="cluster_c9"
 # Set maxVolumeDataSizeMB to 95% of available storage
-maxVolumeDataSizeMB_hot=""
-splunk_volume_name_hot=""
-splunk_volume_path_hot=""
-maxVolumeDataSizeMB_cold=""
-splunk_volume_name_cold=""
-splunk_volume_path_cold=""
+# UPDATE hot and cold volume path to match your environment
+maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
+splunk_volume_name_hot="cca_splunk_home"
+splunk_volume_path_hot="/splunk/hotindex"
+maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
+splunk_volume_name_cold="cca_splunk_cold"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_manager_cluster_c9:children]
 cluster_manager_cluster_c9_ag1
@@ -712,6 +745,7 @@ cluster_manager_cluster_c9_ag3
 # availability groups
 # Proposed server name PREFIX-clm-9101
 [cluster_manager_cluster_c9_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clm-9201
 [cluster_manager_cluster_c9_ag2]
@@ -747,6 +781,7 @@ cluster_peers_cluster_c1_ag3
 [cluster_peers_cluster_c1_ag3]
 #HOSTNAME site="site3"
 
+
 #
 # Index Cluster Peers Cluster C2
 #
@@ -754,8 +789,8 @@ cluster_peers_cluster_c1_ag3
 # within this group.
 [cluster_peers_cluster_c2:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c2:children]
 cluster_peers_cluster_c2_ag1
@@ -764,12 +799,15 @@ cluster_peers_cluster_c2_ag3
 
 # Proposed server name PREFIX-clp-2101
 [cluster_peers_cluster_c2_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-2201
 [cluster_peers_cluster_c2_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-2301
 [cluster_peers_cluster_c2_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -779,8 +817,8 @@ cluster_peers_cluster_c2_ag3
 # within this group.
 [cluster_peers_cluster_c3:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c3:children]
 cluster_peers_cluster_c3_ag1
@@ -789,12 +827,15 @@ cluster_peers_cluster_c3_ag3
 
 # Proposed server name PREFIX-clp-3101
 [cluster_peers_cluster_c3_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-3201
 [cluster_peers_cluster_c3_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-3301
 [cluster_peers_cluster_c3_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -804,8 +845,8 @@ cluster_peers_cluster_c3_ag3
 # within this group.
 [cluster_peers_cluster_c4:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c4:children]
 cluster_peers_cluster_c4_ag1
@@ -814,12 +855,15 @@ cluster_peers_cluster_c4_ag3
 
 # Proposed server name PREFIX-clp-4101
 [cluster_peers_cluster_c4_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-4201
 [cluster_peers_cluster_c4_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-4301
 [cluster_peers_cluster_c4_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -829,8 +873,8 @@ cluster_peers_cluster_c4_ag3
 # within this group.
 [cluster_peers_cluster_c5:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c5:children]
 cluster_peers_cluster_c5_ag1
@@ -839,12 +883,15 @@ cluster_peers_cluster_c5_ag3
 
 # Proposed server name PREFIX-clp-5101
 [cluster_peers_cluster_c5_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-5201
 [cluster_peers_cluster_c5_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-5301
 [cluster_peers_cluster_c5_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -854,8 +901,8 @@ cluster_peers_cluster_c5_ag3
 # within this group.
 [cluster_peers_cluster_c6:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c6:children]
 cluster_peers_cluster_c6_ag1
@@ -864,12 +911,15 @@ cluster_peers_cluster_c6_ag3
 
 # Proposed server name PREFIX-clp-6101
 [cluster_peers_cluster_c6_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-6201
 [cluster_peers_cluster_c6_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-6301
 [cluster_peers_cluster_c6_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -879,22 +929,25 @@ cluster_peers_cluster_c6_ag3
 # within this group.
 [cluster_peers_cluster_c7:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
- [cluster_peers_cluster_c7:children]
+[cluster_peers_cluster_c7:children]
 cluster_peers_cluster_c7_ag1
 cluster_peers_cluster_c7_ag2
 cluster_peers_cluster_c7_ag3
 
 # Proposed server name PREFIX-clp-7101
 [cluster_peers_cluster_c7_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-7201
 [cluster_peers_cluster_c7_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-7301
 [cluster_peers_cluster_c7_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -904,8 +957,8 @@ cluster_peers_cluster_c7_ag3
 # within this group.
 [cluster_peers_cluster_c8:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c8:children]
 cluster_peers_cluster_c8_ag1
@@ -914,12 +967,15 @@ cluster_peers_cluster_c8_ag3
 
 # Proposed server name PREFIX-clp-8101
 [cluster_peers_cluster_c8_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-8201
 [cluster_peers_cluster_c8_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-8301
 [cluster_peers_cluster_c8_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -929,8 +985,8 @@ cluster_peers_cluster_c8_ag3
 # within this group.
 [cluster_peers_cluster_c9:vars]
 configure_inputs_ssl=true
-splunk_volume_path_hot=""
-splunk_volume_path_cold=""
+splunk_volume_path_hot="/splunk/hotindex"
+splunk_volume_path_cold="/splunk/coldindex"
 
 [cluster_peers_cluster_c9:children]
 cluster_peers_cluster_c9_ag1
@@ -939,12 +995,15 @@ cluster_peers_cluster_c9_ag3
 
 # Proposed server name PREFIX-clp-9101
 [cluster_peers_cluster_c9_ag1]
+#HOSTNAME site="site1"
 
 # Proposed server name PREFIX-clp-9201
 [cluster_peers_cluster_c9_ag2]
+#HOSTNAME site="site2"
 
 # Proposed server name PREFIX-clp-9301
 [cluster_peers_cluster_c9_ag3]
+#HOSTNAME site="site3"
 
 
 #
@@ -989,7 +1048,6 @@ configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c2_member_conf"
 shcluster_label="shcluster_c2"
 
-# Proposed server name PREFIX-shd-2101
 [searchhead_deployer_shcluster_c2:children]
 searchhead_deployer_shcluster_c2_ag1
 searchhead_deployer_shcluster_c2_ag2
@@ -999,6 +1057,7 @@ searchhead_deployer_shcluster_c2_ag3
 # availability groups
 # Proposed server name PREFIX-shd-2101
 [searchhead_deployer_shcluster_c2_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-2201
 [searchhead_deployer_shcluster_c2_ag2]
@@ -1028,6 +1087,7 @@ searchhead_deployer_shcluster_c3_ag3
 # availability groups
 # Proposed server name PREFIX-shd-3101
 [searchhead_deployer_shcluster_c3_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-3201
 [searchhead_deployer_shcluster_c3_ag2]
@@ -1057,6 +1117,7 @@ searchhead_deployer_shcluster_c4_ag3
 # availability groups
 # Proposed server name PREFIX-shd-4101
 [searchhead_deployer_shcluster_c4_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-4201
 [searchhead_deployer_shcluster_c4_ag2]
@@ -1086,6 +1147,7 @@ searchhead_deployer_shcluster_c5_ag3
 # availability groups
 # Proposed server name PREFIX-shd-5101
 [searchhead_deployer_shcluster_c5_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-5201
 [searchhead_deployer_shcluster_c5_ag2]
@@ -1115,6 +1177,7 @@ searchhead_deployer_shcluster_c6_ag3
 # availability groups
 # Proposed server name PREFIX-shd-6101
 [searchhead_deployer_shcluster_c6_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-6201
 [searchhead_deployer_shcluster_c6_ag2]
@@ -1144,6 +1207,7 @@ searchhead_deployer_shcluster_c7_ag3
 # availability groups
 # Proposed server name PREFIX-shd-7101
 [searchhead_deployer_shcluster_c7_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-7201
 [searchhead_deployer_shcluster_c7_ag2]
@@ -1173,6 +1237,7 @@ searchhead_deployer_shcluster_c8_ag3
 # availability groups
 # Proposed server name PREFIX-shd-8101
 [searchhead_deployer_shcluster_c8_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-8201
 [searchhead_deployer_shcluster_c8_ag2]
@@ -1202,12 +1267,15 @@ searchhead_deployer_shcluster_c9_ag3
 # availability groups
 # Proposed server name PREFIX-shd-9101
 [searchhead_deployer_shcluster_c9_ag1]
+#HOSTNAME
 
 # Proposed server name PREFIX-shd-9201
 [searchhead_deployer_shcluster_c9_ag2]
 
 # Proposed server name PREFIX-shd-9301
 [searchhead_deployer_shcluster_c9_ag3]
+
+
 
 
 #
@@ -1218,6 +1286,7 @@ searchhead_deployer_shcluster_c9_ag3
 [searchhead_members_shcluster_c1:vars]
 default_tcpout=cluster_peers_cluster_c1
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c1:children]
 searchhead_members_shcluster_c1_ag1
@@ -1226,7 +1295,7 @@ searchhead_members_shcluster_c1_ag3
 
 # Proposed server name PREFIX-shm-1101
 [searchhead_members_shcluster_c1_ag1]
-# HOSTNAME site=siteX
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-1201
 [searchhead_members_shcluster_c1_ag2]
@@ -1243,6 +1312,7 @@ searchhead_members_shcluster_c1_ag3
 [searchhead_members_shcluster_c2:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c2:children]
 searchhead_members_shcluster_c2_ag1
@@ -1251,7 +1321,7 @@ searchhead_members_shcluster_c2_ag3
 
 # Proposed server name PREFIX-shm-2101
 [searchhead_members_shcluster_c2_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-2201
 [searchhead_members_shcluster_c2_ag2]
@@ -1268,6 +1338,7 @@ searchhead_members_shcluster_c2_ag3
 [searchhead_members_shcluster_c3:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c3:children]
 searchhead_members_shcluster_c3_ag1
@@ -1276,7 +1347,7 @@ searchhead_members_shcluster_c3_ag3
 
 # Proposed server name PREFIX-shm-3101
 [searchhead_members_shcluster_c3_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-3201
 [searchhead_members_shcluster_c3_ag2]
@@ -1293,6 +1364,7 @@ searchhead_members_shcluster_c3_ag3
 [searchhead_members_shcluster_c4:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c4:children]
 searchhead_members_shcluster_c4_ag1
@@ -1301,7 +1373,7 @@ searchhead_members_shcluster_c4_ag3
 
 # Proposed server name PREFIX-shm-4101
 [searchhead_members_shcluster_c4_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-4201
 [searchhead_members_shcluster_c4_ag2]
@@ -1318,6 +1390,7 @@ searchhead_members_shcluster_c4_ag3
 [searchhead_members_shcluster_c5:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c5:children]
 searchhead_members_shcluster_c5_ag1
@@ -1326,7 +1399,7 @@ searchhead_members_shcluster_c5_ag3
 
 # Proposed server name PREFIX-shm-5101
 [searchhead_members_shcluster_c5_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-5201
 [searchhead_members_shcluster_c5_ag2]
@@ -1343,6 +1416,7 @@ searchhead_members_shcluster_c5_ag3
 [searchhead_members_shcluster_c6:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c6:children]
 searchhead_members_shcluster_c6_ag1
@@ -1351,7 +1425,7 @@ searchhead_members_shcluster_c6_ag3
 
 # Proposed server name PREFIX-shm-6101
 [searchhead_members_shcluster_c6_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-6201
 [searchhead_members_shcluster_c6_ag2]
@@ -1368,6 +1442,7 @@ searchhead_members_shcluster_c6_ag3
 [searchhead_members_shcluster_c7:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c7:children]
 searchhead_members_shcluster_c7_ag1
@@ -1376,7 +1451,7 @@ searchhead_members_shcluster_c7_ag3
 
 # Proposed server name PREFIX-shm-7101
 [searchhead_members_shcluster_c7_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-7201
 [searchhead_members_shcluster_c7_ag2]
@@ -1393,6 +1468,7 @@ searchhead_members_shcluster_c7_ag3
 [searchhead_members_shcluster_c8:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c8:children]
 searchhead_members_shcluster_c8_ag1
@@ -1401,7 +1477,7 @@ searchhead_members_shcluster_c8_ag3
 
 # Proposed server name PREFIX-shm-8101
 [searchhead_members_shcluster_c8_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-8201
 [searchhead_members_shcluster_c8_ag2]
@@ -1418,6 +1494,7 @@ searchhead_members_shcluster_c8_ag3
 [searchhead_members_shcluster_c9:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c9:children]
 searchhead_members_shcluster_c9_ag1
@@ -1426,13 +1503,15 @@ searchhead_members_shcluster_c9_ag3
 
 # Proposed server name PREFIX-shm-9101
 [searchhead_members_shcluster_c9_ag1]
-# HOSTNAME site=
+# HOSTNAME site="siteN"
 
 # Proposed server name PREFIX-shm-9201
 [searchhead_members_shcluster_c9_ag2]
 
 # Proposed server name PREFIX-shm-9301
 [searchhead_members_shcluster_c9_ag3]
+
+
 
 
 #
@@ -1443,6 +1522,7 @@ searchhead_members_shcluster_c9_ag3
 [hybrid_searchheads:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [hybrid_searchheads:children]
 hybrid_searchheads_ag1
@@ -1467,6 +1547,7 @@ hybrid_searchheads_ag3
 [standalone_searchheads:vars]
 #default_tcpout=
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [standalone_searchheads:children]
 standalone_searchheads_ag1
@@ -1514,6 +1595,7 @@ standalone_indexers_ag3
 [monitoring_consoles:vars]
 default_tcpout=cluster_peers_cluster_c1
 configure_outputs_ssl=true
+#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [monitoring_consoles:children]
 monitoring_consoles_ag1
@@ -1544,13 +1626,13 @@ deployment_servers_ag1
 deployment_servers_ag2
 deployment_servers_ag3
 
-# Proposed server name PREFIX-dpl-101
+# Proposed server name PREFIX-dpl-101 fqdn="UPDATE_ALTERNATE_FQDN"
 [deployment_servers_ag1]
 
-# Proposed server name PREFIX-dpl-201
+# Proposed server name PREFIX-dpl-201 fqdn="UPDATE_ALTERNATE_FQDN"
 [deployment_servers_ag2]
 
-# Proposed server name PREFIX-dpl-301
+# Proposed server name PREFIX-dpl-301 fqdn="UPDATE_ALTERNATE_FQDN"
 [deployment_servers_ag3]
 
 
@@ -1572,14 +1654,13 @@ license_managers_ag3
 
 # Proposed server name PREFIX-lic-101
 [license_managers_ag1]
-#HOSTNAME is_license_manager=true
+#HOSTNAME is_license_manager=true fqdn="UPDATE_ALTERNATE_FQDN"
 
 # Proposed server name PREFIX-lic-201
 [license_managers_ag2]
 
 # Proposed server name PREFIX-lic-301
 [license_managers_ag3]
-
 
 #
 # Forwarder
@@ -1599,13 +1680,13 @@ forwarders_ag1
 forwarders_ag2
 forwarders_ag3
 
-# Proposed server name PREFIX-fwd-101
+# Proposed server name PREFIX-fwd-101 fqdn="UPDATE_ALTERNATE_FQDN"
 [forwarders_ag1]
 
-# Proposed server name PREFIX-fwd-201
+# Proposed server name PREFIX-fwd-201 fqdn="UPDATE_ALTERNATE_FQDN"
 [forwarders_ag2]
 
-# Proposed server name PREFIX-fwd-301
+# Proposed server name PREFIX-fwd-301 fqdn="UPDATE_ALTERNATE_FQDN"
 [forwarders_ag3]
 
 
@@ -1667,8 +1748,9 @@ all_in_one_servers_ag3
 # hence the need to be able to SSH to localhost using the users
 # own ssh key file.
 [manager:vars]
-ansible_ssh_private_key_file=~/.ssh/id_rsa
+
 
 # Server name should be localhost
 [manager]
 localhost
+

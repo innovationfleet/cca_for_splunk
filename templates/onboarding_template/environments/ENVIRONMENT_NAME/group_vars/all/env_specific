@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_env_specific_file_version: '2022.2.1'
+cca_onboarding_env_specific_file_version: '2022.3.1'
 
 # Playbook tuning parameters
 # TUNE Adapt settings to match performance or setup of your environment.
@@ -8,7 +8,12 @@ preflight_command_retries: '100'
 systemd_controlled_splunkd: false
 splunk_cli_user: '{{ cca_splunk_admin_user }}'
 splunk_cli_user_password: '{{ cca_splunk_admin_password }}'
+inventory_dir_array: "{{ inventory_dir.split('/') }}"
+environment_name: "{{ inventory_dir_array[-1] }}"
+absolute_onboarding_repo_path: '{{ inventory_dir }}/../..'
 
 # Tuning parameters for onboarding
 cluster_bundle_status_command_retries: '180'
 cluster_rolling_restart_command_retries: '180'
+parallel_execution_control: false
+cca_data_onboarding_lock_wait_sec: 1800

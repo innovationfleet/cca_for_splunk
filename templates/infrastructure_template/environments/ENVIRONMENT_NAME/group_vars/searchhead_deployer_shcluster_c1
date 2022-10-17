@@ -1,3 +1,6 @@
+# Version parameter is used to validate this file
+# against cca_for_splunk framework requirements.
+cca_infrastructure_searchhead_deployer_shcluster_c1_file_version: '2022.3.1'
 
 splunk_conf_group_settings:
 
@@ -9,6 +12,7 @@ splunk_conf_group_settings:
       options:
        - option: 'master_uri'
          value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
          comment: >-
           Configure license master uri with a DNS alias, to ease future license master migration
 
@@ -26,6 +30,10 @@ splunk_conf_group_settings:
          value: "{{ cca_splunk_shcluster_c1_pass4SymmKey_hash }}"
        - option: 'shcluster_label'
          value: "{{ shcluster_label }}"
+       - option: 'deployerPushThreads'
+         value: 'auto'
+         comment: >-
+           Limit the risk of bundle push timeouts and shorten time to push apply bundles
 
     - section: 'httpServer'
       options:
@@ -113,7 +121,7 @@ splunk_conf_group_settings:
 
  - name: Splunk limits.conf for cluster members
    filename: limits.conf
-   filepath: '{{ splunk_path }}/etc/shcluster/{{ app_name_shc_member_conf }}/default'
+   filepath: '{{ splunk_path }}/etc/shcluster/apps/{{ app_name_shc_member_conf }}/default'
    sections:
     - section: 'realtime'
       options:
@@ -148,3 +156,4 @@ splunk_conf_group_settings:
            until after the upgrade is complete, based on the default defer_scheduled_searchable_idxc
            attribute in savedsearches.conf. Real-time scheduled searches are deferred regardless
            of this setting.
+

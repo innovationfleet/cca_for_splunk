@@ -24,20 +24,22 @@
     cmd: "timeout 60 {{ splunk_path }}/bin/splunk login --accept-license --answer-yes --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'"
   register: splunk_login_result
   no_log: "{{ hide_password }}"
+  until: splunk_status_result.rc == 0
+  retries: 5
+  delay: 10
   failed_when: false
   changed_when: false
-  until: splunk_login_result.rc == 0
-  retries: 5
   check_mode: false
 
-- name: Debug any error and fail task if login wasn't successful
-  ansible.builtin.debug:
-    msg: >-
+- name: Assert to find out if the login was successful
+  ansible.builtin.assert:
+    that:
+      - splunk_login_result.rc | int == 0
+    fail_msg: >-
       Splunk command or login failed with the reason (
       {{ splunk_login_result.stderr | default('Skipped task, disregard this stderr message') }} )
       Splunk command had an unexpected result if this is not blank (
-      {{ splunk_login_result.stdout | default('Skipped task, disregard this stderr message') }} )
-  when:
-    - splunk_login_result.rc > 0
-  failed_when:
-    - splunk_login_result.rc > 0
+      {{ splunk_login_result.stdout | default('Skipped task, disregard this stderr message') }}
+      Return code ={{ splunk_login_result.rc }} )
+    success_msg: >-
+      Login successful

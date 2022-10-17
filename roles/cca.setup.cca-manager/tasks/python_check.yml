@@ -1,0 +1,46 @@
+---
+- name: Deploy a script to test installed python version
+  ansible.builtin.copy:
+    dest: '/tmp/check_python_version.sh'
+    content: |
+       #!/usr/bin/env bash
+       supported_python_dist_version=false
+       supported_python_source_version=false
+
+       if [[ -f /usr/bin/python{{ cca_python_minor_version }} ]] ; then
+         supported_python_dist_version=true
+       fi
+
+       if [[ -f /usr/local/bin/python{{ cca_python_minor_version }} ]] ; then
+         if [[ $(/usr/local/bin/python{{ cca_python_minor_version }} --version | grep -c "Python {{ cca_python_minor_version }}") -gt 0 ]] ; then
+           supported_python_source_version=true
+         fi
+       fi
+
+       if [[ "${supported_python_dist_version}" = true ]] || [[ "${supported_python_source_version}" = true ]] ; then
+         echo "pass"
+       else
+         echo "fail"
+       fi
+    mode: '0755'
+
+- name: Check if we have the required python version is installed
+  ansible.builtin.command:
+    cmd: "/tmp/check_python_version.sh"
+  register: python_version_status
+
+- name: Set fact if we have a valid python version
+  ansible.builtin.set_fact:
+    valid_python_installed: true
+  when:
+    - python_version_status.stdout == 'pass'
+
+- name: Assert if we should break installation
+  ansible.builtin.assert:
+    that:
+      - valid_python_installed | default(false)
+    fail_msg: >-
+      No valid Python version was found. Please install Python with package
+      manager or from source.
+  when:
+    - fail_on_python | default(true)
