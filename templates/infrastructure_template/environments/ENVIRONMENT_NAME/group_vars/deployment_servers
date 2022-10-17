@@ -34,6 +34,14 @@ splunk_conf_group_settings:
    filename: server.conf
    filepath: '{{ splunk_path }}/etc/system/local'
    sections:
+    - section: 'license'
+      options:
+       - option: 'master_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
+         comment: >-
+          Configure license master uri with a DNS alias, to ease future license master migration
+
     - section: ''
       options:
        - option: ''
