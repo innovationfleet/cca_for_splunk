@@ -1,8 +1,9 @@
 # REPO_TYPE=
 # MENU_DESC=Check Automation Readiness
-#EXTRA_VARS=
+# EXTRA_VARS=
 # ansible-playbook -i localhost, playbooks/automation_readiness_cca_manager.yml -v
-- hosts: all
+- name: Automation Readiness Playbook
+  hosts: all
   connection: local
   gather_facts: true
   strategy: linear
@@ -10,11 +11,11 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "2022.3.1"
+        cca_release: "v2022.3.2"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:
-        max_readiness_score: 2898
+        max_readiness_score: 3100
 
     - name: Set start score for manager
       set_fact:
@@ -114,7 +115,7 @@
 
     - name: Get Python3 version from virtual environment
       connection: local
-      ansible.builtin.shell:
+      shell:
         cmd: "{{ ansible_env.VIRTUAL_ENV }}/bin/python3 --version | awk '{ print $2 }'"
       register: cca_python3_version_status
       run_once: true
@@ -285,16 +286,17 @@
 
     - name: Check if we have a cca directories for splunk infrastructure config
       shell:
-        cmd: 'find ~ -name "settings" -type f ! -path "*cca_for_splunk*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+        cmd: 'find {{ playbook_dir }}/../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
       register:
         cca_infra_companion_directory
+      failed_when: cca_infra_companion_directory.rc > 1
       ignore_errors: true
 
     - name: Assert that a infra directory exists
       connection: local
       assert:
         that:
-          - cca_infra_companion_directory.stdout | default('Missing') != "Missing"
+          - cca_infra_companion_directory.rc == 0
         fail_msg: >-
           A companion directory for Splunk Infrastructure is missing
         success_msg: >-
@@ -306,22 +308,23 @@
 
     - name: Increase score for successful task
       set_fact:
-        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
         not assert_result.failed
 
     - name: Check if we have a cca directories for splunk onboarding config
       shell:
-        cmd: 'find ~ -name "settings" -type f ! -path "*cca_for_splunk*" -exec grep "repo_type=onboarding" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+        cmd: 'find {{ playbook_dir }}/../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=onboarding" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
       register:
         cca_onboarding_companion_directory
+      failed_when: cca_onboarding_companion_directory.rc > 1
       ignore_errors: true
 
     - name: Assert that a onboarding directory exists
       connection: local
       assert:
         that:
-          - cca_onboarding_companion_directory.stdout | default('Missing') != "Missing"
+          - cca_onboarding_companion_directory.rc == 0
         fail_msg: >-
           A companion directory for Splunk Onboarding is missing
         success_msg: >-
@@ -333,17 +336,17 @@
 
     - name: Increase score for successful task
       set_fact:
-        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
         not assert_result.failed
 
-    - name: Check if we have access to an Splunk Enterprise tgz file
-      ansible.builtin.shell:
-         cmd: 'find {{ playbook_dir }}/../../{{ cca_infra_companion_directory.stdout }} -name "splunk-8.*-Linux-x86_64.tgz" -type f'
+    - name: When setup wizard is completed, we should have access to an Splunk Enterprise tgz file in infra repo
+      shell:
+        cmd: 'find {{ playbook_dir }}/../../{{ cca_infra_companion_directory.stdout }} -name "splunk-8.*-Linux-x86_64.tgz" -type f'
       register: splunk_enterprise_tgz
       ignore_errors: true
 
-    - name: Assert that a Splunk enterprise file exists
+    - name: Assert that a Splunk enterprise file exists in infra repo
       connection: local
       assert:
         that:
@@ -357,10 +360,40 @@
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
+      when:
+        - cca_infra_companion_directory.rc == 0
 
     - name: Increase score for successful task
       set_fact:
-        mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+      when:
+        - not assert_result.failed | default(true)
+        - cca_infra_companion_directory.rc == 0
+
+    - name: If setup wizard is not yet executed. A Splunk Enterprise tgz file should be available in /var/tmp folder
+      shell:
+        cmd: 'find /var/tmp -name "splunk-8.*-Linux-x86_64.tgz" -type f 2>/dev/null'
+      register: tmp_splunk_enterprise_tgz
+      failed_when: tmp_splunk_enterprise_tgz.rc > 1
+      ignore_errors: true
+
+    - name: Assert that a temporary Splunk enterprise file exists in /var/tmp
+      connection: local
+      assert:
+        that:
+          - tmp_splunk_enterprise_tgz.stdout != ""
+        fail_msg: >-
+          A Splunk enterprise tgz file is missing from /var/tmp
+        success_msg: >-
+         Found a Splunk enterprise file
+      run_once: true
+      delegate_to: localhost
+      ignore_errors: true
+      register: assert_result
+
+    - name: Increase score for successful task
+      set_fact:
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 402 }}"
       when:
         not assert_result.failed
 
@@ -376,7 +409,7 @@
           CCA Release: {{ cca_release }}. Ansible Playbook has checksum {{ stat_ansible_playbook.stat.checksum }}.
         success_msg: >-
           Good work, your manager host looks great, you are ready to start utilizing CCA for Splunk!
-          Readiness score: {{ mgr_readiness_score }}.
+          Readiness score: {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
           CCA Release: {{ cca_release }}. Ansible Playbook has checksum {{ stat_ansible_playbook.stat.checksum }}.
       register: readiness_score
       ignore_errors: true

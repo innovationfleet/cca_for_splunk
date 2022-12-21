@@ -31,4 +31,4 @@
     - name: Include tasks check Pre-flight status
       ansible.builtin.include_tasks: check_preflight_status.yml
       vars:
-        - preflight_command_retries: "{{ cluster_peer_rolling_restart_preflight_retries | default(180) }}"
+        preflight_command_retries: "{{ cluster_peer_rolling_restart_preflight_retries | default(180) }}"

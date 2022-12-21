@@ -11,4 +11,4 @@
 
 - name: Wait for host connection
   wait_for_connection:
-    timeout: "{{ cca_wait_for_connection_timeout | default('120') }}"
+    timeout: "{{ cca_wait_for_connection_timeout | default('600') }}"

@@ -13,7 +13,7 @@
 - ansible.builtin.set_fact:
     tmp_admin: "{{ vars_current_wizard.cca_splunk_admin_user if cca_identical else 'admin' }}"
 
-- name: "Username for administrator in: {{ vars.cca_environment.name }}"
+- name: "Username for administrator in: {{ environment_dir }} "
   ansible.builtin.pause:
     prompt: "Press enter for a administrator login. ({{ tmp_admin }})"
   register: splunk_admin_username

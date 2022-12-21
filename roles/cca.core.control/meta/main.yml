@@ -1,7 +1,14 @@
 galaxy_info:
   author: Roger Lindquist (github.com/rlinq)
-  description: CCA role for setting up servers with Prerequisites for Splunk Enterprise
+  description: CCA role for dealing with additional
   company: Innovationfleet (github.com/innovationfleet)
+  platforms:
+    - name: Amazon Linux 2
+      versions:
+        - all
+    - name: EL
+      versions:
+        - '8'
 
   license: MIT
 

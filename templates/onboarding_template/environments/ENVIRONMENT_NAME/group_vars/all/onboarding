@@ -1,7 +1,7 @@
 # Set dynamic inventory and environment variable or data onboarding
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_onboarding_file_version: '2022.2.1'
+cca_onboarding_onboarding_file_version: '2022.3.2'
 
 inventory_dir_array: "{{ inventory_dir.split('/') }}"
 environment_name: "{{ inventory_dir_array[-1] }}"
@@ -22,6 +22,7 @@ deployment_apps_rsync_opts:
   - '--exclude=/README'
   - '--exclude=.git'
   - '--exclude=.gitkeep'
+  - '--exclude=.gitignore'
 
 shcluster_apps_rsync_opts:
   - '--perms'
@@ -29,6 +30,7 @@ shcluster_apps_rsync_opts:
   - '--exclude=.git'
   - '--exclude=.gitkeep'
   - '--exclude={{ app_name_shc_member_conf }}'
+  - '--exclude=.gitignore'
 
 master_apps_rsync_opts:
   - '--perms'
@@ -37,6 +39,7 @@ master_apps_rsync_opts:
   - '--exclude=.gitkeep'
   - '--exclude={{ app_name_index_peer_conf }}'
   - '--exclude=_cluster'
+  - '--exclude=.gitignore'
 
 selectable_apps_rsync_opts:
   - '--perms'

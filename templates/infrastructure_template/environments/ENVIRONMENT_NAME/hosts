@@ -105,7 +105,7 @@ s2s_tcp_port="9997"
 s2s_tcp_port_ssl="9998"
 web_server_port="8000"
 web_server_port_ssl="8000"
-splunk_enterprise_version="8.2.8"
+splunk_enterprise_version="8.2.9"
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
 cca_infrastructure_hosts_file_version='2022.3.1'
@@ -399,14 +399,13 @@ cluster_manager_cluster_c1_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-1101
+# Proposed server name PREFIX-clm-1101 site="site1"
 [cluster_manager_cluster_c1_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-1201
+# Proposed server name PREFIX-clm-1201 site="site2"
 [cluster_manager_cluster_c1_ag2]
 
-# Proposed server name PREFIX-clm-1301
+# Proposed server name PREFIX-clm-1301 site="site3"
 [cluster_manager_cluster_c1_ag3]
 
 
@@ -418,7 +417,7 @@ cluster_manager_cluster_c1_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c2:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c2
 cluster=cluster_c2
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c2_indexer_conf"
@@ -442,14 +441,13 @@ cluster_manager_cluster_c2_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-2101
+# Proposed server name PREFIX-clm-2101 site="site1"
 [cluster_manager_cluster_c2_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-2201
+# Proposed server name PREFIX-clm-2201 site="site2"
 [cluster_manager_cluster_c2_ag2]
 
-# Proposed server name PREFIX-clm-2301
+# Proposed server name PREFIX-clm-2301 site="site3"
 [cluster_manager_cluster_c2_ag3]
 
 
@@ -461,7 +459,7 @@ cluster_manager_cluster_c2_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c3:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c3
 cluster=cluster_c3
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c3_indexer_conf"
@@ -485,14 +483,13 @@ cluster_manager_cluster_c3_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-3101
+# Proposed server name PREFIX-clm-3101 site="site1"
 [cluster_manager_cluster_c3_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-3201
+# Proposed server name PREFIX-clm-3201 site="site2"
 [cluster_manager_cluster_c3_ag2]
 
-# Proposed server name PREFIX-clm-3301
+# Proposed server name PREFIX-clm-3301 site="site3"
 [cluster_manager_cluster_c3_ag3]
 
 
@@ -504,7 +501,7 @@ cluster_manager_cluster_c3_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c4:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c4
 cluster=cluster_c4
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c4_indexer_conf"
@@ -528,14 +525,13 @@ cluster_manager_cluster_c4_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-4101
+# Proposed server name PREFIX-clm-4101 site="site1"
 [cluster_manager_cluster_c4_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-4201
+# Proposed server name PREFIX-clm-4201 site="site2"
 [cluster_manager_cluster_c4_ag2]
 
-# Proposed server name PREFIX-clm-4301
+# Proposed server name PREFIX-clm-4301 site="site3"
 [cluster_manager_cluster_c4_ag3]
 
 
@@ -547,7 +543,7 @@ cluster_manager_cluster_c4_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c5:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c5
 cluster=cluster_c5
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c5_indexer_conf"
@@ -571,14 +567,13 @@ cluster_manager_cluster_c5_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-5101
+# Proposed server name PREFIX-clm-5101 site="site1"
 [cluster_manager_cluster_c5_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-5201
+# Proposed server name PREFIX-clm-5201 site="site2"
 [cluster_manager_cluster_c5_ag2]
 
-# Proposed server name PREFIX-clm-5301
+# Proposed server name PREFIX-clm-5301 site="site3"
 [cluster_manager_cluster_c5_ag3]
 
 
@@ -590,7 +585,7 @@ cluster_manager_cluster_c5_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c6:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c6
 cluster=cluster_c6
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c6_indexer_conf"
@@ -614,14 +609,13 @@ cluster_manager_cluster_c6_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-6101
+# Proposed server name PREFIX-clm-6101 site="site1"
 [cluster_manager_cluster_c6_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-6201
+# Proposed server name PREFIX-clm-6201 site="site2"
 [cluster_manager_cluster_c6_ag2]
 
-# Proposed server name PREFIX-clm-6301
+# Proposed server name PREFIX-clm-6301 site="site3"
 [cluster_manager_cluster_c6_ag3]
 
 
@@ -633,7 +627,7 @@ cluster_manager_cluster_c6_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c7:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c7
 cluster=cluster_c7
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c7_indexer_conf"
@@ -657,14 +651,13 @@ cluster_manager_cluster_c7_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-7101
+# Proposed server name PREFIX-clm-7101 site="site1"
 [cluster_manager_cluster_c7_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-7201
+# Proposed server name PREFIX-clm-7201 site="site2"
 [cluster_manager_cluster_c7_ag2]
 
-# Proposed server name PREFIX-clm-7301
+# Proposed server name PREFIX-clm-7301 site="site3"
 [cluster_manager_cluster_c7_ag3]
 
 
@@ -676,7 +669,7 @@ cluster_manager_cluster_c7_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c8:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c8
 cluster=cluster_c8
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c8_indexer_conf"
@@ -700,14 +693,13 @@ cluster_manager_cluster_c8_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-8101
+# Proposed server name PREFIX-clm-8101 site="site1"
 [cluster_manager_cluster_c8_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-8201
+# Proposed server name PREFIX-clm-8201 site="site2"
 [cluster_manager_cluster_c8_ag2]
 
-# Proposed server name PREFIX-clm-8301
+# Proposed server name PREFIX-clm-8301 site="site3"
 [cluster_manager_cluster_c8_ag3]
 
 
@@ -719,7 +711,7 @@ cluster_manager_cluster_c8_ag3
 # UPDATE search and replication factor to match your environment
 # UPDATE available sites to match your environment
 [cluster_manager_cluster_c9:vars]
-#default_tcpout=
+default_tcpout=cluster_peers_cluster_c9
 cluster=cluster_c9
 configure_outputs_ssl=true
 app_name_index_peer_conf="cluster_c9_indexer_conf"
@@ -743,14 +735,13 @@ cluster_manager_cluster_c9_ag3
 
 # Only one cluster manager shall be configured, add it to one of the
 # availability groups
-# Proposed server name PREFIX-clm-9101
+# Proposed server name PREFIX-clm-9101 site="site1"
 [cluster_manager_cluster_c9_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clm-9201
+# Proposed server name PREFIX-clm-9201 site="site2"
 [cluster_manager_cluster_c9_ag2]
 
-# Proposed server name PREFIX-clm-9301
+# Proposed server name PREFIX-clm-9301 site="site3"
 [cluster_manager_cluster_c9_ag3]
 
 
@@ -769,17 +760,14 @@ cluster_peers_cluster_c1_ag1
 cluster_peers_cluster_c1_ag2
 cluster_peers_cluster_c1_ag3
 
-# Proposed server name PREFIX-clp-1101
+# Proposed server name PREFIX-clp-1101 site="site1"
 [cluster_peers_cluster_c1_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-1201
+# Proposed server name PREFIX-clp-1201 site="site2"
 [cluster_peers_cluster_c1_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-1301
+# Proposed server name PREFIX-clp-1301 site="site3"
 [cluster_peers_cluster_c1_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -797,17 +785,14 @@ cluster_peers_cluster_c2_ag1
 cluster_peers_cluster_c2_ag2
 cluster_peers_cluster_c2_ag3
 
-# Proposed server name PREFIX-clp-2101
+# Proposed server name PREFIX-clp-2101 site="site1"
 [cluster_peers_cluster_c2_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-2201
+# Proposed server name PREFIX-clp-2201 site="site2"
 [cluster_peers_cluster_c2_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-2301
+# Proposed server name PREFIX-clp-2301 site="site3"
 [cluster_peers_cluster_c2_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -825,17 +810,14 @@ cluster_peers_cluster_c3_ag1
 cluster_peers_cluster_c3_ag2
 cluster_peers_cluster_c3_ag3
 
-# Proposed server name PREFIX-clp-3101
+# Proposed server name PREFIX-clp-3101 site="site1"
 [cluster_peers_cluster_c3_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-3201
+# Proposed server name PREFIX-clp-3201 site="site2"
 [cluster_peers_cluster_c3_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-3301
+# Proposed server name PREFIX-clp-3301 site="site3"
 [cluster_peers_cluster_c3_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -853,17 +835,14 @@ cluster_peers_cluster_c4_ag1
 cluster_peers_cluster_c4_ag2
 cluster_peers_cluster_c4_ag3
 
-# Proposed server name PREFIX-clp-4101
+# Proposed server name PREFIX-clp-4101 site="site1"
 [cluster_peers_cluster_c4_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-4201
+# Proposed server name PREFIX-clp-4201 site="site2"
 [cluster_peers_cluster_c4_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-4301
+# Proposed server name PREFIX-clp-4301 site="site3"
 [cluster_peers_cluster_c4_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -881,17 +860,14 @@ cluster_peers_cluster_c5_ag1
 cluster_peers_cluster_c5_ag2
 cluster_peers_cluster_c5_ag3
 
-# Proposed server name PREFIX-clp-5101
+# Proposed server name PREFIX-clp-5101 site="site1"
 [cluster_peers_cluster_c5_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-5201
+# Proposed server name PREFIX-clp-5201 site="site2"
 [cluster_peers_cluster_c5_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-5301
+# Proposed server name PREFIX-clp-5301 site="site3"
 [cluster_peers_cluster_c5_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -909,17 +885,14 @@ cluster_peers_cluster_c6_ag1
 cluster_peers_cluster_c6_ag2
 cluster_peers_cluster_c6_ag3
 
-# Proposed server name PREFIX-clp-6101
+# Proposed server name PREFIX-clp-6101 site="site1"
 [cluster_peers_cluster_c6_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-6201
+# Proposed server name PREFIX-clp-6201 site="site2"
 [cluster_peers_cluster_c6_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-6301
+# Proposed server name PREFIX-clp-6301 site="site3"
 [cluster_peers_cluster_c6_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -937,17 +910,14 @@ cluster_peers_cluster_c7_ag1
 cluster_peers_cluster_c7_ag2
 cluster_peers_cluster_c7_ag3
 
-# Proposed server name PREFIX-clp-7101
+# Proposed server name PREFIX-clp-7101 site="site1"
 [cluster_peers_cluster_c7_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-7201
+# Proposed server name PREFIX-clp-7201 site="site2"
 [cluster_peers_cluster_c7_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-7301
+# Proposed server name PREFIX-clp-7301 site="site3"
 [cluster_peers_cluster_c7_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -965,17 +935,14 @@ cluster_peers_cluster_c8_ag1
 cluster_peers_cluster_c8_ag2
 cluster_peers_cluster_c8_ag3
 
-# Proposed server name PREFIX-clp-8101
+# Proposed server name PREFIX-clp-8101 site="site1"
 [cluster_peers_cluster_c8_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-8201
+# Proposed server name PREFIX-clp-8201 site="site2"
 [cluster_peers_cluster_c8_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-8301
+# Proposed server name PREFIX-clp-8301 site="site3"
 [cluster_peers_cluster_c8_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -993,17 +960,14 @@ cluster_peers_cluster_c9_ag1
 cluster_peers_cluster_c9_ag2
 cluster_peers_cluster_c9_ag3
 
-# Proposed server name PREFIX-clp-9101
+# Proposed server name PREFIX-clp-9101 site="site1"
 [cluster_peers_cluster_c9_ag1]
-#HOSTNAME site="site1"
 
-# Proposed server name PREFIX-clp-9201
+# Proposed server name PREFIX-clp-9201 site="site2"
 [cluster_peers_cluster_c9_ag2]
-#HOSTNAME site="site2"
 
-# Proposed server name PREFIX-clp-9301
+# Proposed server name PREFIX-clp-9301 site="site3"
 [cluster_peers_cluster_c9_ag3]
-#HOSTNAME site="site3"
 
 
 #
@@ -1027,7 +991,6 @@ searchhead_deployer_shcluster_c1_ag3
 # availability groups
 # Proposed server name PREFIX-shd-1101
 [searchhead_deployer_shcluster_c1_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-1201
 [searchhead_deployer_shcluster_c1_ag2]
@@ -1057,7 +1020,6 @@ searchhead_deployer_shcluster_c2_ag3
 # availability groups
 # Proposed server name PREFIX-shd-2101
 [searchhead_deployer_shcluster_c2_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-2201
 [searchhead_deployer_shcluster_c2_ag2]
@@ -1087,7 +1049,6 @@ searchhead_deployer_shcluster_c3_ag3
 # availability groups
 # Proposed server name PREFIX-shd-3101
 [searchhead_deployer_shcluster_c3_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-3201
 [searchhead_deployer_shcluster_c3_ag2]
@@ -1117,7 +1078,6 @@ searchhead_deployer_shcluster_c4_ag3
 # availability groups
 # Proposed server name PREFIX-shd-4101
 [searchhead_deployer_shcluster_c4_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-4201
 [searchhead_deployer_shcluster_c4_ag2]
@@ -1147,7 +1107,6 @@ searchhead_deployer_shcluster_c5_ag3
 # availability groups
 # Proposed server name PREFIX-shd-5101
 [searchhead_deployer_shcluster_c5_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-5201
 [searchhead_deployer_shcluster_c5_ag2]
@@ -1177,7 +1136,6 @@ searchhead_deployer_shcluster_c6_ag3
 # availability groups
 # Proposed server name PREFIX-shd-6101
 [searchhead_deployer_shcluster_c6_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-6201
 [searchhead_deployer_shcluster_c6_ag2]
@@ -1207,7 +1165,6 @@ searchhead_deployer_shcluster_c7_ag3
 # availability groups
 # Proposed server name PREFIX-shd-7101
 [searchhead_deployer_shcluster_c7_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-7201
 [searchhead_deployer_shcluster_c7_ag2]
@@ -1237,7 +1194,6 @@ searchhead_deployer_shcluster_c8_ag3
 # availability groups
 # Proposed server name PREFIX-shd-8101
 [searchhead_deployer_shcluster_c8_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-8201
 [searchhead_deployer_shcluster_c8_ag2]
@@ -1267,7 +1223,6 @@ searchhead_deployer_shcluster_c9_ag3
 # availability groups
 # Proposed server name PREFIX-shd-9101
 [searchhead_deployer_shcluster_c9_ag1]
-#HOSTNAME
 
 # Proposed server name PREFIX-shd-9201
 [searchhead_deployer_shcluster_c9_ag2]
@@ -1286,24 +1241,21 @@ searchhead_deployer_shcluster_c9_ag3
 [searchhead_members_shcluster_c1:vars]
 default_tcpout=cluster_peers_cluster_c1
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c1:children]
 searchhead_members_shcluster_c1_ag1
 searchhead_members_shcluster_c1_ag2
 searchhead_members_shcluster_c1_ag3
 
-# Proposed server name PREFIX-shm-1101
+# Proposed server name PREFIX-shm-1101 site="site0"
 [searchhead_members_shcluster_c1_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-1201
+# Proposed server name PREFIX-shm-1201 site="site0"
 [searchhead_members_shcluster_c1_ag2]
 
-# Proposed server name PREFIX-shm-1301
+# Proposed server name PREFIX-shm-1301 site="site0"
 [searchhead_members_shcluster_c1_ag3]
-
-
 #
 # Search Head Member Shcluster C2
 #
@@ -1312,24 +1264,21 @@ searchhead_members_shcluster_c1_ag3
 [searchhead_members_shcluster_c2:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c2:children]
 searchhead_members_shcluster_c2_ag1
 searchhead_members_shcluster_c2_ag2
 searchhead_members_shcluster_c2_ag3
 
-# Proposed server name PREFIX-shm-2101
+# Proposed server name PREFIX-shm-2101 site="site0"
 [searchhead_members_shcluster_c2_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-2201
+# Proposed server name PREFIX-shm-2201 site="site0"
 [searchhead_members_shcluster_c2_ag2]
 
-# Proposed server name PREFIX-shm-2301
+# Proposed server name PREFIX-shm-2301 site="site0"
 [searchhead_members_shcluster_c2_ag3]
-
-
 #
 # Search Head Member Shcluster C3
 #
@@ -1338,24 +1287,21 @@ searchhead_members_shcluster_c2_ag3
 [searchhead_members_shcluster_c3:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c3:children]
 searchhead_members_shcluster_c3_ag1
 searchhead_members_shcluster_c3_ag2
 searchhead_members_shcluster_c3_ag3
 
-# Proposed server name PREFIX-shm-3101
+# Proposed server name PREFIX-shm-3101 site="site0"
 [searchhead_members_shcluster_c3_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-3201
+# Proposed server name PREFIX-shm-3201 site="site0"
 [searchhead_members_shcluster_c3_ag2]
 
-# Proposed server name PREFIX-shm-3301
+# Proposed server name PREFIX-shm-3301 site="site0"
 [searchhead_members_shcluster_c3_ag3]
-
-
 #
 # Search Head Member Shcluster C4
 #
@@ -1364,24 +1310,21 @@ searchhead_members_shcluster_c3_ag3
 [searchhead_members_shcluster_c4:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c4:children]
 searchhead_members_shcluster_c4_ag1
 searchhead_members_shcluster_c4_ag2
 searchhead_members_shcluster_c4_ag3
 
-# Proposed server name PREFIX-shm-4101
+# Proposed server name PREFIX-shm-4101 site="site0"
 [searchhead_members_shcluster_c4_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-4201
+# Proposed server name PREFIX-shm-4201 site="site0"
 [searchhead_members_shcluster_c4_ag2]
 
-# Proposed server name PREFIX-shm-4301
+# Proposed server name PREFIX-shm-4301 site="site0"
 [searchhead_members_shcluster_c4_ag3]
-
-
 #
 # Search Head Member Shcluster C5
 #
@@ -1390,24 +1333,21 @@ searchhead_members_shcluster_c4_ag3
 [searchhead_members_shcluster_c5:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c5:children]
 searchhead_members_shcluster_c5_ag1
 searchhead_members_shcluster_c5_ag2
 searchhead_members_shcluster_c5_ag3
 
-# Proposed server name PREFIX-shm-5101
+# Proposed server name PREFIX-shm-5101 site="site0"
 [searchhead_members_shcluster_c5_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-5201
+# Proposed server name PREFIX-shm-5201 site="site0"
 [searchhead_members_shcluster_c5_ag2]
 
-# Proposed server name PREFIX-shm-5301
+# Proposed server name PREFIX-shm-5301 site="site0"
 [searchhead_members_shcluster_c5_ag3]
-
-
 #
 # Search Head Member Shcluster C6
 #
@@ -1416,24 +1356,21 @@ searchhead_members_shcluster_c5_ag3
 [searchhead_members_shcluster_c6:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c6:children]
 searchhead_members_shcluster_c6_ag1
 searchhead_members_shcluster_c6_ag2
 searchhead_members_shcluster_c6_ag3
 
-# Proposed server name PREFIX-shm-6101
+# Proposed server name PREFIX-shm-6101 site="site0"
 [searchhead_members_shcluster_c6_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-6201
+# Proposed server name PREFIX-shm-6201 site="site0"
 [searchhead_members_shcluster_c6_ag2]
 
-# Proposed server name PREFIX-shm-6301
+# Proposed server name PREFIX-shm-6301 site="site0"
 [searchhead_members_shcluster_c6_ag3]
-
-
 #
 # Search Head Member Shcluster C7
 #
@@ -1442,24 +1379,21 @@ searchhead_members_shcluster_c6_ag3
 [searchhead_members_shcluster_c7:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c7:children]
 searchhead_members_shcluster_c7_ag1
 searchhead_members_shcluster_c7_ag2
 searchhead_members_shcluster_c7_ag3
 
-# Proposed server name PREFIX-shm-7101
+# Proposed server name PREFIX-shm-7101 site="site0"
 [searchhead_members_shcluster_c7_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-7201
+# Proposed server name PREFIX-shm-7201 site="site0"
 [searchhead_members_shcluster_c7_ag2]
 
-# Proposed server name PREFIX-shm-7301
+# Proposed server name PREFIX-shm-7301 site="site0"
 [searchhead_members_shcluster_c7_ag3]
-
-
 #
 # Search Head Member Shcluster C8
 #
@@ -1468,24 +1402,21 @@ searchhead_members_shcluster_c7_ag3
 [searchhead_members_shcluster_c8:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c8:children]
 searchhead_members_shcluster_c8_ag1
 searchhead_members_shcluster_c8_ag2
 searchhead_members_shcluster_c8_ag3
 
-# Proposed server name PREFIX-shm-8101
+# Proposed server name PREFIX-shm-8101 site="site0"
 [searchhead_members_shcluster_c8_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-8201
+# Proposed server name PREFIX-shm-8201 site="site0"
 [searchhead_members_shcluster_c8_ag2]
 
-# Proposed server name PREFIX-shm-8301
+# Proposed server name PREFIX-shm-8301 site="site0"
 [searchhead_members_shcluster_c8_ag3]
-
-
 #
 # Search Head Member Shcluster C9
 #
@@ -1494,24 +1425,21 @@ searchhead_members_shcluster_c8_ag3
 [searchhead_members_shcluster_c9:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
+#fqdn="ALTERNATE_FQDN"
 
 [searchhead_members_shcluster_c9:children]
 searchhead_members_shcluster_c9_ag1
 searchhead_members_shcluster_c9_ag2
 searchhead_members_shcluster_c9_ag3
 
-# Proposed server name PREFIX-shm-9101
+# Proposed server name PREFIX-shm-9101 site="site0"
 [searchhead_members_shcluster_c9_ag1]
-# HOSTNAME site="siteN"
 
-# Proposed server name PREFIX-shm-9201
+# Proposed server name PREFIX-shm-9201 site="site0"
 [searchhead_members_shcluster_c9_ag2]
 
-# Proposed server name PREFIX-shm-9301
+# Proposed server name PREFIX-shm-9301 site="site0"
 [searchhead_members_shcluster_c9_ag3]
-
-
 
 
 #
@@ -1522,7 +1450,6 @@ searchhead_members_shcluster_c9_ag3
 [hybrid_searchheads:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [hybrid_searchheads:children]
 hybrid_searchheads_ag1
@@ -1547,7 +1474,6 @@ hybrid_searchheads_ag3
 [standalone_searchheads:vars]
 #default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [standalone_searchheads:children]
 standalone_searchheads_ag1
@@ -1565,11 +1491,12 @@ standalone_searchheads_ag3
 
 
 #
-# Standalone Index Servers
+# Standalone Indexers
 #
 # Group specific variables that are applied for all hosts
 # within this group.
 [standalone_indexers:vars]
+#default_tcpout=
 configure_inputs_ssl=true
 
 [standalone_indexers:children]
@@ -1588,14 +1515,13 @@ standalone_indexers_ag3
 
 
 #
-# Monitoring Console
+# Monitoring Consoles
 #
 # Group specific variables that are applied for all hosts
 # within this group.
 [monitoring_consoles:vars]
-default_tcpout=cluster_peers_cluster_c1
+#default_tcpout=
 configure_outputs_ssl=true
-#fqdn="UPDATE_ALTERNATE_FQDN"
 
 [monitoring_consoles:children]
 monitoring_consoles_ag1
@@ -1617,8 +1543,10 @@ monitoring_consoles_ag3
 #
 # Group specific variables that are applied for all hosts
 # within this group.
+# Use ALTERNATE_FQDN to specify an alternative CNAME or ALIAS record
+# for a server.
 [deployment_servers:vars]
-default_tcpout=cluster_peers_cluster_c1
+#default_tcpout=
 configure_outputs_ssl=true
 
 [deployment_servers:children]
@@ -1626,25 +1554,32 @@ deployment_servers_ag1
 deployment_servers_ag2
 deployment_servers_ag3
 
-# Proposed server name PREFIX-dpl-101 fqdn="UPDATE_ALTERNATE_FQDN"
+# Proposed server name PREFIX-dpl-101 fqdn="ALTERNATE_FQDN"
 [deployment_servers_ag1]
 
-# Proposed server name PREFIX-dpl-201 fqdn="UPDATE_ALTERNATE_FQDN"
+# Proposed server name PREFIX-dpl-201 fqdn="ALTERNATE_FQDN"
 [deployment_servers_ag2]
 
-# Proposed server name PREFIX-dpl-301 fqdn="UPDATE_ALTERNATE_FQDN"
+# Proposed server name PREFIX-dpl-301 fqdn="ALTERNATE_FQDN"
 [deployment_servers_ag3]
 
 
 #
-# License Manager
+# License Managers
 #
 # Group specific variables that are applied for all hosts
 # within this group.
 # One license manager needs to have the is_license_manager
-# variable set to true for license files to be configured.
+# variable set to true for license files to be installed.
+# Specify the DNS name of the load balancer for ALTERNATE_FQDN if
+# the server sits behind a load balancer.
+# Use ALTERNATE_FQDN to specify an alternative CNAME or ALIAS record
+# for a server.
+# It's a good practice to use generic name for license servers and
+# configure all other splunk servers to use the dns alias instead of
+# the real hostname.
 [license_managers:vars]
-default_tcpout=cluster_peers_cluster_c1
+#default_tcpout=
 configure_outputs_ssl=true
 
 [license_managers:children]
@@ -1652,41 +1587,47 @@ license_managers_ag1
 license_managers_ag2
 license_managers_ag3
 
-# Proposed server name PREFIX-lic-101
+# Proposed server name PREFIX-lic-101 is_license_manager=true fqdn="ALTERNATE_FQDN"
 [license_managers_ag1]
-#HOSTNAME is_license_manager=true fqdn="UPDATE_ALTERNATE_FQDN"
 
-# Proposed server name PREFIX-lic-201
+# Proposed server name PREFIX-lic-201 is_license_manager=true fqdn="ALTERNATE_FQDN"
 [license_managers_ag2]
 
-# Proposed server name PREFIX-lic-301
+# Proposed server name PREFIX-lic-301 is_license_manager=true fqdn="ALTERNATE_FQDN"
 [license_managers_ag3]
 
+
 #
-# Forwarder
+# Forwarders
 #
 # Group specific variables that are applied for all hosts
 # within this group.
 # If you have requirement to configure different output groups
 # per forwarder, add the default_tcpout variable to each host
 # and configure it respectively.
+# Specify the DNS name of the load balancer for ALTERNATE_FQDN if
+# the server sits behind a load balancer.
+# Use ALTERNATE_FQDN to specify an alternative CNAME or ALIAS record
+# for a server.
+# It's a good practice to use generic name for license servers and
+# configure all other splunk servers to use the dns alias instead of
+# the real hostname.
 [forwarders:vars]
-default_tcpout=cluster_peers_cluster_c1
+#default_tcpout=
 configure_outputs_ssl=true
 
-# Proposed server name PREFIX-fwd-101
 [forwarders:children]
 forwarders_ag1
 forwarders_ag2
 forwarders_ag3
 
-# Proposed server name PREFIX-fwd-101 fqdn="UPDATE_ALTERNATE_FQDN"
+# Proposed server name PREFIX-fwd-101 fqdn="ALTERNATE_FQDN"
 [forwarders_ag1]
 
-# Proposed server name PREFIX-fwd-201 fqdn="UPDATE_ALTERNATE_FQDN"
+# Proposed server name PREFIX-fwd-201 fqdn="ALTERNATE_FQDN"
 [forwarders_ag2]
 
-# Proposed server name PREFIX-fwd-301 fqdn="UPDATE_ALTERNATE_FQDN"
+# Proposed server name PREFIX-fwd-301 fqdn="ALTERNATE_FQDN"
 [forwarders_ag3]
 
 
@@ -1699,7 +1640,6 @@ forwarders_ag3
 #default_tcpout=
 configure_outputs_ssl=true
 
-# Proposed server name PREFIX-dcn-101
 [data_collection_nodes:children]
 data_collection_nodes_ag1
 data_collection_nodes_ag2
@@ -1716,13 +1656,15 @@ data_collection_nodes_ag3
 
 
 #
-# All in one servers
+# All in one Servers
 #
 # Group specific variables that are applied for all hosts
-# within this group. An all in one server is not expected to forward
-# data to an indexing layer. So default_tcpout variable is not
-# applicable.
+# within this group.
+# An all in one server is not expected to forward data to an
+# indexing layer. So default_tcpout variable is not applicable.
 [all_in_one_servers:vars]
+#default_tcpout=
+configure_outputs_ssl=true
 
 [all_in_one_servers:children]
 all_in_one_servers_ag1

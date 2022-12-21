@@ -47,7 +47,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/cluster_manager_cluster_c1 ', 'parameter_name ': 'cca_infrastructure_cluster_manager_cluster_c1_file_version' , 'version': '2022.3.1' }
@@ -75,7 +75,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/cluster_manager_cluster_c2', 'parameter_name': 'cca_infrastructure_cluster_manager_cluster_c2_file_version' , 'version': '2022.3.1' }
@@ -103,7 +103,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/cluster_peers_cluster_c1', 'parameter_name': 'cca_infrastructure_cluster_peers_cluster_c1_file_version' , 'version': '2022.3.1' }
@@ -131,7 +131,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/cluster_peers_cluster_c2', 'parameter_name': 'cca_infrastructure_cluster_peers_cluster_c2_file_version' , 'version': '2022.3.1' }
@@ -159,7 +159,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/data_collection_nodes', 'parameter_name': 'cca_infrastructure_data_collection_nodes_file_version' , 'version': '2022.3.1' }
@@ -187,7 +187,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/deployment_servers', 'parameter_name': 'cca_infrastructure_deployment_servers_file_version' , 'version': '2022.3.1' }
@@ -215,7 +215,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/forwarders', 'parameter_name': 'cca_infrastructure_forwarders_file_version' , 'version': '2022.3.1' }
@@ -243,7 +243,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/hybrid_searchheads', 'parameter_name': 'cca_infrastructure_hybrid_searchheads_file_version' , 'version': '2022.3.1' }
@@ -271,7 +271,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/license_managers', 'parameter_name': 'cca_infrastructure_license_managers_file_version' , 'version': '2022.3.1' }
@@ -299,7 +299,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/monitoring_consoles', 'parameter_name': 'cca_infrastructure_monitoring_consoles_file_version' , 'version': '2022.3.1' }
@@ -327,7 +327,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/searchhead_deployer_shcluster_c1', 'parameter_name': 'cca_infrastructure_searchhead_deployer_shcluster_c1_file_version' , 'version': '2022.3.1' }
@@ -355,7 +355,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/searchhead_deployer_shcluster_c2', 'parameter_name': 'cca_infrastructure_searchhead_deployer_shcluster_c2_file_version' , 'version': '2022.3.1' }
@@ -383,7 +383,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/searchhead_members_shcluster_c1', 'parameter_name': 'cca_infrastructure_searchhead_members_shcluster_c2_file_version' , 'version': '2022.3.1' }
@@ -411,7 +411,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/searchhead_members_shcluster_c2', 'parameter_name': 'cca_infrastructure_searchhead_deployer_shcluster_c2_file_version' , 'version': '2022.3.1' }
@@ -439,7 +439,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/standalone_indexers', 'parameter_name': 'cca_infrastructure_standalone_indexers_file_version' , 'version': '2022.3.1' }
@@ -467,7 +467,7 @@
       - 'vars[item.parameter_name] == "{{ item.version }}"'
     fail_msg:
       "Your {{ item.parameter_name }} is {{ vars[item.parameter_name] }} where it should be {{ item.version }}.
-      Please compare your file in environments/{{ environment_name }}/{{item.file_name}} with the file in the
+      Please compare your file in environments/{{ environment_name }}/{{ item.file_name }} with the file in the
       template directory and do necessary updates"
   loop:
     - { 'file_name': 'group_vars/standalone_searchheads', 'parameter_name': 'cca_infrastructure_standalone_searchheads_file_version' , 'version': '2022.3.1' }

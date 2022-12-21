@@ -15,7 +15,7 @@
         splunk_login.yml
 
     - name: Set fact of current epoc
-      set_fact:
+      ansible.builtin.set_fact:
         current_epoch: "{{ ansible_date_time.epoch | int -10 }}"
 
     - name: Apply cluster in validate mode
@@ -110,6 +110,6 @@
       ansible.builtin.include_tasks:
         check_preflight_status.yml
       vars:
-        - command_retries: "{{ preflight_command_retries | default(30) }}"
+        command_retries: "{{ preflight_command_retries | default(30) }}"
   when:
     - not ansible_check_mode

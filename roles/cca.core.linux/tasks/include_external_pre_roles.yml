@@ -9,7 +9,7 @@
 #
 # Release: 2022.2.1
 - name: Include and run tasks from external pre bootstrap roles
-  include_role:
+  ansible.builtin.include_role:
    name: '{{ external_bootstrap_role }}'
   loop_control:
     loop_var: external_bootstrap_role

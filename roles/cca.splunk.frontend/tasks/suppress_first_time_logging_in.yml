@@ -7,9 +7,10 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.1
 - name: Touch a file to suppress first time logging in message
   ansible.builtin.file:
     path: "{{ splunk_path }}/etc/.ui_login"
     state: touch
+    mode: '0644'
   changed_when: false

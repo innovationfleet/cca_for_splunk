@@ -41,7 +41,7 @@
   register: stat_dot_data_onboarding_lock
   until: not stat_dot_data_onboarding_lock.stat.exists
   retries: "{{ cca_data_onboarding_lock_retries | default(120) | int }}"
-  delay: "{{ cca_data_onboarding_lock_retry_delay | default(15) | int  }}"
+  delay: "{{ cca_data_onboarding_lock_retry_delay | default(15) | int }}"
   when:
     - not my_runid | default(false)
     - parallel_execution_control | default(false)
@@ -56,6 +56,7 @@
     dest: "/tmp/.cca_data_onboarding_lock-{{ environment_name }}"
     content: |
       {{ cca_runid | default('20380119') }}
+    mode: '0644'
   when:
     - not my_runid | default(false)
     - parallel_execution_control | default(false)
@@ -90,6 +91,7 @@
     dest: "/tmp/.cca_infra_lock-{{ environment_name }}"
     content: |
       {{ cca_runid | default('20380119') }}
+    mode: '0644'
   when:
     - not my_runid | default(false)
     - parallel_execution_control | default(false)
@@ -102,4 +104,3 @@
       target ==  "hybrid_searchheads" or
       target ==  "license_managers" or
       target ==  "searchhead_deployers-searchhead_members"
-

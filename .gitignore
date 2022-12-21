@@ -1,17 +1,9 @@
 # CCA CTRL
 .cookie
 
-# VI
+# Vi
 *.bak
 *.swp
-
-# Terraform
-.terraform
-*lock.hcl
-plan.tfplan
-
-# Terraform environment temporary files
-network_zone_to_subnet_id.csv
 
 # VS Code
 .vs
@@ -20,6 +12,8 @@ network_zone_to_subnet_id.csv
 *.log
 *.mdproj
 *.sln
+*.srl
 
 # Misc ignored files
 ._*
+

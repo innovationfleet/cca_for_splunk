@@ -22,7 +22,7 @@
       delay: 10
       until: kvstore_status.stdout | default('') | string | regex_search('(status {{ ":" }} ready)')
       changed_when: false
-      check_mode: no
+      check_mode: false
 
     - name: Check Pre-flight status on Cluster Manager
       ansible.builtin.shell:
@@ -32,9 +32,10 @@
       delay: 60
       until: cluster_manager_preflight_status.stdout | regex_search(('Pre-flight check successful.*YES'))
       changed_when: false
-      check_mode: no
+      check_mode: false
       when:
         - preflight_command_retries | int < 90
+        - not skip_preflight_check | default(false)
 
     - name: Check Pre-flight status on Cluster Manager, no log
       ansible.builtin.shell:
@@ -44,10 +45,11 @@
       delay: 60
       until: cluster_manager_preflight_status_no_log.stdout | regex_search(('Pre-flight check successful.*YES'))
       changed_when: false
-      check_mode: no
+      check_mode: false
       no_log: "{{ hide_password }}"
       when:
         - preflight_command_retries | int >= 90
+        - not skip_preflight_check | default(false)
 
     - name: Include tasks to logout from splunk cli
       ansible.builtin.include_tasks:

@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_standalone_indexers_file_version: '2022.3.1'
+cca_infrastructure_standalone_indexers_file_version: '2022.3.2'
 
 # This group_vars file holds a skeleton to custom Splunk configuration
 # CCA already have the essential configuration covered in
@@ -12,6 +12,14 @@ splunk_conf_group_settings:
  - name: Splunk server.conf
    filename: server.conf
    filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: 'general'
+      options:
+       - option: 'serverName'
+         value: '{{ inventory_hostname }}'
+       - option: 'pass4SymmKey'
+         value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
+
     - section: 'license'
       options:
        - option: 'master_uri'
@@ -20,7 +28,6 @@ splunk_conf_group_settings:
          comment: >-
           Configure license master uri with a DNS alias, to ease future license master migration
 
-   sections:
     - section: ''
       options:
        - option: ''
