@@ -12,15 +12,17 @@ Automation Readiness is a playbook developed by us to help you determine how pre
 
 The playbook outputs a score, referred as Automation Readiness Score.
 
-The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 2898 (fully!). At least a score of 2498 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps are required to perform to increase your Automation Readiness Score based on our best practices.
+The Automation Readiness Score tells you how well your environment is prepared to run CCA for Splunk from 0 (not at all) to 3100 (fully!). At least a score of 2300 is required to run CCA for Splunk. The Automation Readiness Playbook will also tell you which steps that are required to increase your Automation Readiness Score based on our recommended best practices.
 
-If you have run the playbook `setup_cca_manager.yml` you should reach a readiness score of 2498 without any extra steps and be ready to continue with the setup wizard.
+If you have run the playbook `setup_cca_manager.yml` you should reach a readiness score of 2300 without any extra steps and be ready to continue with the setup wizard.
 
-Once you reach Automation Readiness Score above 2498 you should be ready to execute `./cca_ctrl --setup` from the main *cca_for_splunk* repo. See [Setup Wizard](#setup-wizard)
+Once you reach Automation Readiness Score of 2300 you should be ready to execute `./cca_ctrl --setup` from the main *cca_for_splunk* repo. See [Setup Wizard](#setup-wizard)
 
 ![Automation Readiness Score](media/automation_readiness_score_viz.png)
 
-CCA for Splunk typically need at least 2000 in Automation Readiness Score to be able to run (with some hard requirements of course)
+After that the setup wizard is completed, you can re-run the automation readiness playbook. If you now
+get at least 2900 in Automation Readiness Score you are able to run CCA for Splunk.
+
 We have also described installation steps according to our best practices, following these steps will increase your Automation Readiness Score.
  * [Python installation](#install-python-39)
  * [Virtual env and Ansible Installation](#create-python-virtual-env-and-install-ansible-with-collections)
@@ -200,7 +202,7 @@ Wait with ANSIBLE_VAULT_PASSWORD_FILE until it exists.
 Store the Splunk Enterprise for Linux tar file in `/var/tmp/splunk_tmp/`. If you are missing the directory, create it and it will later on be used during the setup wizard.
 
 # Setup Wizard
-When you have reached a automation readiness score above 2000 then you are ready to run the setup wizard. Read up on what the setup_wizard playbook does [here](/README.md) and **step 2b.**
+When you have reached a automation readiness score of 2300 then you are ready to run the setup wizard. Read up on what the setup_wizard playbook does [here](/README.md) and **step 2b.**
 
 In short it configures the two companion directories where custom settings and apps are stored. In the playbook you will be questioned to set names on the companion directories, the environment, the general pass4SymmKey and admin password.
 
