@@ -43,9 +43,8 @@
 - name: Collect Captain information from Seach Head Cluster status
   ansible.builtin.shell:
     cmd: |
-      timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status
-      head -9 | grep \"label\"
-      awk -F'label : ' '{ print $2 }'
+      timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status |
+      head -9 | grep 'label' | awk -F'label : ' '{ print $2 }'
   register: shcluster_captain
   changed_when: false
   check_mode: false

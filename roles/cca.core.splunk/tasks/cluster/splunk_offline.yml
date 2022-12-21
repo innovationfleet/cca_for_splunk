@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2022.3.2
 
 - name: Include task to check Splunk status
   ansible.builtin.include_tasks:
@@ -22,4 +22,5 @@
     cmd: "timeout 900 {{ splunk_path }}/bin/splunk offline"
   changed_when: false
   when:
-    - enterprise_upgrade | default(false)
+    - enterprise_upgrade | default(false) or
+      os_update | default(false)
