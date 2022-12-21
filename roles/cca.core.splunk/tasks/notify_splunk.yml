@@ -16,7 +16,7 @@
 # META_VERSION
 
 - name: Notify a standard splunkd restart if relevant changes are detected
-  set_fact:
+  ansible.builtin.set_fact:
     splunkd_restart: true
   loop: "{{ cca_splunk_settings_update.results }}"
   when:
@@ -43,7 +43,7 @@
 
 # TODO
 #- name: Notify a standalone splunkd restart if special updates are detected
-#  set_fact:
+#  ansible.builtin.set_fact:
 #    standalone_splunkd_restart: true
 #  with_items: "{{ cca_splunk_settings_update.results }}"
 #  when:
@@ -56,7 +56,7 @@
 #  no_log: '{{ hide_password }}'
 
 - name: Notify a Deployment Server reload if deployment-apps content is updated
-  set_fact:
+  ansible.builtin.set_fact:
      deploymentserver_reload: true
   with_items: "{{ cca_splunk_settings_update.results }}"
   when:
@@ -69,7 +69,7 @@
   no_log: '{{ hide_password }}'
 
 - name: Notify a Search Head Deployer push if shcluster content is updated
-  set_fact:
+  ansible.builtin.set_fact:
      deployer_push: true
   with_items: "{{ cca_splunk_settings_update.results }}"
   when:
@@ -82,15 +82,15 @@
   no_log: '{{ hide_password }}'
 
 - name: Notify a Search Head Deployer push if a forced push option is true
-  set_fact:
+  ansible.builtin.set_fact:
      deployer_push: true
   when:
     - force_bundle_push | default(false)
   notify: notify shcluster bundle push
-  no_log: '{{ hide_password }}'  
+  no_log: '{{ hide_password }}'
 
 - name: Notify a Cluster Manager push if master-apps content is updated
-  set_fact:
+  ansible.builtin.set_fact:
     cluster_manager_push: true
   with_items: "{{ cca_splunk_settings_update.results }}"
   when:

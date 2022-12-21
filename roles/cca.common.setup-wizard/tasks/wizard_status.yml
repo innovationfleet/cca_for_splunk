@@ -9,16 +9,16 @@
 #
 # Release: 2022.3.1
 
-- set_fact:
+- ansible.builtin.set_fact:
    cca_splunk_secret_path: "{{ infra_repo_path }}/environments/{{ environment_dir }}/group_vars/all"
 
-- set_fact:
+- ansible.builtin.set_fact:
    cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
 
-- set_fact:
+- ansible.builtin.set_fact:
     vault_path: "{{ user_home }}/secrets"
 
-- set_fact:
+- ansible.builtin.set_fact:
     vault_secret: "{{ ansible_env.ANSIBLE_VAULT_PASSWORD_FILE }}"
 
 - name: Check for first run wizard

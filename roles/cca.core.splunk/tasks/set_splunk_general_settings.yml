@@ -27,26 +27,27 @@
     src: "{{ item.path }}"
     dest: "{{ item.path }}.bak-{{ ansible_date_time.iso8601 }}"
     remote_src: true
+    mode: '0644'
   loop: "{{ find_splunk_local_conf.files }}"
   when:
     - accept_cca_management | default(false)
     - not cca_ansible_managed | default(false)
 
 - name: Manage header line in splunk files, managed by ansible
-  ini_file:
+  ansible.builtin.ini_file:
     path: "{{ item.filepath }}/{{ item.filename }}"
     section:
     option: '{{ file_managed_by_ansible }}'
     value: null
     state: present
-    allow_no_value: yes
+    allow_no_value: true
   loop:
     "{{ splunk_conf_general_settings }}"
   changed_when: false
   no_log: '{{ hide_password }}'
 
 - name: Updates Splunk conf based on general settings
-  ini_file:
+  ansible.builtin.ini_file:
     path: "{{ item.0.filepath }}/{{ item.0.filename}}"
     section: "{{ item.0.section }}"
     option: "{{ item.1.option | default(null)
@@ -68,6 +69,7 @@
                'absent'
             }}"
     allow_no_value: "{{ 'yes' if ( not item.1.value ) else 'no' }}"
+    mode: '0644'
   with_subelements:
     - "{{ general_sections_loop }}"
     - options
