@@ -31,6 +31,36 @@
 
     Release notes:
 
+        2022.3.2
+             - Recommended Splunk Enterprise version updated to 8.2.9 for production use.
+               Added new diff file for Splunk enterprise 8.2.9.
+             - Added catch function to stop playbook when an value contains 'UPDATE'. Those
+               parameters needs to be updated prior to running cca_ctrl.
+             - Improved handling of invalid_config_regex to skip checks if an option is
+               set to be 'absent'
+             - Updated git lfs to cover spl and tgz files.
+             - Ansible lint updates and spelling improvement.
+             - Update to group_vars files with general section where it was missing.
+             - Update to group_vars files with master license section where it was missing.
+             - Bumped version for modified group_vars files.
+
+
+              Bug fixes:
+                  * Updated checks in automation readiness playbook to better handle validation
+                    logic and produce a correct value. automation_readiness.md file updated with
+                    new scores.
+                  * Corrected display variable for environment in setup wizard.
+                  * Corrected search head cluster checks
+                  * Lookup file needed to be written out in check_mode
+                  * Changed UPDATE_ALTERNATE_FQDN to ALTERNATE_FQDN to avoid it being caught by the
+                    invalid_config_regex filter.
+                  * Improved problem detection when ansible vault trows errors during setup_wizard
+                  * Corrected path for staging directory in onboarding playbook for deployment-apps.
+                    Incorrectly identified deleted deployment-apps.
+                  * Ignore .gitignore file in default rsync options for data onboarding.
+                  * Cleanup inventory hosts file and removed incorrect settings.
+
+
     2022.3.1 - CCA can handle parallel execution of playbooks and wait until a playbook
                has been completed until a new one starts. .../group_vars/env_specific are
                updated with new control parameters. Default disabled.
@@ -130,7 +160,7 @@
              version is below 9.0.0, disable deployment server functionallity.
 
              Bug fixes:
-                * Corrected splunk_conf_group_settings variable in 
+                * Corrected splunk_conf_group_settings variable in
                   templates/infrastructure_template/environments/ENVIRONMENT_NAME/group_vars/
                   for
                      all_in_one_servers
