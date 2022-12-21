@@ -28,6 +28,18 @@ splunk_conf_group_settings:
              Only enable Deployment Server functionality if Splunk Enterprise runs on a version
              more recent than 8.2.6. Vulnerability description at Splunk.
              https://www.splunk.com/en_us/product-security/announcements/svd-2022-0608.html
+         - option: 'serverName'
+           value: '{{ inventory_hostname }}'
+         - option: 'pass4SymmKey'
+           value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
+
+     - section: 'license'
+       options:
+         - option: 'master_uri'
+           value: "{{ cca_splunk_license_manager_uri }}"
+           state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
+           comment: >-
+             Configure license master uri with a DNS alias, to ease future license master migration
 
 
  - name: Splunk server.conf

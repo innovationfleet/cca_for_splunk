@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_standalone_searchheads_file_version: '2022.3.1'
+cca_infrastructure_standalone_searchheads_file_version: '2022.3.2 '
 
 # This group_vars file holds a skeleton to custom Splunk configuration
 # CCA already have the essential configuration covered in
@@ -13,6 +13,18 @@ splunk_conf_group_settings:
    filename: server.conf
    filepath: '{{ splunk_path }}/etc/system/local'
    sections:
+    - section: 'general'
+      options:
+       - option: 'serverName'
+         value: '{{ inventory_hostname }}'
+       - option: 'pass4SymmKey'
+         value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
+       - option: 'site'
+         value: "{{ site | default('site0') }}"
+         comment: >-
+           Set site reference in host inventory for all search heads
+           For a search head, "site0" disables search affinity
+
     - section: 'license'
       options:
        - option: 'master_uri'
@@ -20,6 +32,14 @@ splunk_conf_group_settings:
          state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
          comment: >-
           Configure license master uri with a DNS alias, to ease future license master migration
+
+    - section: 'config_change_audit'
+      options:
+       - option: 'disabled'
+         value: 'false'
+       - option: 'mode'
+         value: 'auto'
+
 
     - section: ''
       options:
