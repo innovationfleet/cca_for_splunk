@@ -1,7 +1,7 @@
 # CCA CTRL
 .cookie
 
-# vi 
+# VI
 *.bak
 *.swp
 
@@ -10,6 +10,10 @@
 *lock.hcl
 plan.tfplan
 
+# Python
+__pycache__
+*.pyc
+
 # VS Code
 .vs
 .vscode
@@ -17,8 +21,7 @@ plan.tfplan
 *.log
 *.mdproj
 *.sln
+*.srl
 
-# Python
-__pycache__
-*.pyc
-
+# Misc ignored files
+._*

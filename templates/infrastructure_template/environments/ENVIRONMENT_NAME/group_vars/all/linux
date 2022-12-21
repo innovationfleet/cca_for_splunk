@@ -17,16 +17,16 @@ cca_baseline_software:
   - 'bind-utils'
 control:
   linux_configuration:
-    splunk_user: true
-    fs_path: false
-    configure_firewall: true
-    server_hardening: true
-    baseline_software: true
-    splunk_limits: true
-    splunk_service: true
-    splunk_polkit: true
-    thp: true
-    selinux: true
-    sudoers: true
-    user_profile: true
+    splunk_user: True
+    fs_path: False
+    configure_firewall: True
+    server_hardening: True
+    baseline_software: True
+    splunk_limits: True
+    splunk_service: True
+    splunk_polkit: True
+    thp: True
+    selinux: True
+    sudoers: True
+    user_profile: True
 

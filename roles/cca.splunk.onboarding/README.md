@@ -31,7 +31,7 @@ Deployment-apps are essential if your infrastructure has any Universal Forwarder
 
 Any controlling `serverclass.conf` file should be configured in a dedicated app and stored in `apps/ENVIRONMENT_NAME` or as it's destined for the Deployment Servers app directory.
 
-In the group_vars template structure there is only one deployment-servers group, if additional granularity is needed, target option can be set for each app and then that specific app will only be deployed onto that host.
+In the group_vars template structure there is only one deployment-servers group, if additional granularity is needed, `target` option can be set for each app and then that specific app will only be deployed onto that host.
 
 ### Deployment-apps - selectable
 Apps in the selectable directory needs to be cherry picked by specifying them in `environments/ENVIRONMENT_NAME/group_vars/ANSIBLE_GROUP` for relevant deployment_servers group_vars file.
@@ -114,7 +114,7 @@ Description
 
 ### group_vars/INVENTORY_GROUP
 * `forwarders`
-  * Target inventory group name, apps and generic apps is in scope for standalone splunk servers. The destination for all apps are `SPLUNK_HOME/etc/apps`. The `INVENTORY_GROUP` can be towards any non-clustered splunk server.
+  * Ansible inventory group name, apps and generic apps is in scope for standalone splunk servers. The destination for all apps are `SPLUNK_HOME/etc/apps`. The `INVENTORY_GROUP` can be towards any non-clustered splunk server.
   * Example config for an environment specific app, not versioned and specific to this organization.
     ```
     selected_apps:
@@ -124,6 +124,19 @@ Description
         rsync_opts:
           - "--exclude=default"
     ```
+
+  * Example config for an environment specific app that should be deployed towards one target only.
+    Multiple apps with the same name but different target hosts can be configured.
+    ```
+    selected_apps:
+      - name: 'splunk_httpinput'
+        source_app: 'innovationfleet-splunk_httpinput'
+        state: 'present'
+        target: '<INVENTORY_HOST>'
+        rsync_opts:
+          - "--exclude=default"
+    ```
+
   * Example config for an generic app, version 3.7.0 of Splunk DB Connect. Version info available as part of the app name. Supports easy upgrade/downgrade by updating the app version and re-deploy.
     ```
     versioned_apps:
