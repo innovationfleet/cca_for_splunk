@@ -1,6 +1,6 @@
 # MENU_DESC=Setup Wizard
 # REPO_TYPE=main
-# EXTRA_VARS=splunk_enterprise_version(8.2.8) cca_splunk_var_tmp(/var/tmp)
+# EXTRA_VARS=splunk_enterprise_version(8.2.9) cca_splunk_var_tmp(/var/tmp)
 - name: Wizard - Setup and aid user to copy and create necessary directories
   hosts: localhost
   connection: local
@@ -18,7 +18,7 @@
     pwd_array: "{{ script_cwd.split('/') }}"
     repo_base: "{{ pwd_array[:-1] | join('/') }}"
     systemd_enterprise_name: "NA_Service"
-    splunk_enterprise_version: "8.2.8"
+    splunk_enterprise_version: "8.2.9"
     splunk_user: "{{ ansible_user_id }}"
     splunk_group: "{{ ansible_user_id }}"
 
@@ -58,11 +58,12 @@
 
   pre_tasks:
 
-    - setup:
+    - name: Run setup
+      setup:
 
     - name: Set sed command for linux/OSx
       ansible.builtin.set_fact:
-        sed_cmd: "{% if ansible_os_family=='Darwin' %}gsed{% else %}sed{% endif %}"
+        sed_cmd: "{% if ansible_os_family == 'Darwin' %}gsed{% else %}sed{% endif %}"
 
     - name: Prompt for initial names
       ansible.builtin.include_role:
@@ -89,8 +90,8 @@
         path: "{{ item }}"
         state: directory
       loop:
-        - "{{ splunk_path }}"
         - "{{ cca_splunk_var_tmp }}"
+        - "{{ splunk_path }}"
 
     - name: Find Splunk install file in tmp directory
       ansible.builtin.find:
@@ -98,17 +99,41 @@
         patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
       register: find_splunk_tgz
 
-    - name: Assert that only a single splunk package is matched
-      ansible.builtin.assert:
-        that:
-          find_splunk_tgz.matched == 1
-        fail_msg: >-
-          Could not find exactly one Splunk tar file on the host
+    - name: block to test assert
+      block:
+        - name: Assert that only a single splunk package is matched
+          ansible.builtin.assert:
+            that:
+              find_splunk_tgz.matched == 1
+            quiet: true
+      rescue:
+        - name: Multiple packages
+          ansible.builtin.debug:
+            msg: >-
+              Found multiple Splunk packages with same version: {{ item.path }}
+          with_items:
+            - "{{ find_splunk_tgz.files }}"
+          loop_control:
+            label: "{{ item.path }}"
+          when: find_splunk_tgz.matched > 1
+
+        - name: No packages
+          ansible.builtin.debug:
+            msg: >-
+              Missing Splunk package: "splunk-{{ splunk_enterprise_version }}-<build-id>-Linux-64.tgz"
+              Please download and add to path : {{ cca_splunk_var_tmp }}
+
+          when: find_splunk_tgz.matched == 0
+
+        - name: fail the playbook as the task was not successful
+          fail:
+            msg: "Ending playbook"
 
     - name: Copy the Splunk install file to splunk infrastructure repo
       ansible.builtin.copy:
         src: "{{ item.path }}"
-        dest: "{{  infra_repo_path }}/splunk/var/images"
+        dest: "{{ infra_repo_path }}/splunk/var/images"
+        mode: '0664'
       with_items:
         - "{{ find_splunk_tgz['files'] }}"
 
@@ -138,7 +163,11 @@
 
     - name: Set fact that the current splunk secret is the secret found in cca_splunk_secret_file
       ansible.builtin.set_fact:
-        cca_identical: "{{ true if vars_current_wizard.cca_splunk_secret_sha256 is defined and stat_splunk_secret.stat.checksum == vars_current_wizard.cca_splunk_secret_sha256 else false }}"
+        cca_identical: "{{ true if vars_current_wizard.cca_splunk_secret_sha256 is defined
+                             and
+                           stat_splunk_secret.stat.checksum == vars_current_wizard.cca_splunk_secret_sha256
+                             else
+                           false }}"
 
     - name: Instantiate cli user, password and password hash
       ansible.builtin.include_role:
