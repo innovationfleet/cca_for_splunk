@@ -3,19 +3,19 @@
 #
 # Description:
 #   The enterprise-bootstrap makes all necessary configurations that is needed
-#   to manage splunk as a non privilieged user, set ulimits, create service
+#   to manage splunk as a non privileged user, set ulimits, create service
 #   files, install required packages and harden the server.
 #
 #   The task include_external_roles takes a list of additional roles that is
 #   needed, i.e. configure additional server parameters, disks, etc.
 #
 # Prerequisite:
-#   A filesytem needs to exist for Splunk Enterprise install path. Recommended
+#   A filesystem needs to exist for Splunk Enterprise install path. Recommended
 #   is to keep the default /opt/splunk and configure it as own LVM.
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2022.3.2
 
 - name: Load OS specific variables if found, else default
   ansible.builtin.include_vars: '{{ item }}'
@@ -42,9 +42,9 @@
   ansible.builtin.include_tasks: dot_bootstrap.yml
 
 # If any of the tasks below is not included, then its guaranteed that Splunk
-# Enterprise will not function as intented. The logic of the below tasks can
+# Enterprise will not function as intended. The logic of the below tasks can
 # however be replaced by tasks in one of the imported custom roles but at your
-# own reponsability.
+# own responsibility.
 
 
 - name: Configure Splunk related FW settings
@@ -60,7 +60,7 @@
 - name: Configure baseline software needed for Ansible management for Splunk
   ansible.builtin.include_tasks: configure_baseline_software.yml
   when:
-    - control.linux_configuration.basline_software | default(true)
+    - control.linux_configuration.baseline_software | default(true)
 
 - name: Setup splunk system and user limits
   ansible.builtin.include_tasks: configure_splunk_limits.yml
