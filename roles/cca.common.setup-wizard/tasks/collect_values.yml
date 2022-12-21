@@ -1,3 +1,4 @@
+
 ---
 # tasks file for cca.common.setup-wizard
 #
@@ -30,6 +31,14 @@
 
  - ansible.builtin.set_fact:
      onboarding_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_onboarding_repo_name if wizard_onboarding_repo_path.user_input | length == 0 else repo_base_path +'/'+ wizard_onboarding_repo_path.user_input }}"
+
+ - name: Check uniqueness of infra and onboarding directory
+   ansible.builtin.assert:
+     that:
+       - infra_repo_path != onboarding_repo_path
+     fail_msg:
+       Error, the directory name of both infra and onboarding are the same,
+       please change one of these directories name.
 
  - name: Prompt for environment name where to store initial templates
    ansible.builtin.pause:
