@@ -7,13 +7,7 @@
 #
 # Author: André Enemark
 #
-# Release: 2022.3.1
-
-- ansible.builtin.set_fact:
-   cca_splunk_secret_path: "{{ infra_repo_path }}/environments/{{ environment_dir }}/group_vars/all"
-
-- ansible.builtin.set_fact:
-   cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
+# Release: 2023.1.1
 
 - ansible.builtin.set_fact:
     vault_path: "{{ user_home }}/secrets"
@@ -64,12 +58,5 @@
 
 - name: Create a onboarding secrets file
   ansible.builtin.file:
-    path: "{{ onboarding_repo_path }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
+    path: "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
     state: touch
-
-- name: Include wizard vars.
-  ansible.builtin.include_vars:
-    file: "{{ cca_splunk_secret_file }}"
-    name: vars_current_wizard
-  when:
-    - stat_cca_splunk_secret_file.stat.exists

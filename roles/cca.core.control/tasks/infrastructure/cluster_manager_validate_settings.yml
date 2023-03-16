@@ -1,0 +1,43 @@
+---
+# tasks file for cca.core.control
+#
+# Description: Match stored file version against hard coded requirements
+#
+# Prerequisite:
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.1.1
+
+- name: To support Splunk Enterprise version 9+, verify that there is a valid defaults file version
+  ansible.builtin.assert:
+    that:
+      - hostvars[groups[group] | first]['cca_infrastructure_defaults_file_version'] is version('2023.1.1', '>=')
+    fail_msg: >-
+      FAILED: Splunk version 9 needs an updated defaults file.
+      Copy latest version from templates/infrastructure_templates/ENVIRONMENT_NAME/group_vars/all/defaults and replace the
+      current file.
+  register: infra_template_version_assert_result
+  ignore_errors: true
+
+- name: Set variable that an assert has failed.
+  ansible.builtin.set_fact:
+    passed_assert_status: false
+  when:
+    - infra_template_version_assert_result.failed | default(None)
+
+- name: To support Splunk Enterprise version 9+, verify that there is a valid infra template version in use
+  ansible.builtin.assert:
+    that:
+      - hostvars[groups[group] | first]['cca_infrastructure_' + group + '_file_version'] is version('2023.1.1', '>=')
+    fail_msg: >-
+      FAILED: Splunk version 9 needs an updated group_vars file for group=({{ group }}).
+      Copy latest version from templates/infrastructure_templates/ENVIRONMENT_NAME/group_vars.
+  register: infra_template_version_assert_result
+  ignore_errors: true
+
+- name: Set variable that an assert has failed.
+  ansible.builtin.set_fact:
+    passed_assert_status: false
+  when:
+    - infra_template_version_assert_result.failed | default(None)

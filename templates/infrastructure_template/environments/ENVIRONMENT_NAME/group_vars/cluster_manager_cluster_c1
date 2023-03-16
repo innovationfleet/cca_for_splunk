@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_cluster_manager_cluster_c1_file_version: '2022.3.1'
+cca_infrastructure_cluster_manager_cluster_c1_file_version: '2023.1.1'
 
 splunk_conf_group_settings:
 
@@ -17,17 +17,26 @@ splunk_conf_group_settings:
       options:
        - option: 'master_uri'
          value: "{{ cca_splunk_license_manager_uri }}"
-         state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
+         state: "{{ 'present'
+                    if
+                      current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '<=')
+                    and
+                      not is_license_manager | default(false)
+                    else
+                      'absent' }}"
          comment: >-
-          Configure license master uri with a DNS alias, to ease future license master migration
-
-    - section: 'config_change_audit'
-      options:
-       - option: 'disabled'
-         value: 'false'
+           Deprecated value from Splunk version 9.0+
+       - option: 'manager_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'present'
+                    if
+                      current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+                    and
+                      not is_license_manager | default(false)
+                    else
+                      'absent' }}"
          comment: >-
-          Enable config audit as it will assist in management of configuration
-          changes
+           Configure license manager uri with a DNS alias, to ease future license manager migration
 
     - section: 'clustering'
       options:
@@ -122,19 +131,25 @@ splunk_conf_group_settings:
 #
 # Base configuration for indexer peers, that can be cluster specific, are
 # managed using a dedicated app. The app is configured directly on the
-# Cluster Manager in the master-apps directory
+# Cluster Manager in the manager-apps directory
 #
 ###############################################################################
  - name: Splunk server.conf for index peers
    filename: server.conf
-   filepath: '{{ splunk_path }}/etc/master-apps/{{ app_name_index_peer_conf }}/local'
+   filepath: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/{{ app_name_index_peer_conf }}/local'
    sections:
     - section: 'license'
       options:
        - option: 'master_uri'
          value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'absent' if current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=') else 'present' }}"
          comment: >-
-          Configure license master uri with a DNS alias, to ease future license master migration
+           Deprecated value from Splunk version 9.0+
+       - option: 'manager_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'present' if current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=') else 'absent' }}"
+         comment: >-
+           Configure license manager uri with a DNS alias, to ease future license manager migration
 
     - section: 'applicationsManagement'
       options:
@@ -153,7 +168,7 @@ splunk_conf_group_settings:
 
  - name: Splunk inputs.conf for index peers
    filename: inputs.conf
-   filepath: '{{ splunk_path }}/etc/master-apps/{{ app_name_index_peer_conf }}/local'
+   filepath: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/{{ app_name_index_peer_conf }}/local'
    sections:
     - section: 'splunktcp:{{ s2s_tcp_port }}'
       options:
@@ -162,7 +177,7 @@ splunk_conf_group_settings:
 
  - name: Splunk limits.conf for index peers
    filename: limits.conf
-   filepath: '{{ splunk_path }}/etc/master-apps/{{ app_name_index_peer_conf }}/local'
+   filepath: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/{{ app_name_index_peer_conf }}/local'
    sections:
     - section: 'default'
       options:
@@ -194,7 +209,7 @@ splunk_conf_group_settings:
 
  - name: Splunk props.conf
    filename: props.conf
-   filepath: '{{ splunk_path }}/etc/master-apps/{{ app_name_index_peer_conf }}/local'
+   filepath: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/{{ app_name_index_peer_conf }}/local'
    sections:
     - section: 'source::*EventLog:Security'
       options:
@@ -206,7 +221,7 @@ splunk_conf_group_settings:
 
  - name: Splunk indexes.conf for indexers
    filename: indexes.conf
-   filepath: '{{ splunk_path }}/etc/master-apps/{{ app_name_index_peer_conf }}/local'
+   filepath: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/{{ app_name_index_peer_conf }}/local'
    sections:
     - section: "{{ 'volume:' + splunk_volume_name_hot }}"
       options:
@@ -302,11 +317,11 @@ splunk_conf_group_settings:
        - option: 'homePath'
          value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
        - option: 'coldPath'
          value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
 
     - section: '_metrics'
       options:
@@ -319,11 +334,11 @@ splunk_conf_group_settings:
        - option: 'homePath'
          value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
        - option: 'coldPath'
          value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
 
     - section: '_metrics_rollup'
       options:
@@ -336,11 +351,28 @@ splunk_conf_group_settings:
        - option: 'homePath'
          value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
        - option: 'coldPath'
          value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
+
+    - section: '_configtracker'
+      options:
+       - option: 'datatype'
+         value: 'metric'
+       - option: 'frozenTimePeriodInSecs'
+         value: "{{ splunk_retentiontime_configtracker | default('2592000') }}"
+         comment: >-
+          If not set, it defaults to 30 days
+       - option: 'homePath'
+         value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
+         comment: >-
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
+       - option: 'coldPath'
+         value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
+         comment: >-
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
 
     - section: '_telemetry'
       options:
@@ -351,11 +383,11 @@ splunk_conf_group_settings:
        - option: 'homePath'
          value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
        - option: 'coldPath'
          value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
          comment: >-
-           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+           Override default value from manager-apps/_cluster/defaults/indexes.conf
 
     - section: '_thefishbucket'
       options:

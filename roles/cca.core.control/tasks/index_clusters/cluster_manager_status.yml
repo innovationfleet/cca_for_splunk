@@ -1,0 +1,41 @@
+---
+# tasks file for cca.core.control
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.1
+
+- name: Check if Splunk is installed and has been started
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/var/log/splunk"
+  register: stat_splunk_enterprise_started
+
+- name: Set fact if splunk is installed
+  ansible.builtin.set_fact:
+    splunk_enterprise_installed: "{{ true if stat_splunk_enterprise_started.stat.exists else false }}"
+
+- name: Get running splunk version
+  ansible.builtin.include_tasks: splunk_version.yml
+  when:
+    - stat_splunk_enterprise_started.stat.exists
+
+- name: Get migration status
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/.cca/master-apps_config_bundle_dir_migrated"
+  register: stat_master_apps_migration_state
+
+- name: Set fact of migration status
+  ansible.builtin.set_fact:
+    master_apps_migration_completed: "{{ true if stat_master_apps_migration_state.stat.exists else false }}"
+  when:
+    - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')

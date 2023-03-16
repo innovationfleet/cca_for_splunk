@@ -1,0 +1,44 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.1.1
+
+- name: Include task to login
+  ansible.builtin.include_tasks: splunk_login.yml
+
+- name: Start kvstore migration
+  run_once: true
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk start-shcluster-migration kvstore -storageEngine wiredTiger"
+  register:
+    kvstore_migration_result
+  changed_when: false
+
+- name: Assert that migration status is as expected
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - kvstore_migration_result.stdout == "SHC KV Store migration has been successfully triggered"
+    fail_msg: >-
+      Kvstore migration status is not as expected.
+  when:
+    - not ansible_check_mode
+
+- name: Wait for kvstore migration engine to complete
+  run_once: true
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk show shcluster-kvmigration-status"
+  register:
+    kvstore_migration_status
+  until: "'migrationStatus: kvstore_migration_completed' in kvstore_migration_status.stdout"
+  retries: "{{ kvstore_migration_retry | default('60') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  changed_when: false
+  when:
+    - not ansible_check_mode

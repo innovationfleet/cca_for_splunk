@@ -7,21 +7,90 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2023.1.1
+
+- name: Assert that the validate_cca_infrastructure_files is set during ansible_check_mode
+  ansible.builtin.assert:
+    that:
+      - ansible_check_mode
+    fail_msg: >-
+      The playbook needs to run in checkmode when validate CCA settings
+  when:
+    - validate_cca_infrastructure_files | default(false)
 
 - name: Include tasks to validate template file versions
   ansible.builtin.include_tasks: validate_cca_infrastructure_file_versions.yml
   when:
-    - target is defined
-    - target == "all_in_one_servers" or
-      target ==  "cluster_managers-cluster_peers" or
-      target ==  "data_collection_nodes" or
-      target ==  "deployment_servers" or
-      target ==  "forwarders" or
-      target ==  "hybrid_searchheads" or
-      target ==  "license_managers" or
-      target ==  "searchhead_deployers-searchhead_members"
     - validate_cca_infrastructure_files | default(false)
+    - ansible_check_mode
+  loop: "{{ groups['splunk_servers'] }}"
+  loop_control:
+    loop_var: loop_inventory_hostname
+
+- name: Issues found in group_vars files, please update before continuing
+  ansible.builtin.debug:
+    msg: "Issue number ({{ index }}) - {{ item.reason }}"
+  loop:
+    - "{{ infrastructure_assert_result_all_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_cluster_manager_cluster_c1_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_cluster_manager_cluster_c2_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_cluster_peers_cluster_c1_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_cluster_peers_cluster_c2_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_data_collection_nodes_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_deployment_servers_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_forwarders_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_hybrid_searchheads_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_license_managers_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_monitoring_consoles_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_searchhead_deployer_shcluster_c1_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_searchhead_deployer_shcluster_c2_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_searchhead_members_shcluster_c1_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_searchhead_members_shcluster_c2_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_standalone_indexers_summary | default({}) }}"
+    - "{{ infrastructure_assert_result_standalone_searchheads_summary | default({}) }}"
+  loop_control:
+    index_var: index
+  failed_when:
+    - infrasturcture_assert_failed
+  when:
+    - item.reason is defined
+    - ansible_check_mode
+
+- name: Infrastructure - Mandatory - Validate that we have correct file version and settings for cluster managers
+  ansible.builtin.include_tasks: infrastructure/cluster_manager_validate_settings.yml
+  loop:
+    - cluster_manager_cluster_c1
+    - cluster_manager_cluster_c2
+    - cluster_manager_cluster_c3
+    - cluster_manager_cluster_c4
+    - cluster_manager_cluster_c5
+    - cluster_manager_cluster_c6
+    - cluster_manager_cluster_c7
+    - cluster_manager_cluster_c8
+    - cluster_manager_cluster_c9
+  loop_control:
+    loop_var: 'group'
+  when:
+    - groups[group] | length > 0
+    - target ==  "cluster_managers-cluster_peers"
+
+- name: Onboarding - Mandatory - Validate that we have correct file version and settings for cluster managers
+  ansible.builtin.include_tasks: onboarding/cluster_manager_validate_settings.yml
+  loop:
+    - cluster_manager_cluster_c1
+    - cluster_manager_cluster_c2
+    - cluster_manager_cluster_c3
+    - cluster_manager_cluster_c4
+    - cluster_manager_cluster_c5
+    - cluster_manager_cluster_c6
+    - cluster_manager_cluster_c7
+    - cluster_manager_cluster_c8
+    - cluster_manager_cluster_c9
+  loop_control:
+    loop_var: 'group'
+  when:
+    - groups[group] | length > 0
+    - target ==  "deploy_manager-apps"
 
 - name: Include task to validate onboarding file versions
   ansible.builtin.include_tasks: validate_cca_onbarding_file_versions.yml

@@ -1,0 +1,3 @@
+{% for i in certificate_data %}
+{{ lookup('file', i) }}
+{% endfor %}

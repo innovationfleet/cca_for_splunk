@@ -8,7 +8,8 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2022.2.1
+
 - name: Check if a server reboot is pending
   ansible.builtin.stat:
-    path: "{{ server_reboot_pending  | default('/tmp/server_reboot.pending') }}"
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
   register: stat_server_reboot_pending

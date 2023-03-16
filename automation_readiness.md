@@ -24,7 +24,7 @@ After that the setup wizard is completed, you can re-run the automation readines
 get at least 2900 in Automation Readiness Score you are able to run CCA for Splunk.
 
 We have also described installation steps according to our best practices, following these steps will increase your Automation Readiness Score.
- * [Python installation](#install-python-39)
+ * [Python installation](#python-39-installation)
  * [Virtual env and Ansible Installation](#create-python-virtual-env-and-install-ansible-with-collections)
 
 ## Optional: CCA Manager Setup (Recommended)
@@ -69,8 +69,8 @@ A remote user that has SSH key based login enabled and has `sudo ALL NO PASSWD` 
 Logon to the server you have designated as CCA for Splunk Manager. First we will create directories where the cloned `cca_for_splunk`repository will reside. See example of commands below.
 
 ```
-mkdir ~/master ~/secrets
-cd ~/master
+mkdir ~/data/main ~/data/secrets ~/clones
+cd ~/clones
 git clone https://github.com/innovationfleet/cca_for_splunk.git
 cd cca_for_splunk
 ```
@@ -80,7 +80,7 @@ We will now execute the Automation Readiness Playbook with `ansible-playbook`com
 In order to perform the execution of this playbook, you need to perform the steps below to "create Python virtual env and Install Ansible with collections"
 
 ```
-cd ~/master/cca_for_splunk
+cd ~/clones/cca_for_splunk
 
 ansible-playbook -i localhost, playbooks/automation_readiness_cca_manager.yml -v
 ```
@@ -90,7 +90,11 @@ ansible-playbook -i localhost, playbooks/automation_readiness_cca_manager.yml -v
 Here we list the different checks that are performed by the Automation Readiness Playbook and what should be configured to correct them if they didn't pass in your playbook execution.
 
 ## Python 3.9 Installation
-As a user with `sudo` privileges execute `sudo yum install python39`
+As a user with `sudo` privileges execute
+
+```
+sudo yum install python39
+```
 
 ## Create Python virtual env and Install Ansible with collections
 Logon as the same user that executed the Automation Readiness Playbook. Execute the following commands to setup Python virtual environment variables & install Ansible
@@ -104,6 +108,7 @@ python -m venv ansible2.12
 source ansible2.12/bin/activate
 ~/tools/python-venv/ansible2.12/bin/python3.9 -m pip install --upgrade pip
 pip install ansible-core==2.12.5
+pip install pcrypt
 ansible-galaxy collection install community.general
 ansible-galaxy collection install ansible.posix
 
@@ -142,13 +147,13 @@ Ansible needs a reference to the private ssh key file that shall be used to acce
 ### ANSIBLE_ROLES_PATH
 
 Ansible needs how to find roles, this is required for `cca_for_splunk` where the playbooks are called from outside the repository. Verify that the directory below match your setup. Add
-`export ANSIBLE_ROLES_PATH=./roles:~/master/cca_for_splunk/roles` to your user profile and source it when you are done and before next automation readiness run.
+`export ANSIBLE_ROLES_PATH=./roles:~/clones/cca_for_splunk/roles` to your user profile and source it when you are done and before next automation readiness run.
 
 ### ANSIBLE_VAULT_PASSWORD_FILE
 
 Use `openssl rand -hex 32` to output a random string that you then add to your `ANSIBLE_VAULT_PASSWORD_FILE` file. See proposed file name below.
 
-Add `export ANSIBLE_VAULT_PASSWORD_FILE=~/secrets/cca_splunk_ansible_vault.secret` to your user profile and source it when you are done and before next automation readiness run.
+Add `export ANSIBLE_VAULT_PASSWORD_FILE=~/data/secrets/cca_ansible_vault_secret` to your user profile and source it when you are done and before next automation readiness run.
 
 
 ## Recommended Environment variables
@@ -161,12 +166,12 @@ If we set it to `mitogen_linear` the playbooks will run much faster, up 4X.
 
 To use it your self, read up on [Ansible Mitogen](https://github.com/mitogen-hq/mitogen). Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
 
-Add `epxport ANSIBLE_STRATEGY="mitogen_linear"`
+Add `export ANSIBLE_STRATEGY="mitogen_linear"`
 to start using the highly recommended strategy plugin.
 
 ### ANSIBLE_STRATEGY_PLUGINS
 
-Add `export ANSIBLE_STRATEGY_PLUGINS="~/tools/mitogen-0.3.2/ansible_mitogen/plugins/strategy"` and set it to the directory where you have installed the mitogen package.
+Add `export ANSIBLE_STRATEGY_PLUGINS=~/tools/mitogen-0.3.2/ansible_mitogen/plugins/strategy` and set it to the directory where you have installed the mitogen package.
 
 ## Optional Environment variables
 
@@ -184,13 +189,13 @@ Increased readability of Ansible terminal output, yaml formatted. Add
 ## Summary of configured variables in your user profile
 
 ```
-export ANSIBLE_PRIVATE_KEY_FILE="~/secrets/splunk_cca_ansible_gcp.pem"
-export ANSIBLE_ROLES_PATH="./roles:~/master/cca_for_splunk/roles"
-export ANSIBLE_STRATEGY_PLUGINS="~/tools/mitogen-0.3.2/ansible_mitogen/plugins/strategy"
+export ANSIBLE_PRIVATE_KEY_FILE=~/data/secrets/cca_ansible_id_rsa
+export ANSIBLE_ROLES_PATH=./roles:~/clones/cca_for_splunk/roles
+export ANSIBLE_STRATEGY_PLUGINS=~/tools/mitogen-0.3.2/ansible_mitogen/plugins/strategy
 export ANSIBLE_STRATEGY="mitogen_linear"
 export ANSIBLE_CALLBACKS_ENABLED="ansible.posix.profile_tasks"
 export ANSIBLE_STDOUT_CALLBACK="yaml"
-export ANSIBLE_VAULT_PASSWORD_FILE="~/secrets/cca_splunk_ansible_vault.secret"
+export ANSIBLE_VAULT_PASSWORD_FILE=~/data/secrets/cca_ansible_vault_secret
 
 source ~/tools/python-venv/ansible2.12/bin/activate
 ```
@@ -198,13 +203,12 @@ Wait with ANSIBLE_VAULT_PASSWORD_FILE until it exists.
 
 ### Splunk Enterprise Package
 
-`cca_for_splunk` uses Splunk Enterprise tgz files for installing Splunk on target Splunk servers. The tgz files is also used by the setup wizard to temporary install.
-Store the Splunk Enterprise for Linux tar file in `/var/tmp/splunk_tmp/`. If you are missing the directory, create it and it will later on be used during the setup wizard.
+`cca_for_splunk` uses Splunk Enterprise tgz files for installing Splunk on target Splunk servers. The setup wizard will store the Splunk Enterprise version in the infrastructure repo at splunk/var/images. Store the initial Splunk Enterprise Linux tar file in `/var/tmp/splunk_tmp/` and the wizard take care of the rest.
 
 # Setup Wizard
 When you have reached a automation readiness score of 2300 then you are ready to run the setup wizard. Read up on what the setup_wizard playbook does [here](/README.md) and **step 2b.**
 
-In short it configures the two companion directories where custom settings and apps are stored. In the playbook you will be questioned to set names on the companion directories, the environment, the general pass4SymmKey and admin password.
+In short it configures the two companion directories where custom settings and apps are stored. In the playbook you will be asked to set names of the companion directories, the environment, the general pass4SymmKey and admin password.
 
 If you have an existing environment that your are transforming, you have to update the pass4SymmKeys for the different cluster and shcluster id's.
 

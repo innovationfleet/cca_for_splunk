@@ -17,7 +17,7 @@
     - target is defined
     - target == "deploy_apps" or
       target == "deploy_deployment-apps" or
-      target == "deploy_master-apps" or
+      target == "deploy_manager-apps" or
       target == "deploy_shcluster_apps"
 
 - name: Delete lock file to manage multi user execution

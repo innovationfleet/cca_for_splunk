@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
 
 - name: Include task to login
   include_tasks: splunk_login.yml
@@ -20,6 +20,6 @@
 
 - name: Set fact if member should be added
   ansible.builtin.set_fact:
-    add_shcluster_mamber: true
+    add_shcluster_member: true
   when:
     - shcluster_member_status_result.stdout | regex_search('(.*Search Head Clustering is not enabled on this node.*)')

@@ -7,7 +7,31 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
+
+- name: Find Splunk install file in repo directory
+  become: false
+  delegate_to: localhost
+  connection: local
+  ansible.builtin.find:
+    paths: "{{ absolute_infra_repo_path }}/splunk/var/images/"
+    patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
+  register: find_cca_splunk_tgz
+
+- name: Assert that we have a splunk tar file
+  become: false
+  delegate_to: localhost
+  connection: local
+  ansible.builtin.assert:
+    that:
+      find_cca_splunk_tgz.files | length == 1
+    fail_msg: >-
+      Found {{ find_cca_splunk_tgz.files | length }} Splunk tar file on the
+      host that matches splunk-{{ splunk_enterprise_version }}-*64.tgz.
+      It needs to be exaclty one, and we found these {{ find_cca_splunk_tgz.files }}
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists or
+      enterprise_upgrade | default(false)
 
 - name: Stage splunk_cca files used during initial install or upgrade of Splunk Enterprise
   ansible.builtin.synchronize:

@@ -13,9 +13,12 @@
     src: "etc/polkit-1/rules.d/10-Splunkd.rules_{{ cca_splunk_polkit_template_version }}.j2"
     dest: /etc/polkit-1/rules.d/10-Splunkd.rules
     mode: '0644'
+  register: polkit_template_status
 
 - name: Restart polkit systemd service
   ansible.builtin.systemd:
     state: restarted
     daemon_reload: yes
     name: polkit
+  when:
+    - polkit_template_status.changed

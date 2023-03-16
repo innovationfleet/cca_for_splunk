@@ -146,8 +146,11 @@ Tasks
   * Set facts for output certificate variables
 * `server_certificate.yml`
   * Set facts for server certificate variables
-* `validate_certificates.yml`
-  * Validates if certificate is available, checks all 4 certificates.
+* `validate_manual_certificates.yml`
+  * Validates if certificate is available and valid, checks all 4 certificates.
+    Compares checksums of certificates stored on Manager server and on Splunk server.
+    If the file doesn't exists or match each other it will trigger the `deploy_manual_certs.yml`
+    task under the condition that `cca_splunk_cert_enrollment_method` is set to manual.
 * `web_certificate.yml`
   * Set facts for web certificate variables
 

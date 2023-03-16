@@ -14,7 +14,7 @@
     cmd: "timeout 5 {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
-  retries: 60
+  retries: 2
   delay: 10
   changed_when: false
   check_mode: false

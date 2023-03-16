@@ -5,6 +5,12 @@
 #
 # Prerequisite:
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Author: Robin Blomdahl
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
+
+- name: Include tasks that will install/upgrade firewalld
+  include_tasks: firewalld/ensure_firewalld.yml
+
+- name: Configure firewalld for splunk
+  include_tasks: firewalld/configure_firewalld.yml

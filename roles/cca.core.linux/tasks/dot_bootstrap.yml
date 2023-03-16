@@ -13,3 +13,5 @@
   ansible.builtin.file:
     path: "{{ splunk_path }}/.bootstrap"
     state: touch
+    owner: "{{ splunk_user }}"
+  changed_when: false

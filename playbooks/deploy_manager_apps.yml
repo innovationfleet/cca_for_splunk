@@ -2,19 +2,20 @@
 #
 # REPO_TYPE=onboarding
 # MENU_DESC=Deploy to Cluster Manager
-# EXTRA_VARS=hide_password(true) accept_master_app_removal(false)
+# EXTRA_VARS=hide_password(true) accept_manager_app_removal(false)
 
-# Initialize playbook run on manager server
-- hosts: manager
+- name: Initialize playbook run on manager server - Deploy Manager Apps
+  hosts: manager
   connection: local
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
     - include_role:
         name: cca.core.control
         tasks_from:
           initialize.yml
       vars:
-        target: "deploy_master-apps"
+        target: "deploy_manager-apps"
 
 # Configure the deployer
 - hosts: cluster_managers
@@ -22,6 +23,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -35,9 +37,11 @@
         msg: '{{ hostvars[inventory_hostname] }}'
         verbosity: 3
 
+  tasks:
     - include_role:
         name: cca.splunk.onboarding
-  tasks:
+
+  post_tasks:
     - include_role:
         name: cca.core.splunk
         tasks_from:
@@ -57,4 +61,4 @@
         tasks_from:
           finalize.yml
       vars:
-        target: "deploy_master-apps"
+        target: "deploy_manager-apps"

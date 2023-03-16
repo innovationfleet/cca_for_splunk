@@ -7,12 +7,20 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2023.1.1
 
-- name: Include task to validate infrastructure file versions
-  ansible.builtin.include_tasks: validate_cca_infrastructure_file_versions.yml
+- name: Get cluster manager status
+  ansible.builtin.include_tasks: index_clusters/cluster_manager_status.yml
   when:
-    - validate_cca_infrastructure_files | default(false)
+    - inventory_hostname in groups.cluster_managers
+
+- name: Migrate master-apps on Cluster Manager
+  ansible.builtin.include_tasks: index_clusters/cluster_manager_cluster_bundle_dir.yml
+  when:
+    - inventory_hostname in groups.cluster_managers
+    - splunk_enterprise_installed
+    - current_splunk_enterprise_version | default(splunk_enterprise_version) | default(splunk_enterprise_version) is version('9.0.0', '>=')
+    - not master_apps_migration_completed
 
 - name: Include licensed CCA pre tasks
   ansible.builtin.include_role:

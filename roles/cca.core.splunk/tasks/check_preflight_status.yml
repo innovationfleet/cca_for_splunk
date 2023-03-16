@@ -20,7 +20,7 @@
       register: kvstore_status
       retries: 6
       delay: 10
-      until: kvstore_status.stdout | default('') | string | regex_search('(status {{ ":" }} ready)')
+      until: "'status : ready' in kvstore_status.stdout | default('') | string"
       changed_when: false
       check_mode: false
 

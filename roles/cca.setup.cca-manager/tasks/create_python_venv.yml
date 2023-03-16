@@ -13,4 +13,4 @@
   ansible.builtin.command:
     cmd: "python{{ cca_python_minor_version }} -m venv ansible{{ cca_ansible_minor_version }}"
   args:
-    chdir: "{{ cca_manager_user_dir }}/tools/python-venv"
+    chdir: "{{ cca_manager_user_dir }}tools/python-venv"

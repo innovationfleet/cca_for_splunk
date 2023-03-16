@@ -83,7 +83,7 @@
   until: splunk_status_result.rc == 0
   retries: 5
   delay: 10
-  changed_when: false
+  changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
   when:
     - not inventory_hostname in groups.searchhead_members
 
@@ -100,6 +100,6 @@
   until: splunk_status_result.rc == 0
   retries: 5
   delay: 10
-  changed_when: false
+  changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
   when:
     - inventory_hostname in groups.searchhead_members

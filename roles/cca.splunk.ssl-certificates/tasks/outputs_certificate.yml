@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
 - name: Set fact for outputs cert to be used in common tasks
   ansible.builtin.set_fact:
     cert_file_name: '{{ cca_splunk_certs_outputs_cert }}'
@@ -16,17 +16,17 @@
     privkey_staging_file_name: '{{ cca_splunk_certs_outputs_staging_key }}'
     privkey_password: '{{ cca_splunk_certs_outputs_sslpassword }}'
     encrypt_private_key: '{{ openssl_certs_outputs_encryption }}'
+    facts_variable: 'cca_splunk_outputs_ssl'
+    cert_type: 'outputs'
   no_log: "{{ hide_password }}"
 
-- name: Validate certs
-  include_tasks: validate_certificates.yml
+- name: Validate manual certs to find if they need updates
+  include_tasks: validate_manual_certificates.yml
+  when:
+    - cca_splunk_cert_enrollment_method == 'manual'
 
-# TODO: Update logic to handle case where cert needs to be renewed.
 - name: Include task to deploy manual certs
   include_tasks: deploy_manual_certs.yml
   when:
     - cca_splunk_cert_enrollment_method == 'manual'
-    - stat_outputs_cert_file.stat.exists | default(false) == false
-
-- name: Validate certs
-  include_tasks: validate_certificates.yml
+    - final_cert_file_result.changed

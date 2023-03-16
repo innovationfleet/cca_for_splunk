@@ -11,7 +11,7 @@
 - name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/'
+    src: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/'
     dest: '{{ splunk_path }}/etc/shcluster/apps/'
     copy_links: true
     recursive: true
@@ -33,7 +33,10 @@
   ansible.builtin.assert:
     that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
     success_msg: 'No critical app directories will be deleted on the deployer'
-    fail_msg: 'An app directory deletion is detected on the deployer'
+    fail_msg: >-
+      An app directory deletion is detected on the deployer. his is not allowed by
+      default. If you expect these directories to be deleted, set accept_shc_app_removal
+      to true in the extra_vars CCA dialogue.
   with_items: "{{ shcluster_apps_update_status.stdout_lines | default('') | list }}"
   when:
     - not accept_shc_app_removal | default(false)
@@ -41,7 +44,7 @@
 - name: Deploy the apps from the staging directory to the deployer
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/'
+    src: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/'
     dest: '{{ splunk_path }}/etc/shcluster/apps/'
     copy_links: true
     recursive: true

@@ -9,8 +9,20 @@
 #              splunk_conf_*_settings needs to be defined.
 #
 # Roger Lindquist (github.com/rlinq)
-# META_DATE
-# META_VERSION
+# Release: 2023.1.1
+
+
+- name: Assert that default_tcpout valid group name when defined
+  ansible.builtin.assert:
+    that:
+      default_tcpout in groups
+    fail_msg: >-
+      The hosts inventory file needs to have a proper group_name
+      referenced in the default_tcpout variable. Current value are
+
+      default_tcpout={{ default_tcpout }}
+  when:
+    - default_tcpout is defined
 
 - name: Parse all sections for general settings and build a loop var
   ansible.builtin.set_fact:

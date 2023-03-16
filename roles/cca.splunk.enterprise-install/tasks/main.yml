@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
 
 # tasks file for cca.splunk.enterprise-install
 #
@@ -28,3 +28,8 @@
 
 - name: Include task to always ensure that splunk is running
   include_tasks: ensure_splunk_status_started.yml
+
+- name: Include task to inform that this host is managed by ansible
+  include_tasks: ansible_managed.yml
+  when:
+    - not cca_splunk_enterprise_upgrade | default(false)

@@ -8,6 +8,7 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2022.2.1
+
 - name: Check if Splunk is installed
   ansible.builtin.stat:
     path: "{{ splunk_path }}/bin/splunk"
@@ -39,7 +40,7 @@
     path: "/etc/systemd/system/{{ systemd_enterprise_name }}"
   register: stat_splunk_enterprise_systemd
 
-- name: Check if current splunk version is installed
+- name: Get current installed splunk version
   ansible.builtin.shell:
     cmd: "timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | awk '{ print $2 }'"
   register: splunk_enterprise_version_result

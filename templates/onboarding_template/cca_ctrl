@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 set -o errexit
@@ -31,18 +32,23 @@ trap "exit 1" TERM
 export ProcessPid=$$
 
 # Get current dir, path and script name
-ScriptPath=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")")
+ScriptPath=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
 DirName=$(basename "$ScriptPath")
 ScriptName=${0##*/}
 
 # CCA for Splunk globals
 CcaScriptName="cca_ctrl"
+
 CcaRepo="cca_for_splunk"
+CcaRepoPath=~/clones/cca_for_splunk
+CcaInfraRepoPath=~/data/main/cca_splunk_infrastructure
+CcaOnbRepoPath=~/data/main/cca_splunk_onboarding
 CcaRepoShort="cca"
 ScriptParams=$@
 Setup=false
 EnforceMultiplexer=true
-PlaybookFindOptions=""
+
+
 sed_cmd="sed"
 CcaRunId=\"cca_runid\":\"${ProcessPid}\"
 
@@ -70,10 +76,10 @@ else
 fi
 
 WhiptailHight=30
-BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2022.3.2"
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2023.1.1"
 CookieFile="${ScriptPath}/.cookie"
-LicenseFile="${ScriptPath}/../${CcaRepo}/LICENSE"
-InfoFile="${ScriptPath}/../${CcaRepo}/RELEASE_NOTES.txt"
+LicenseFile=~/clones/cca_for_splunk/LICENSE
+InfoFile=~/clones/cca_for_splunk/RELEASE_NOTES.txt
 Debug=false
 
 
@@ -227,8 +233,8 @@ cat <<EOF
   infrastructure automation as well as Splunk onboarding
   automation.
 
-* This script will now exit here and if you would like to
-  configure your environment run the script again with
+* This script will exit now. If you would like to configure
+  your environment run the script again with
 
   ./cca_control --setup
 EOF
@@ -672,7 +678,7 @@ function accept_eula() {
 function info_dialog() {
 
   local InfoText="$(${sed_cmd} '$!s/$/\\n/' ${InfoFile} | tr -d '\n')"
-  if [[ $(has_cookie ${CookieFile} "info_md5"\
+  if [[ $(has_cookie "${CookieFile}" "info_md5" \
         $(file_md5 ${InfoFile})) -ne 0  ]] ; then
 
     local InfoAnswer=$(whiptail_confirmationbox "CCA for Splunk Release Notes"\
@@ -686,6 +692,84 @@ function info_dialog() {
 
   fi
 
+}
+
+
+###############################################################################
+# Handle display of info dialog
+# Globals:
+#   Playbooks
+# Locals:
+#   PathDepth
+#   TempPathLength
+# Returns:
+#   Highest number of directories in playbook paths
+###############################################################################
+function get_path_depth() {
+
+  local PathDeepth=0
+
+  for Play in $Playbooks ; do
+
+      local TempPathLength=$(echo $Play | awk -F/ '{print NF-1}')
+
+      if [ $TempPathLength -gt $PathDeepth ] ; then
+
+         echo $TempPathLength
+         break
+
+      fi
+
+  done
+
+}
+
+
+###############################################################################
+# Finds greatest common denominator in a set of file paths. Used to shorten path in
+# UI diaglog.
+# Globals:
+#   Playbooks
+# Locals:
+#   PathDepth
+#   CommonPath
+#   TempPath
+# Returns:
+#   The least common den
+###############################################################################
+function greatest_common_path () {
+
+  local PathDepth=$(get_path_depth)
+  local CommonPath=''
+  local TempPath=''
+  local EndLoop=false
+
+  for Play in $Playbooks ; do
+
+    for ((i=2;i<=$(( PathDepth -1 ));i++)) ; do
+
+    TempPath=$(echo $Play | cut -d"/" -f-${i})
+
+      for Play in $Playbooks ; do
+
+        if [[ ${Play} =~ "${TempPath}".* ]] ; then
+
+            CommonPath=${TempPath}
+
+        else
+
+          echo $CommonPath
+          EndLoop=true
+          break 3
+
+        fi
+      done
+    done
+  done
+
+  if [[ "${EndLoop}" == false ]] ; then
+    echo $CommonPath
+ fi
 }
 
 
@@ -705,25 +789,31 @@ function select_playbook() {
   local PlaybookArray
 
   cd ${ScriptPath}
-  Playbooks=$(find ../ -maxdepth 3 -type d -name "playbooks"\
-	            -o -name "*.yml" ${PlaybookFindOptions}\
+
+    Playbooks=$(find ${ScriptPath}/playbooks ${CcaRepoPath}/playbooks -maxdepth 1\
+	            -name "*.yml"\
                     | grep -e ".*.yml"\
                     | xargs grep "REPO_TYPE=${repo_type}"\
-                    | awk -F: '{ print $1 }' | sort -n )
+                    | awk -F: '{ print $1 }' | sort -u | sort -n )
+
+    CommonPath="$(greatest_common_path)"
+    CommonPath=$(${sed_cmd} "s|/${CcaRepo}||g" <<< ${CommonPath})
+    ReplacePath="$CommonPath/"
 
   if [[ $(wc -w <<< ${Playbooks}) -eq 1 ]] ; then RadioListItemStatus="ON" ; else RadioListItemStatus="OFF" ; fi
 
   for Playbook in ${Playbooks} ; do
 
-    local MenuDesc=("$(grep MENU_DESC ${ScriptPath}/${Playbook} | awk -F= '{ print $2 }')")
+    local MenuDesc=("$(grep MENU_DESC ${Playbook} | awk -F= '{ print $2 }')")
 
     # Add MenuDesc to Items array
     if [[ a"${MenuDesc}" != a ]] ; then
-
        PlaybookArray+=("$(echo ${Playbook}\
-                      | ${sed_cmd} "s/${CcaRepo}/${CcaRepoShort}/g"\
-                      | ${sed_cmd} "s/${DirName}/${repo_type}/g"\
-                      | ${sed_cmd} "s/playbooks/.../g")")
+                     | ${sed_cmd} "s|${CcaRepoPath}/|${CcaRepoShort}/|g"\
+                     | ${sed_cmd} "s|${CcaInfraRepoPath}/|infra/|g"\
+                     | ${sed_cmd} "s|${CcaOnbRepoPath}/|onb/|g"\
+                     | ${sed_cmd} "s|playbooks/|.../|g"\
+                     | ${sed_cmd} "s|//|/|g")")
        PlaybookArray+=("${MenuDesc}")
        PlaybookArray+=("${RadioListItemStatus}")
        MenuDesc=""
@@ -773,7 +863,13 @@ function select_environment() {
 
   done
 
-  SelectedEnvironment=$(whiptail_radiolist "Select environment for ${SelectedPlaybook}"\
+  WindowTextSelectedPlaybook=$(echo ${SelectedPlaybook}\
+                     | ${sed_cmd} "s|\.\.\./|playbooks/|g"\
+                     | ${sed_cmd} "s|${CcaRepoShort}/|${CcaRepoPath}/|g"\
+                     | ${sed_cmd} "s|infra/|${CcaInfraRepoPath}/|g"\
+                     | ${sed_cmd} "s|onb/|${CcaOnbRepoPath}/|g")
+
+ SelectedEnvironment=$(whiptail_radiolist "Select environment for ${WindowTextSelectedPlaybook}"\
          "Environments" "${EnvironmentArray[@]}")
 
 }
@@ -797,7 +893,13 @@ function select_hosts() {
 
   done
 
-  SelectedHosts=$(whiptail_checklist "Host Selection for ${SelectedPlaybook}"\
+  WindowTextSelectedPlaybook=$(echo ${SelectedPlaybook}\
+                     | ${sed_cmd} "s|\.\.\./|playbooks/|g"\
+                     | ${sed_cmd} "s|${CcaRepoShort}/|${CcaRepoPath}/|g"\
+                     | ${sed_cmd} "s|infra/|${CcaInfraRepoPath}/|g"\
+                     | ${sed_cmd} "s|onb/|${CcaOnbRepoPath}/|g")
+
+  SelectedHosts=$(whiptail_checklist "Host Selection for ${WindowTextSelectedPlaybook}"\
      "Hosts that will be part of playbook execution " "${HostArray[@]}")
   ${Debug} && echo "Playbook --limits are:" ${SelectedHosts}
 
@@ -816,14 +918,19 @@ function playbook_hosts() {
   local InSection=false
   local Host
   local HostArray
+
+ SelectedPlaybook=$(echo ${SelectedPlaybook}\
+                    | ${sed_cmd} "s|\.\.\./|playbooks/|g"\
+                    | ${sed_cmd} "s|${CcaRepoShort}/|${CcaRepoPath}/|g"\
+                    | ${sed_cmd} "s|infra/|${CcaInfraRepoPath}/|g"\
+                    | ${sed_cmd} "s|onb/|${CcaOnbRepoPath}/|g")
+
   # Assign the HostArray, restrictive set -u needs it to be defined
   HostArray=${HostArray[@]+"${HostArray[@]}"}
-  SelectedPlaybook=$(echo ${SelectedPlaybook} | ${sed_cmd} "s:/${repo_type}/:/${DirName}/:g"\
-                    | ${sed_cmd} "s:/${CcaRepoShort}/:/${CcaRepo}/:g"\
-                    | ${sed_cmd} "s:/\.\.\./:/playbooks/:g")
+
   IFS=$'\n'
   for Line in $(ansible-playbook --check -i ${ScriptPath}/${SelectedEnvironment}\
-                  --list-hosts ${ScriptPath}/${SelectedPlaybook}) ; do
+                  --list-hosts ${SelectedPlaybook}) ; do
 
     if [[ "${Line}" =~ hosts.\( ]] ; then
 
@@ -868,8 +975,15 @@ function playbook_hosts() {
 function get_extra_vars() {
 
 # Get extra vars options from playbook
-local PlaybookVars=$(grep EXTRA_VARS ${ScriptPath}/${SelectedPlaybook} | cut -d"=" -f2)
-local Title="Extra vars for ${SelectedPlaybook}"
+
+local PlaybookVars=$(grep EXTRA_VARS ${SelectedPlaybook} | cut -d"=" -f2)
+local WindowTextSelectedPlaybook=$(echo ${SelectedPlaybook}\
+                     | ${sed_cmd} "s|\.\.\./|playbooks/|g"\
+                     | ${sed_cmd} "s|${CcaRepoShort}/|${CcaRepoPath}/|g"\
+                     | ${sed_cmd} "s|infra/|${CcaInfraRepoPath}/|g"\
+                     | ${sed_cmd} "s|onb/|${CcaOnbRepoPath}/|g")
+
+local Title="Extra vars for ${WindowTextSelectedPlaybook}"
 local Description="  Here you can add extra variables for the playbook\n\n\
   The supported extra-vars are read from the playbook as #EXTRA_VARS=\n\n\
   Available default variables in this playbook are:\n\
@@ -917,7 +1031,7 @@ function run_playbook () {
   local CheckMode=""
   local AnsiblePlaybookArray
 
-  AnsiblePlaybookArray+=("${ScriptPath}/${SelectedPlaybook}")
+  AnsiblePlaybookArray+=("${SelectedPlaybook}")
   if [[ "${repo_type}" != "main" ]] ; then
       AnsiblePlaybookArray+=("-i ${ScriptPath}/${SelectedEnvironment}")
   fi
@@ -988,43 +1102,62 @@ set +e
 
  test -f .storage/settings && source <(grep = .storage/settings)
 
- if [[ $(file_md5 "${ScriptPath}/${ScriptName}") == \
-       $(file_md5 "${ScriptPath}/../${CcaRepo}/${CcaScriptName}") ]] ;\
- then
-
-  ${Debug} &&  echo "Version OK"
-
- else
-
-   if [[ ! -f "${ScriptPath}/../${CcaRepo}/${CcaScriptName}" ]] ; then
+   if [[ ! -f ${CcaRepoPath}/${CcaScriptName} ]] ; then
 
      echo
      echo "The main CCA repository or cca_ctlr file couldn't be found."
-     echo "Verify that ( ${CcaRepo} ) is the correct repo name"
-     echo "Verify that ( ${CcaScriptName} ) is the correct script name"
+     echo "The CCA Repo needs to exist in path: (${CcaRepoPath})"
+     echo "Infrastructure Repo needs to exist in path: (${CcaInfraRepoPath})"
+     echo "Onboarding Repo needs to exist in path: (${CcaOnbRepoPath})"
      echo "Please copy the cca_ctrl from the CCA repo to this directory"
-     echo "and rerun the script again to see if this solves the issue"
+     echo "and rerun the script again to see if this solves the issue."
 
      trap_cancel "Exit"
 
    fi
 
-   echo "You have an outdated version of the script"
-   echo "Do you want to update it?"
-   if $(confirmation_dialog) ; then
+   if ! [[ ${ScriptPath} =~ (${CcaInfraRepoPath}|${CcaOnbRepoPath}|${CcaRepoPath}) ]] ; then
 
-     cp "${ScriptPath}/../${CcaRepo}/${ScriptName}" "${ScriptPath}/"
-     eval "bash ${ScriptPath}/${ScriptName} ${ScriptParams}"
-     exit 0
+     echo "The Open Source version of CCA for Splunk has fixed paths"
+     echo "for the cca_for_splunk, cca_splunk_infrastructure and"
+     echo "cca_splunk_onboarding repo."
+     echo "Please updated your repos to match the following directories."
+     echo "Infrastructure repo path: (${CcaInfraRepoPath})"
+     echo "Onboarding repo path: (${CcaOnbRepoPath})"
+     echo "CCA Repo path: (${CcaRepoPath})"
+     echo "Thank you!"
+     echo
 
-   else
-
-     echo "\n You answered no, the Script will exit"
-     exit 1
+     trap_cancel "Exit"
 
    fi
 
- fi
+
+   if [[ $(file_md5 "${ScriptPath}/${ScriptName}") == \
+       $(file_md5 ${CcaRepoPath}/${CcaScriptName}) ]] ;\
+
+   then
+
+      ${Debug} &&  echo "Version OK"
+
+   else
+
+     echo "You have an outdated version of the script"
+     echo "Do you want to update it?"
+     if $(confirmation_dialog) ; then
+
+       cp ${CcaRepoPath}/${ScriptName} "${ScriptPath}/"
+       eval "bash ${ScriptPath}/${ScriptName} ${ScriptParams}"
+       exit 0
+
+     else
+
+       echo "\n You answered no, the Script will exit"
+       exit 1
+
+     fi
+
+   fi
 
 }
 
@@ -1118,6 +1251,8 @@ function multiplexer_control () {
 
 }
 
+
+
 ###############################################################################
 # Main part of script
 
@@ -1133,6 +1268,7 @@ validate_os
 # Check option if we should enforce tmux or screen sessions
 test -f .storage/settings && source <(grep = .storage/settings)
 multiplexer_control
+
 
 # Dialog to show the release notes and info text
 info_dialog
@@ -1171,7 +1307,7 @@ else
       echo -n "But the file don't exists yet."
       echo " Create the ${ANSIBLE_VAULT_PASSWORD_FILE} file and add this content to it. Generated with 'openssl rand -hex 32'"
       echo " echo \"$(openssl rand -hex 32)\" > ${ANSIBLE_VAULT_PASSWORD_FILE}"
-      echo "   Script will now exit."
+      echo "   Script will exit now."
       exit 1
     fi
 
@@ -1182,6 +1318,9 @@ fi
 select_hosts
 ${Debug} && echo "${SelectedHosts}"
 
+
+
+
 # Option to add extra variables to playbook execution
 get_extra_vars
 
@@ -1189,3 +1328,4 @@ get_extra_vars
 
 # Summary of what will be executed
 run_playbook
+

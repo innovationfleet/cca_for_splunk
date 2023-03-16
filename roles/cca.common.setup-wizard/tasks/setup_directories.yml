@@ -14,57 +14,59 @@
      path: "{{ item }}"
      state: directory
    loop:
-     - "{{ infra_repo_path }}"
-     - "{{ onboarding_repo_path }}"
+     - "{{ cca_environment.infrastructure_repo_dir }}"
+     - "{{ cca_environment.onboarding_repo_dir }}"
 
- - name: Copy template files for infrastructure
+ - name: Copy template files for infrastructure - may take some time
    ansible.builtin.copy:
      src: "{{ script_cwd }}/templates/infrastructure_template/"
-     dest: "{{ infra_repo_path }}"
+     dest: "{{ cca_environment.infrastructure_repo_dir }}"
 
- - name: Copy template files for onboarding
+ - name: Copy template files for onboarding - may take some time
    ansible.builtin.copy:
      src: "{{ script_cwd }}/templates/onboarding_template/"
-     dest: "{{ onboarding_repo_path }}"
+     dest: "{{ cca_environment.onboarding_repo_dir }}"
 
- - name: Move ENVIRONMENT_NAME to new env directory for infra
+ - name: Move ENVIRONMENT_NAME to new env directory for infra - may take some time
    ansible.builtin.copy:
-     src: "{{ infra_repo_path }}/{{ item }}/ENVIRONMENT_NAME/"
-     dest: "{{ infra_repo_path }}/{{ item }}/{{ environment_dir }}"
+     src: "{{ cca_environment.infrastructure_repo_dir }}/{{ item }}/ENVIRONMENT_NAME/"
+     dest: "{{ cca_environment.infrastructure_repo_dir }}/{{ item }}/{{ environment_dir }}"
    loop:
      - "environments"
 
- - name: Cleanup unused ENVIRONMENT_NAME directory for infra
+ - name: Cleanup unused ENVIRONMENT_NAME directory for infra - may take some time
    ansible.builtin.file:
-     path: "{{ infra_repo_path }}/{{ item }}/ENVIRONMENT_NAME"
+     path: "{{ cca_environment.infrastructure_repo_dir }}/{{ item }}/ENVIRONMENT_NAME"
      state: 'absent'
    loop:
       - "environments"
 
- - name: Move ENVIRONMENT_NAME to new env directory for onboarding
+ - name: Move ENVIRONMENT_NAME to new env directory for onboarding - may take some time
    ansible.builtin.copy:
-     src: "{{ onboarding_repo_path }}/{{ item }}/ENVIRONMENT_NAME/"
-     dest: "{{ onboarding_repo_path }}/{{ item }}/{{ environment_dir }}"
+     src: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/ENVIRONMENT_NAME/"
+     dest: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/{{ environment_dir }}"
    loop:
      - "environments"
      - "splunk/etc/deployment-apps"
      - "splunk/etc/shcluster"
      - "splunk/etc/master-apps"
+     - "splunk/etc/manager-apps"
 
- - name: Cleanup unused ENVIRONMENT_NAME directory for onboarding
+ - name: Cleanup unused ENVIRONMENT_NAME directory for onboarding - may take some time
    ansible.builtin.file:
-     path: "{{ onboarding_repo_path }}/{{ item }}/ENVIRONMENT_NAME"
+     path: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/ENVIRONMENT_NAME"
      state: 'absent'
    loop:
      - "environments"
      - "splunk/etc/deployment-apps"
      - "splunk/etc/shcluster"
      - "splunk/etc/master-apps"
+     - "splunk/etc/manager-apps"
 
  - name: Set execute bit on cca_ctrl file
    ansible.builtin.file:
      path: "{{ item }}/cca_ctrl"
      mode: '0700'
    loop:
-     - "{{  onboarding_repo_path }}"
-     - "{{  infra_repo_path }}"
+     - "{{ cca_environment.onboarding_repo_dir }}"
+     - "{{ cca_environment.infrastructure_repo_dir }}"

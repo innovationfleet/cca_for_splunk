@@ -7,29 +7,29 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
 
 # tasks file for cca.splunk.onboarding
 
 - name: Include task for shcluster app staging
   ansible.builtin.include_tasks: stage_shcluster_apps.yml
   when:
-    - shcluster is defined
+    - shcluster_label is defined
 
 - name: Include task for shcluster app deployment
   ansible.builtin.include_tasks: deploy_shcluster_apps.yml
   when:
-    - shcluster is defined
+    - shcluster_label is defined
 
 - name: Include task for master apps staging
-  ansible.builtin.include_tasks: stage_master_apps.yml
+  ansible.builtin.include_tasks: stage_manager_apps.yml
   when:
-    - cluster is defined
+    - cluster_label is defined
 
 - name: Include task for master apps deployment
-  ansible.builtin.include_tasks: deploy_master_apps.yml
+  ansible.builtin.include_tasks: deploy_manager_apps.yml
   when:
-    - cluster is defined
+    - cluster_label is defined
 
 - name: Include task for apps deployment to splunk instance
   ansible.builtin.include_tasks: deploy_apps.yml

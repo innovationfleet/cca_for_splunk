@@ -1,7 +1,7 @@
 ---
 # REPO_TYPE=infra
 # MENU_DESC=Upgrade Splunk on all NON clustered servers.
-# EXTRA_VARS=cca_splunk_enterprise_upgrade(false),upgrade_check(true)
+# EXTRA_VARS=cca_splunk_enterprise_upgrade(false) upgrade_check(true)
 
 
 # Upgrade non clustered servers in availability group 1

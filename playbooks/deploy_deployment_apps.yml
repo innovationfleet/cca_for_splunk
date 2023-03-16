@@ -5,10 +5,11 @@
 # MENU_DESC=Deploy apps to Deployment Servers
 # EXTRA_VARS=hide_password(true) accept_deployment_app_removal(false)
 
-## Initialize playbook run on manager server
-- hosts: manager
+- name: Initialize playbook run on manager server - Deploy Deployment Apps
+  hosts: manager
   connection: local
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
     - include_role:
         name: cca.core.control
@@ -23,6 +24,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -35,6 +37,12 @@
   tasks:
     - include_role:
         name: cca.splunk.onboarding
+
+  post_tasks:
+    - include_role:
+        name: cca.core.splunk
+        tasks_from:
+          reload_deployment_server.yml
 
     - include_role:
         name: cca.core.control

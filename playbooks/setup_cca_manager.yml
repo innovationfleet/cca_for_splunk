@@ -5,7 +5,19 @@
   gather_facts: 'no'
   serial: 1
   pre_tasks:
-    - setup:
+    - ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Setup CCA manager
+      include_role:
         name: ./roles/cca.setup.cca-manager
+      when:
+        - not post_docker_setup is defined
+
+    - name: Post confgiuration of CCA Manager if running in docker instance
+      include_role:
+        name: ./roles/cca.setup.cca-manager
+        tasks_from:
+          post_configure_cca_manager_user.yml
+      when:
+        - post_docker_setup is defined

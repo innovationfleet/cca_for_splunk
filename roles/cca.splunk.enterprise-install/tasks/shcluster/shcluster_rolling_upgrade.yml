@@ -22,7 +22,7 @@
   ansible.builtin.shell:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk list shcluster-member-info | grep "active"'
   register: shcluster_member_info_status
-  until: shcluster_member_info_status.stdout | default('') | regex_search('(active_historical_search_count{{ ":" }}0)')
+  until: "'active_historical_search_count:0' in shcluster_member_info_status.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -34,7 +34,7 @@
   ansible.builtin.shell:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk list shcluster-member-info | grep "active"'
   register: shcluster_member_info_status
-  until: shcluster_member_info_status.stdout | default('') | regex_search('(active_realtime_search_count{{ ":" }}0)')
+  until: "active_realtime_search_count:0' in shcluster_member_info_status.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false

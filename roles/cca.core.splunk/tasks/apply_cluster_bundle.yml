@@ -7,7 +7,13 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
+
+- name: Check if there is a pending config bundle to be pushed
+  ansible.builtin.stat:
+    path: "{{ cluster_bundle_push_pending }}"
+  register: stat_cluster_bundle_push_pending
+
 - name: Login and check bundle restart status
   block:
     - name: Include tasks to login to splunk cli
@@ -21,6 +27,7 @@
     - name: Apply cluster in validate mode
       ansible.builtin.shell:
         cmd: "{{ splunk_path }}/bin/splunk validate cluster-bundle --check-restart"
+      register: validate_bundle_check_restart_status
       changed_when: false
 
     - name: Wait until last_validated_bundle is more recent than previous timestamp
@@ -31,6 +38,9 @@
       delay: 15
       until: last_check_restart_bundle_epoch.stdout | int > current_epoch | int
       changed_when: false
+      when:
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '<=') or
+          "'Created new bundle with checksum' in validate_bundle_check_restart_status.stdout"
 
     - name: Check validation status
       ansible.builtin.shell:
@@ -83,6 +93,7 @@
         - prompt_rolling_restart | default(false)
   when:
     - not ansible_check_mode
+    - stat_cluster_bundle_push_pending.stat.exists
 
 - name: Apply cluster-bundle
   block:
@@ -113,3 +124,4 @@
         command_retries: "{{ preflight_command_retries | default(30) }}"
   when:
     - not ansible_check_mode
+    - stat_cluster_bundle_push_pending.stat.exists

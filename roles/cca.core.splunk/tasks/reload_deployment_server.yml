@@ -1,0 +1,32 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.1.1
+
+- name: Check if there is a pending deployment server reload
+  ansible.builtin.stat:
+    path: "{{ deployment_server_reload_pending }}"
+  register: stat_deployment_server_reload_pending
+
+- name: Reload Deployment Server
+  block:
+    - name: Include tasks to login to splunk cli
+      ansible.builtin.include_tasks:
+        splunk_login.yml
+
+    - name: Reload deploy-server to notify clients of new apps
+      ansible.builtin.shell: "{{ splunk_path }}/bin/splunk reload deploy-server"
+
+    - name: Cleanup state file for deployment apps push
+      ansible.builtin.file:
+        path: "{{ deployment_server_reload_pending }}"
+        state: absent
+  when:
+    - stat_deployment_server_reload_pending.stat.exists
+

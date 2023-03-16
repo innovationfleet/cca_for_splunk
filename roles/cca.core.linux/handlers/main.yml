@@ -6,3 +6,10 @@
     path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
     state: touch
   listen: notify server reboot
+
+- name: Restart the internal firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
+    enabled: true
+  listen: restart firewalld

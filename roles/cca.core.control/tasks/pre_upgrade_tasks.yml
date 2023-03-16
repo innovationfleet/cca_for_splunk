@@ -7,4 +7,13 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
+
+- name: Include licensed CCA pre upgrade tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_pre_upgrade.role }}"
+    tasks_from:
+      "{{ cca_control_pre_upgrade.task }}"
+  loop_control:
+    loop_var: cca_control_pre_upgrade
+  loop: '{{ cca_control_pre_upgrade_tasks | default([]) if cca_control_pre_upgrade_tasks | default([]) is iterable else [] }}'

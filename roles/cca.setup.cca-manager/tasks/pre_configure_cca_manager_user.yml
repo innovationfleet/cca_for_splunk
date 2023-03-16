@@ -1,0 +1,75 @@
+---
+# tasks file for cca.setup.cca-manager
+#
+# Description: Creates directories and configures user profiles for CCA usage.
+#
+# Prerequisite: SSH access to server with a user that can be setup for CCA usage.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.1.1
+
+- name: Set fact for cca_manager_user_dir
+  ansible.builtin.set_fact:
+    cca_manager_user_dir: "{{ ansible_facts.user_dir }}"
+  when:
+    cca_manager_user_dir is not defined
+
+- name: Create tools directories on cca manager
+  ansible.builtin.file:
+    path: "{{ directory }}"
+    state: 'directory'
+  loop:
+    "{{ cca_manager_tools_directories }}"
+  loop_control:
+     loop_var: directory
+
+- name: Generate a .profile for the user
+  ansible.builtin.copy:
+    dest: "{{ cca_manager_user_dir }}.profile"
+    backup: true
+    content: |
+      ###############################
+      # enable option with better support window resizing
+      shopt -s checkwinsize
+
+      ###############################
+
+      # prompt setting:
+      GREEN="\[\e[0;32m\]"
+      NONE="\[\e[0;0m\]"
+
+      PS1="${GREEN}\u${NONE}@${GREEN}\h: ${NONE}\w${GREEN} \$ ${NONE}"
+      export PS1
+
+      ###############################
+
+      # settings for history:
+      alias logname='whoami'
+      export PROMPT_COMMAND='echo "$(date "+%Y-%m-%d %H:%M:%S") $(logname):${PWD} $(history 1)" >> ~/.bash-history-$(date "+%Y-%m-%d").log'
+      export HISTCONTROL="ignoreboth"
+
+      ###############################
+
+      # aliases:
+      alias cp='cp -iv'                       # Preferred 'cp' implementation
+      alias mv='mv -iv'                       # Preferred 'mv' implementation
+      alias mkdir='mkdir -pv'                 # Preferred 'mkdir' implementation
+      alias ..='cd ../'                       # Go back 1 directory level
+      alias ...='cd ../../'                   # Go back 2 directory levels
+      alias path='echo -e ${PATH//:/\\n}'
+      alias grep='grep --color=auto'
+
+      # If a user has a .profile_local source it
+      if [[ -f ~/{{ cca_docker_mount_dir | default(none) }}.profile_local ]]; then
+
+        source ~/{{ cca_docker_mount_dir | default(none) }}.profile_local
+
+      fi
+
+      if [[ -f ~/{{ cca_docker_mount_dir | default(none) }}.bashrc ]]; then
+
+        source ~/{{ cca_docker_mount_dir | default(none) }}.bashrc
+
+      fi
+    mode: 400
