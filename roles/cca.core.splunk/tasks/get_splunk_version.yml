@@ -23,6 +23,6 @@
   changed_when: false
   check_mode: false
 
-- name: Set fact for current Splunk version or target splunk version of splunk is not running
+- name: Set fact for current Splunk version or target splunk version if splunk is not running
   ansible.builtin.set_fact:
     current_splunk_enterprise_version: "{{ splunk_enterprise_version_result.stdout | default(splunk_enterprise_version) }}"

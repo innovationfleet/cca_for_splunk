@@ -5,7 +5,8 @@
 #              settings. Based on what items that has been updated different
 #              notify actions is triggered.
 #              Special actions is implemented for Splunk core, deployment-apps
-#              shcluster and master-apps.
+#              shcluster and cm bundle directory (master-apps or manager-apps)
+#              depending on Splunk version.
 #
 # Prerequisite:
 #              splunk_settings_update must be defined and have results. This
@@ -22,7 +23,7 @@
   when:
     - (
         item.changed and
-        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-apps).*?$')
+        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-app|manager-apps).*?$')
       ) or
       stat_rolling_restart_pending | default(false) or
       stat_splunkd_restart_pending | default(false) or
@@ -31,7 +32,7 @@
   changed_when:
     - (
         item.changed == true and
-        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-apps).*?$')
+        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-apps|manager-apps).*?$')
       )
       or
       stat_rolling_restart_pending | default(false) or
@@ -89,15 +90,18 @@
   notify: notify shcluster bundle push
   no_log: '{{ hide_password }}'
 
-- name: Notify a Cluster Manager push if master-apps content is updated
+- name: Notify a Cluster Manager push if bundle directory content is updated
   ansible.builtin.set_fact:
     cluster_manager_push: true
   with_items: "{{ cca_splunk_settings_update.results }}"
   when:
     - item.changed
-    - item.path | regex_search('(master-apps)')
+    - item.path | regex_search('(master-apps)') or
+      item.path | regex_search('(manager-apps)')
   changed_when:
     - item.changed
-    - item.path | regex_search('(master-apps)')
+    - item.path | regex_search('(master-apps)') or
+      item.path | regex_search('(manager-apps)')
+
   notify: notify cluster bundle push
   no_log: '{{ hide_password }}'

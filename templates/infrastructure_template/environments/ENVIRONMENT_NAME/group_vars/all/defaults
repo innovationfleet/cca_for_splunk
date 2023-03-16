@@ -5,9 +5,9 @@
 
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_defaults_file_version: '2022.3.2'
-
+cca_infrastructure_defaults_file_version: '2023.1.1'
 splunk_download_url: 'https://download.splunk.com/products/splunk/releases'
+
 splunk_path: "/opt/splunk"
 cca_splunk_var_tmp: "/var/tmp/{{ inventory_hostname }}"
 splunk_enterprise_mgmt_port: '8089'
@@ -15,6 +15,7 @@ splunk_uf_mgmt_port: '48089'
 cca_splunk_cluster_peer_replication_port: '8080'
 cca_splunk_shcluster_member_replication_port: '8181'
 cca_splunk_kvstore_replication_port: '8191'
+cca_splunk_kvstore_engine_version: '4.2'
 
 # Files for splunk handlers
 cluster_bundle_push_pending: "{{ splunk_path }}/var/run/splunk_bundle_push.pending"
@@ -38,7 +39,7 @@ dot_cca_splunk_bootstrap: "{{ splunk_path }}/.cca_splunk_bootstrap"
 hide_password: true
 
 # Check for invalid configuration patterns
-invalid_config_regex: '({|}|\[|\]|UPDATE)'
+invalid_config_regex: '({|}|\[|\]|UPDATE|No.*FoundInInventory|MissingInventoryVar)'
 
 # Default service names and commands
 systemd_enterprise_name: "Splunkd.service"
@@ -55,4 +56,7 @@ stop_uf_systemd_command: "systemctl stop {{ systemd_uf_name }}"
 
 # CCA tuning parameters
 cluster_peer_rolling_restart_preflight_retries: '180'
+
+# Calculated value depending on Splunk Enterprise version
+cluster_manager_config_bundle_dir: "{{ 'manager-apps' if current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=') else 'master-apps' }}"
 

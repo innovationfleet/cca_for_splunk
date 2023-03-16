@@ -90,6 +90,7 @@
         source ~/.bashrc
 
       fi
+      unset LS_COLORS
     mode: 400
 
 - name: Get python path
@@ -111,7 +112,7 @@
     state: 'present'
   with_items:
     - { regex: 'ANSIBLE_VAULT_PASSWORD_FILE', value: 'export ANSIBLE_VAULT_PASSWORD_FILE={{ cca_manager_ansible_vault_secret_path }}' }
-    - { regex: 'ANSIBLE_ROLES_PATH', value: 'export ANSIBLE_ROLES_PATH={{ cca_ansible_roles_path }}' }
+    - { regex: 'ANSIBLE_ROLES_PATH', value: 'export ANSIBLE_ROLES_PATH={{ cca_ansible_roles_path }}' }
     - { regex: 'PROFILE_TASKS_TASK_OUTPUT_LIMIT', value: 'export PROFILE_TASKS_TASK_OUTPUT_LIMIT=15' }
     - { regex: 'PROFILE_TASKS_SORT_ORDER', value: 'export PROFILE_TASKS_SORT_ORDER=descending' }
     - { regex: 'ANSIBLE_INTERPRETER_PYTHON', value: 'export ANSIBLE_INTERPRETER_PYTHON=auto_silent' }

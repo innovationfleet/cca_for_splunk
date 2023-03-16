@@ -28,3 +28,4 @@
 - name: Set password to never expire, despite no password is used
   ansible.builtin.command:
     cmd: "{{ 'chage -m -1 -M -1 ' + splunk_user }}"
+  changed_when: false

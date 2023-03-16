@@ -1,0 +1,31 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.1.1
+
+- name: Include task to login
+  ansible.builtin.include_tasks: splunk_login.yml
+
+- name: Check kvstore migration readiness
+  run_once: true
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk start-shcluster-migration kvstore -storageEngine wiredTiger -isDryRun true"
+  register:
+    kvstore_migration_readiness_status
+  check_mode: false
+  changed_when: false
+
+- name: Assert that migration readiness status is as expected
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - kvstore_migration_readiness_status.stdout == "Dry run for SHC KV Store migration for search head cluster passed"
+    fail_msg: >-
+      Kvstore migration is not ready
+  check_mode: false

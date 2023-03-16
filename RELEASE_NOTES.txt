@@ -31,6 +31,92 @@
 
     Release notes:
 
+        2023.1.1
+             - Bumped recommended Splunk Enterprise Version to 9.0.4.
+             - Splunk Enterprise 9 support
+                 * Upgrade Playbook handles SHC kvstore migration and upgrade. New variable
+                   shc_upgrade_kvstore_engine to control the update.
+                 * Updated group_vars files to handle cluster config bundle directory differences
+                   between Splunk Enterprise 8 and 9 by introducing a dynamic variable.
+                   (cluster_manager_config_bundle_dir)
+                 * manage_index_clusters.yml playbook will prompt for migration of master-apps
+                   to manager-apps at first run on Splunk Enterprise 9
+                 * onboarding repo needs updates, deploy_manager_apps.yml will inform what to do.
+                 * Extra condition added to group files to change master_uri to manager_uri for
+                   license stanza in server.conf.
+                 * CCA customer file version check, assert that critical files are up to date.
+                 * Moved settings for config_change_tracker to general_settings and made it
+                   conditional for Splunk 9+ as the previous setting config_change_audit is
+                   deprecated.
+                 * Verify that all SHC servers has the same version.
+                 * Introduced a group_vars/all/defaults variable to control kvstore engine version.
+                   (cca_splunk_kvstore_engine_version)
+                 * Adding settings to manage new index _configtracker.
+                 * Removed legacy settings for config_change_audit that is deprecated by Splunk.
+                 * Splunk Enterprise EULA
+                   roles/cca.splunk.enterprise-install/files/dat/splunk-license-eula.txt
+                 * Improved availability validation of Splunk Enterprise tgz file before installation.
+             - This release comes with important updates to group_vars files, to get a list of
+               files that needs to be updated a new task and playbook has been developed.
+               The validate_cca_parameters.yml playbook only runs in Ansible check mode.
+               ./cca_ctrl -c Select validate_cca_infrastructure_parameters.yml playbook,
+               run and review the result.
+             - Bias names change in CCA, master directory changed to main to reflect default
+               git branch name. All tasks names with master changed to manager.
+             - Setup cca manager playbook and roles are reworked to support Docker Container
+               images.
+             - Setup wizard no longer require Splunk binaries to generate password, secrets or
+               encrypted password hashes.
+                 * pip pcrypt is required to generate Splunk secrets.
+             - Setup wizard can be re-run to update singular stored secrets and passwords.
+             - Major lint update to playbooks.
+                 * Moved ansible managed tasks from post_tasks to enterprise install.
+                 * Added any_errors_fatal to all playbooks to abort execution when an issue
+                   or validation didn't pass.
+             - Automated certificate renewal implemented, triggers when
+               cca_splunk_cert_enrollment_method is set to manual and the checksum differs
+               for a certificate or key file between manager and Splunk server. Validating
+               private key and securing proper EOL in cert and key files.
+             - Added assert to give a helpful message if private key decryption fail during
+               manual certificate deployment.
+             - Added assert to give a helpful message when a default_tcpout variable is
+               misconfigured in the inventory hosts file.
+             - Improved assert message when detecting app removals during onboarding deployment.
+             - New tasks to handle pre and post configuration of CCA Manager user.
+             - Included more patterns to detect missing and required variables before deploying
+               settings in Splunk.
+             - General ansible lint and spelling corrections.
+             - Firewall configuration on Splunk servers, default disabled. Controlled by settings
+               in group_vars/all/linux (configure_firewall)
+             - Onboarding directories names for cluster and shcluster are now aligned with
+               cluster_label and shcluster_label. Enables descriptive labels that allows correlation
+               between inventory hosts files, onboarding repo and Monitoring Console.
+             - General updates to README files.
+             - Restricted playbook failure detecting to break on fatal errors. Ease troubleshooting and
+               stability by halting when an errors is discovered instead of continuing with other hosts
+               in the same play.
+             - Tuned playbook to suppress changes notification where it makes sense. A playbook should
+               returned all OK if nothing was changed on the host.
+             - Tasks for deploy_deployment_apps now handles deployment server reload.
+             - Role: cca.core.control
+                * Included csv file with latest versions of onboarding and infrastructure template
+                  files.
+
+              Bug fixes:
+                  * Corrected variable name in search head cluster member logic
+                  * Moved state file for ansible managed server to enterprise installation task.
+                  * Corrected option name for deployment_servers, option disabled. Perform a manual
+                    of the template file if upgrading to this framework version.
+                  * Corrected pass4SymmKey reference in searchhead_members_shcluster_c2. Manual
+                    update of group_vars file are required.
+                  * Corrected playbooks with better error handling and task description.
+                  * Added missing reload_deployment_server tasks for deployment apps onboarding
+                  * Corrected group_vars for deployment_servers where serverName and pass4SymmKey
+                    was incorrectly set in the servervclass.conf section instead of server.conf.
+                    Incorrect values needs to be set to absent to be removed by CCA.
+                  * Changed regex_search to 'value' in output to reduce Ansible warnings.
+
+
         2022.3.2
              - Recommended Splunk Enterprise version updated to 8.2.9 for production use.
                Added new diff file for Splunk enterprise 8.2.9.

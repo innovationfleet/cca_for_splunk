@@ -19,10 +19,21 @@
       - shcluster_service_ready_flag | default(false)
       - shcluster_stable_captain_flag | default(false)
       - not shcluster_manual_detention_flag | default(true)
+      - shcluster_kvstore_status_flag | default(false)
     fail_msg: >-
       Upgrade precheck failed, to override upgrade precheck. Add --extra-vars='{"shcluster_precheck":false}'
     success_msg: >-
       All prechecks passed
+  when:
+    - shcluster_precheck | default(true)
+  check_mode: false
+
+- name: Verify that all SHC members has the same version
+  ansible.builtin.assert:
+    that:
+      - shcluster_splunk_version.stdout.split() | length == 1
+    fail_msg: >
+      Review SHC status, {{ shcluster_splunk_version.stdout }} versions detected.
   when:
     - shcluster_precheck | default(true)
   check_mode: false

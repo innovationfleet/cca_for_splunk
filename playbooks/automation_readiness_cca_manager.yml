@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "v2022.3.2"
+        cca_release: "2023.1.1"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:
@@ -77,9 +77,9 @@
           - ansible_version.full is version('2.11.0', '>=')
         fail_msg:
           You need to have ansible-core version 2.11 or 2.12 on your control host to use
-          the automation framework. Detected version {{ ansible_version.full }}
+          the automation framework. Detected version {{ ansible_version.full }}
         success_msg: >-
-          You are running an validated ansible version {{ ansible_version.full }}
+          You are running an validated ansible version {{ ansible_version.full }}
           in {{ ansible_env.VIRTUAL_ENV | default('no VIRTUAL_ENV, a venv should be configured') }}
       run_once: true
       delegate_to: localhost
@@ -116,7 +116,7 @@
     - name: Get Python3 version from virtual environment
       connection: local
       shell:
-        cmd: "{{ ansible_env.VIRTUAL_ENV }}/bin/python3 --version | awk '{ print $2 }'"
+        cmd: "{{ ansible_env.VIRTUAL_ENV }}/bin/python3 --version | awk '{ print $2 }'"
       register: cca_python3_version_status
       run_once: true
       delegate_to: localhost
@@ -128,9 +128,9 @@
           - cca_python3_version_status.stdout is version('3.9.0', '>=')
         fail_msg: >-
           You need to have Python3 version 3.9+ on your control host to use
-          the automation framework. Detected version {{ cca_python3_version_status.stdout }}
+          the automation framework. Detected version {{ cca_python3_version_status.stdout }}
         success_msg: >-
-          You are running an validated Python3 version {{ cca_python3_version_status.stdout }}
+          You are running an validated Python3 version {{ cca_python3_version_status.stdout }}
       ignore_errors: true
       register: assert_result
 
@@ -402,14 +402,14 @@
         that:
           - not mgr_readiness_score | int < max_readiness_score | int
         fail_msg: >-
-          Your Manager readiness score is {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
+          Your Manager readiness score is {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
           Please review the output and the documentation on how to improve your automation
           readiness, so that you can start using CCA for Splunk from this host.
           Readiness score: {{ mgr_readiness_score }}.
           CCA Release: {{ cca_release }}. Ansible Playbook has checksum {{ stat_ansible_playbook.stat.checksum }}.
         success_msg: >-
           Good work, your manager host looks great, you are ready to start utilizing CCA for Splunk!
-          Readiness score: {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
+          Readiness score: {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
           CCA Release: {{ cca_release }}. Ansible Playbook has checksum {{ stat_ansible_playbook.stat.checksum }}.
       register: readiness_score
       ignore_errors: true

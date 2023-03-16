@@ -1,0 +1,81 @@
+---
+# tasks file for cca.setup.cca-manager
+#
+# Description: Creates directories and configures user profiles for CCA usage.
+#
+# Prerequisite: SSH access to server with a user that can be setup for CCA usage.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.1.1
+
+- name: Set fact for cca_manager_ansible_vault_secret_path
+  ansible.builtin.set_fact:
+    cca_manager_ansible_vault_secret_path: "{{ cca_manager_user_dir }}/secrets/cca_ansible_vault_secret"
+  when:
+    cca_manager_ansible_vault_secret_path is not defined
+
+- name: Create directories on cca manager
+  ansible.builtin.file:
+    path: "{{ directory }}"
+    state: 'directory'
+  loop:
+    "{{ cca_manager_directories }}"
+  loop_control:
+     loop_var: directory
+
+- name: Check if secrets file exists
+  ansible.builtin.stat:
+    path: "{{ cca_manager_ansible_vault_secret_path }}"
+  register: stat_vault_secret
+
+- name: Generate a vault secret if it's missing
+  ansible.builtin.shell:
+    cmd: "openssl rand -hex 32 >> {{ cca_manager_ansible_vault_secret_path }}"
+  when:
+    - not stat_vault_secret.stat.exists
+
+- name: Touch file to ensure it exists
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: 'touch'
+  with_items:
+    - "{{ cca_manager_user_dir }}.profile_local"
+    - "{{ cca_manager_user_dir }}.bash_profile"
+
+- name: Get python path
+  ansible.builtin.command:
+    cmd: "which python{{ cca_python_minor_version }}"
+  register: result_python_path
+
+- name: Add settings to .profile_local for CCA usage
+  ansible.builtin.lineinfile:
+    dest: "{{ cca_manager_user_dir }}.profile_local"
+    regex: "{{ item.regex }}"
+    line: "{{ item.value }}"
+    firstmatch: true
+    state: 'present'
+  with_items:
+    - { regex: 'ANSIBLE_VAULT_PASSWORD_FILE', value: 'export ANSIBLE_VAULT_PASSWORD_FILE={{ cca_manager_ansible_vault_secret_path }}' }
+    - { regex: 'ANSIBLE_ROLES_PATH', value: 'export ANSIBLE_ROLES_PATH={{ cca_ansible_roles_path }}' }
+    - { regex: 'PROFILE_TASKS_TASK_OUTPUT_LIMIT', value: 'export PROFILE_TASKS_TASK_OUTPUT_LIMIT=15' }
+    - { regex: 'PROFILE_TASKS_SORT_ORDER', value: 'export PROFILE_TASKS_SORT_ORDER=descending' }
+    - { regex: 'ANSIBLE_INTERPRETER_PYTHON', value: 'export ANSIBLE_INTERPRETER_PYTHON=auto_silent' }
+    - { regex: 'ANSIBLE_PRIVATE_KEY_FILE', value: 'export ANSIBLE_PRIVATE_KEY_FILE={{ cca_ansible_private_key_file }}' }
+    - { regex: 'ANSIBLE_HOST_KEY_CHECKING', value: 'export ANSIBLE_HOST_KEY_CHECKING=false' }
+    - { regex: 'ANSIBLE_CALLBACKS_ENABLED', value: 'export ANSIBLE_CALLBACKS_ENABLED=ansible.posix.profile_tasks' }
+    - { regex: 'ANSIBLE_CALLBACK_ENABLED', value: 'export ANSIBLE_CALLBACK_ENABLED=profile_tasks' }
+    - { regex: 'ANSIBLE_STDOUT_CALLBACK', value: 'export ANSIBLE_STDOUT_CALLBACK=yaml' }
+    - { regex: "python='/usr/bin/python'", value: "alias python='{{ result_python_path.stdout }}'" }
+    - { regex: 'source ~/tools/python-venv/ansible', value: 'source ~/tools/python-venv/ansible{{ cca_ansible_minor_version }}/bin/activate' }
+
+- name: Add settings to .bash_profile for CCA usage
+  ansible.builtin.lineinfile:
+    dest: "{{ cca_manager_user_dir }}.bash_profile"
+    regex: "{{ item.regex }}"
+    line: "{{ item.value }}"
+    firstmatch: true
+    state: 'present'
+    backup: true
+  with_items:
+    - { regex: '^\[ -f ~/.profile', value: '[ -f ~/.profile ] && source ~/.profile' }

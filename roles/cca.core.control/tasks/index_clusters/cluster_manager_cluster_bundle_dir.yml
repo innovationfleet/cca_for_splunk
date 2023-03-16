@@ -1,0 +1,185 @@
+---
+# tasks file for cca.core.control
+#
+# Description: Get information about cluster manager cluster bundle dir and use the info to
+#              migrate the bundle when Splunk Enterprise version > 9.0+
+#
+# Prerequisite: Splunk is installed
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.1.1
+
+- name: Check if we have a master-apps directory
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/etc/master-apps"
+  register: stat_master_apps
+
+- name: Get files in master-apps directory of Cluster Manager
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.find:
+    paths: "{{ splunk_path }}/etc/master-apps"
+    patterns: ".*"
+    hidden: true
+    recurse: true
+    file_type: any
+  register: master_apps_files
+  when:
+    - stat_master_apps.stat.exists
+
+- name: Loop through master-apps directory files
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.debug:
+    msg: "{{ item.path }}"
+  with_items:
+    "{{ master_apps_files.files | default([]) | list }}"
+  when:
+    - item.path != "/opt/splunk/etc/master-apps/_cluster/default/indexes.conf"
+    - item.path != "/opt/splunk/etc/master-apps/_cluster/local/README"
+  register: user_content_master_apps
+  no_log: "{{ hide_password }}"
+
+- name: Set fact when master-apps are untouched
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.set_fact:
+    master_apps_untouched: true
+  when:
+    - user_content_master_apps.skipped
+
+- name: Prompt to migrate master-apps to manager-apps if master-apps has custom content
+  ansible.builtin.pause:
+    prompt: >-
+      IMPORTANT. CCA manages cluster bundle configuration only in manager-apps when
+      Splunk Enterprise is version 9 or higher. Would you like to move content from
+      master-apps to manager-apps directory, answer (yes/no)?
+  register: prompt_answer
+  when:
+    - not master_apps_untouched | default(false)
+    - not migrate_master_apps | default(false)
+
+- name: Validate answer and inform user if other than a yes answer is received
+  ansible.builtin.pause:
+    prompt: "Received answer: ({{ prompt_answer.user_input }}), expected a yes, playbook will exit"
+    minutes: 1
+  when:
+    - prompt_answer.user_input is defined
+    - prompt_answer.user_input != "yes"
+    - not master_apps_untouched | default(false)
+    - not migrate_master_apps | default(false)
+
+- name: Assert master-apps migration conditions is as expected
+  ansible.builtin.assert:
+    that:
+      - prompt_answer.user_input == "yes"
+      - master_apps_untouched | default(true)
+      - migrate_master_apps | default(true)
+  when:
+    - prompt_answer.user_input is defined
+
+- name: Get directories in master-apps directory of Cluster Manager
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.find:
+    paths: "{{ splunk_path }}/etc/master-apps"
+    recurse: true
+    file_type: directory
+  register: master_apps_directories
+  when:
+    - not master_apps_untouched | default(false)
+
+- name: Create directories in manager-apps before copying files
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item.path | replace('master-apps', 'manager-apps') }}"
+    state: directory
+  with_items:
+    "{{ master_apps_directories.files }}"
+  when:
+    - not master_apps_untouched | default(false)
+    - not master_apps_migration_state | default(false)
+
+- name: Copy files from master-apps to manager-apps
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.copy:
+    src: "{{ item.path }}"
+    dest: "{{ item.path | replace('master-apps', 'manager-apps') }}"
+    remote_src: true
+  with_items:
+    "{{ master_apps_files.files }}"
+  when:
+    - not master_apps_untouched | default(false)
+    - not master_apps_migration_state | default(false)
+
+- name: Delete files from master-apps after content copy
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items:
+    "{{ master_apps_files.files }}"
+  when:
+    - item.path != "{{ splunk_path }}/etc/master-apps/_cluster/default/indexes.conf"
+    - item.path != "{{ splunk_path }}/etc/master-apps/_cluster/local/README"
+    - not master_apps_untouched | default(false)
+
+- name: Delete directories from master-apps after content copy
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items:
+    "{{ master_apps_directories.files }}"
+  when:
+    - master_apps_directories.matched | default(0) > 0
+    - 'item.path not in "{{ splunk_path }}/etc/master-apps/_cluster/default"'
+    - 'item.path not in "{{ splunk_path }}/etc/master-apps/_cluster/local"'
+    - not master_apps_untouched | default(false)
+
+- name: Delete .git related files and directories from master-apps after content copy
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ splunk_path }}/etc/master-apps/.git"
+    - "{{ splunk_path }}/etc/master-apps/.gitignore"
+  when:
+    - not master_apps_untouched | default(false)
+
+- name: Create directory used by cca to store state files
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/.cca"
+    state: directory
+    mode: '775'
+
+- name: Create state file when master-apps has been migrated
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/.cca/master-apps_config_bundle_dir_migrated"
+    state: touch
+    mode: '600'

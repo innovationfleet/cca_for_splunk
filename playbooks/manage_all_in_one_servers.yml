@@ -1,13 +1,14 @@
-# Playbook to handle All in One servers
+# Playbook to handle All In One servers
+#
 # REPO_TYPE=infra
 # MENU_DESC=Manage All in One servers
 # EXTRA_VARS=hide_password(true) debug(false)
 
-
-- name: Initialize playbook run on manager server
+- name: Initialize playbook run on manager server - All in One Servers
   hosts: manager
   connection: local
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
     - name: Include initialize task
       ansible.builtin.include_role:
@@ -17,10 +18,15 @@
       vars:
         target: "all_in_one_servers"
 
+
 - name: Verify that connection to all servers are ok before we start
   hosts: all_in_one_servers
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
@@ -33,6 +39,7 @@
         name: cca.core.control
         tasks_from:
           pre_tasks.yml
+
 
 - name: Configure the server(s)
   hosts: all_in_one_servers
@@ -78,13 +85,6 @@
           configure_user_profile.yml
 
   post_tasks:
-
-    - name: Add file to inform that this host is managed by ansible
-      ansible.builtin.include_role:
-        name: cca.core.splunk
-        tasks_from:
-          ansible_managed.yml
-
     - name: Check if there is any pending actions
       ansible.builtin.include_role:
         name: cca.core.splunk

@@ -73,10 +73,22 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
+  changed_when: false
+  check_mode: false
+  when:
+    - not status_shc_init
+
+- name: Wait until kvstore is ready
+  ansible.builtin.shell:
+    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
+  register: kvstore_status
+  retries: 6
+  delay: 10
+  until: "'status : ready' in kvstore_status.stdout | default('') | string"
   changed_when: false
   check_mode: false
   when:
@@ -86,7 +98,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(rolling_restart_flag {{ ":" }} 0)')
+  until: "'rolling_restart_flag : 0' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false

@@ -4,10 +4,11 @@
 # MENU_DESC=Deploy to standalone Splunk instances
 # EXTRA_VARS=hide_password(true)
 
-# Initialize playbook run on manager server
-- hosts: manager
+- name: Initialize playbook run on manager server - Deploy Apps
+  hosts: manager
   connection: local
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
     - include_role:
         name: cca.core.control
@@ -22,6 +23,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -44,6 +46,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -66,6 +69,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -88,6 +92,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -99,6 +104,8 @@
   tasks:
     - include_role:
         name: cca.splunk.onboarding
+
+  post_tasks:
     - include_role:
         name: cca.core.control
         tasks_from:

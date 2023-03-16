@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
 - name: Set fact for web cert to be used in common tasks
   ansible.builtin.set_fact:
     cert_file_name: '{{ cca_splunk_certs_web_cert }}'
@@ -16,19 +16,18 @@
     privkey_staging_file_name: '{{ cca_splunk_certs_web_staging_key }}'
     privkey_password: '{{ cca_splunk_certs_web_sslpassword }}'
     encrypt_private_key: '{{ openssl_certs_web_encryption }}'
+    facts_variable: 'cca_splunk_web_ssl'
+    cert_type: 'web'
   no_log: "{{ hide_password }}"
 
-- name: Validate certs
-  include_tasks: validate_certificates.yml
+- name: Validate manual certs to find if they need updates
+  include_tasks: validate_manual_certificates.yml
+  when:
+    - cca_splunk_cert_enrollment_method == 'manual'
 
-# TODO Better logic for when to renew certs.
 - name: Include task to deploy manual certs
   include_tasks: deploy_manual_certs.yml
   when:
-    ( cca_splunk_cert_enrollment_method == 'manual' and
-    stat_web_cert_file.stat.exists | default(false) == false )
-    or
-    ( renew_web_cert | default(false) == true )
+    - cca_splunk_cert_enrollment_method == 'manual'
+    - final_cert_file_result.changed
 
-- name: Validate certs
-  include_tasks: validate_certificates.yml

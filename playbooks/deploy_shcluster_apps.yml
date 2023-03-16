@@ -4,10 +4,11 @@
 # MENU_DESC=Deploy to SHC
 # EXTRA_VARS=hide_password(true) accept_shc_app_removal(false) force_bundle_push(false)
 
-# Initialize playbook run on manager server
-- hosts: manager
+- name: Initialize playbook run on manager server - Deploy Search Head Cluster Apps
+  hosts: manager
   connection: local
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
     - include_role:
         name: cca.core.control
@@ -22,6 +23,7 @@
   become_method: sudo
   become_user: splunk
   gather_facts: false
+  any_errors_fatal: true
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -35,9 +37,11 @@
         msg: '{{ hostvars[inventory_hostname] }}'
         verbosity: 3
 
+  tasks:
     - include_role:
         name: cca.splunk.onboarding
-  tasks:
+
+  post_tasks:
     - include_role:
         name: cca.core.splunk
         tasks_from:

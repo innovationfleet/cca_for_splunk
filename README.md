@@ -8,6 +8,7 @@ See how you can manage certificates, upgrades & app deployments with full contro
 
 You can find the Project Presentation as well as a Q&A section in the [Wiki](https://github.com/innovationfleet/cca_for_splunk/wiki).
 
+
 # Do I need CCA for Splunk ?
 
 Whether you use & manage Splunk internally, or if you are a consultant with Splunk expertise deploying architecture for your clients, or if you want to deploy standalone test or development instance, or deploy a new enterprise multi-site cluster - CCA for Splunk suits all possible use cases & scenarios and can be your greatest companion in your Splunk administration journey.
@@ -16,14 +17,21 @@ With this framework you are able to automatically deploy a full Splunk cluster o
 
 If you invest time in implementing CCA for Splunk you can recover time lost later with automatic manual tasks, but perhaps more importantly also gain better configuration consistency across your platform, raise quality of your services dependent on Splunk - all while keeping it secure and ready to deliver business value!
 
+# Commercial version of CCA for Splunk ?
+
+CCA for Splunk is designed to be a companion tool for Splunk administrators in any type of Enterprise. As any tool, it requires a lot of competence from the user to wield effectively. For Splunk Enterprise or Splunk Cloud customers who want to start their automation journey with CCA for Splunk with support and additional enterprise functionality, we offer a complete package of both technology and supporting services in the CCA for Splunk Premium portfolio.
+
+Visit our [CCA for Splunk - Premium](https://www.orangecyberdefense.com/se/cca-for-splunk) page and read more about who backs this project and what else you can do with CCA for Splunk.
+
+
 # Where does CCA for come from ?
 
-The framework concept utilized in CCA for Splunk goes back several years and has proven to be absolutely critical in managing complex Splunk infrastructures with 100+ servers in several environments. 450+ tasks has been developed across 10 carefully created Ansible roles. For this first release, more than 1000 development hours have been invested, so that you can get the scalability that you should expect out of a automation framework.
+The framework concept utilized in CCA for Splunk goes back several years and has proven to be absolutely critical in managing complex Splunk infrastructures with 100+ servers in several environments. 450+ tasks has been developed across 10 carefully created Ansible roles. We continuously invest hundreds of development hours for every release, so that you can get the scalability that you should expect out of a automation framework.
 Besides adding your servers to the ansible inventory file, there is less than 25 parameters that you have to set per environment - then off you go to much different Splunk journey going forward.
 
 The templates that we provide for configuring Splunk roles are used in our own Multisite Cluster implementations. After you have configured your project, the control is in your hands when it comes to deciding your settings. Adding or modifying parameters has no impact on the framework and are localized under your control.
 
-Playbooks are DRY (Don't Repeat Yourself), with almost no tasks - instead they are using common code in roles. So an update of a task has just to be done in one place, keeping code updates much cleaner and easily overviewed.
+Playbooks are DRY (Don't Repeat Yourself), with almost no tasks - instead they are using common code in roles. So an update of a task has just to be done in one place, keeping code updates much cleaner and easier to overview.
 
 # Technically what is CCA for Splunk ?
 
@@ -41,13 +49,19 @@ Our design principles behind the project are:
 * Make data valuable
 * Sharing is caring
 
-We base our configuration and naming standard on [Splunk Validated Architecture](https://www.splunk.com/pdfs/technical-briefs/splunk-validated-architectures.pdf) description. See [Ansible Inventory File](/environments/infra_template/hosts) for naming convention and Ansible groups layout.
+We base our configuration and naming standard on [Splunk Validated Architecture](https://www.splunk.com/pdfs/technical-briefs/splunk-validated-architectures.pdf) description. See [Ansible Inventory File](/templates/infrastructure_template/environments/ENVIRONMENT_NAME/hosts) for naming convention and Ansible groups layout.
 
 # Architecture
 ## Prerequisites
 Before you can initiate CCA for Splunk, the environments needs to fulfil some basic requirements.
 
-The easiest way to setup a CCA manager is to use the `setup_cca_manager.yml` playbook from a device that is suitable. The following perquisites is needed:
+### Docker - cca_for_splunk
+
+To use the docker image for 'CCA for Splunk' by following the instruction in
+[CCA for Splunk - Docker Repo](https://github.com/innovationfleet/docker).
+
+### Manual Setup
+The easiest way to setup a CCA manager from scratch is to use the `setup_cca_manager.yml` playbook from a device that is suitable. The following perquisites is needed:
 * Access to a server where you would like to deploy CCA Manager.
 * Python 3.9 installed on that server.
 * Ansible locally installed on your device from where you run the setup playbook, any recent ansible version should be good to use.
@@ -77,12 +91,12 @@ The repository that holds all infrastructure configurations and the ansible host
 
 **Onboarding Repo**
 
-The repository holds all data onboarding related configuration and aps. This repo has user specific configurations and apps and should be connected to a central remote repository. Secrets are stored in ansible vaults and can thus be safely store in the repo.
+The repository holds all data onboarding related configuration and apps. This repo has user specific configurations and apps and should be connected to a central remote repository. Secrets are stored in ansible vaults and can thus be safely store in the repo.
 
 
 ### Repository overview
 
-![CCA Overview](media/cca_overview.jpeg)
+![CCA Overview](media/cca_overview.png)
 
 - **CORE - cca_for_splunk** : This is the main repository where the core code of CCA for Splunk is stored. Treat this repository as read-only, do not store any custom playbooks or roles in this repo as that will break future updates. Custom roles and playbooks can easily be added to the below repositories in their respective `roles` and `playbooks` directory. Inclusion of the custom playbooks are automatic in `cca_ctrl`
 
@@ -100,9 +114,15 @@ The repository holds all data onboarding related configuration and aps. This rep
 
 **Step 1: Plan your architecture**
  CCA for Splunk can deploy anything from standalone servers to multisite clusters, and up to 9 clusters in each environment, controlled by the same automation framework.
- A proper planning is key to define the type of architure(s) that will be created, their environment, individual specifications and requirements.
+ A proper planning is key to define the type of architecture(s) that will be created, their environment, individual specifications and requirements.
 
-**Step 2: Install the Manager and pull CCA for Splunk**
+**Step 2: Alt 1: Use docker image for cca_for_splunk**
+
+To use the docker image for CCA for Splunk follow the instruction in
+[CCA for Splunk - Docker Repo](https://github.com/innovationfleet/docker).
+When completed you can jump to step **3**
+
+**Step 2: Alt 2: Install the Manager and pull CCA for Splunk**
 Machine minimum requirements:
  CPU: 2core
  RAM: 4GB
@@ -115,14 +135,20 @@ Read up on our [Automation Readiness](/automation_readiness.md) page.
 
 These playbooks will check your automation readiness of both the Manager server, and your Splunk infrastructure in simple assert tasks. When you have passed all assert checks, your environment is ready for the automation journey to start.
 
-**b**) run `./cca_crtl --setup` from the **cca_for_splunk** repo. The wizard will ask you to provide the following information:
+**Step 3: Setup your environment**
 
-* Name of your repo to store Splunk Infrastructure configuration (cca_splunk_infrastructure)
-* Name of your repo to store Splunk Onboarding configuration (cca_splunk_onboarding)
+Watch the video to see the steps of setup manager before you continue.
+
+[![cca_for_splunk Setup Wizard](https://asciinema.org/a/567633.svg)](https://asciinema.org/a/567633)
+
+
+**b**) run `./cca_ctrl --setup` from the **cca_for_splunk** repo. The wizard will ask you to provide the following information:
+
 * Name of your environment (cca_lab)
 
-When this information is collected a temporary splunk installation will be performed and used to generate a splunk.secret file, hash passwords and pass4SymmKeys. After the installation is completed you will be asked to provide the following information:
+When this information is collected, template files will be copied from the **cca_for_splunk/templates** directory to build the base for the two required repositories, when this is completed you will be asked to provide the following information:
 
+* Splunk Secret, this is the key used to encrypt and decrypt Splunk Passwords and secrets. Accept the generated key or provide your own.
 * The name of the admin user (admin)
 * The password for the admin user, a random password is generated. Store it if you choose to use it.
 * The general pass4SymmKey that is used by Splunk for S2S communication, like communication to license managers. If you have an existing infrastructure, use that pass4SymmKey. If not keep the random key.
@@ -146,14 +172,13 @@ To access the cleartext value of one of the ansible secrets, run the following c
 ansible -i environments/cca_lab -m debug -a "var=cca_splunk_certs_server_default_sslpassword" localhost
 ```
 
-**c**) Verification
-verify that two companion repos has been created and staged with the correct information.
+**c**) Verification: Verify that two companion repos has been created and staged with the correct information.
 
-**Step 3:**  Update ansible inventory files and variable values in the following files in your environment directory.
+**Step 4:**  Update ansible inventory files and variable values in the following files in your environment directory.
 
 * group_vars/all/env_specific
-  * cca_splunk_license_manager_uri: 'https://UPDATE_LICENSE_MANGER_FQDN:8089'
-  * UPDATE the clustering manager uris if needed.
+  * cca_splunk_license_manager_uri: 'https://UPDATE_LICENSE_MANAGER_FQDN:8089'
+  * domain_name: 'UPDATE_DOMAIN.NAME'
   * cca_splunk_alert_action_smtp: 'UPDATE_SMTP_SERVER_FQDN'
   * cca_splunk_health_alert_action_email_to: 'UPDATE_ALERT_EMAIL_ADDRESS'
   * cca_splunk_extension_cert_rootca: 'UPDATE_ROOT_CA_EXPIRE_DATE_Issuing_CA_EXPIRE_DATE.pem'
@@ -169,6 +194,8 @@ verify that two companion repos has been created and staged with the correct inf
 * group_vars/all/linux
   * splunk_user_uid: 'UPDATE_SPLUNK_UID'
   * splunk_user_gid: 'UPDATE_SPLUNK_GID'
+  * firewall_zone_name: 'UPDATE_ZONE_NAME'
+  * firewall_zone_description: 'UPDATE_ZONE_DESCRIPTION'
 * hosts
   * UPDATE Splunk S2S ports if the default don't match your environment.
   * UPDATE Splunk enterprise version to your desired version.
@@ -179,7 +206,22 @@ verify that two companion repos has been created and staged with the correct inf
   * maxVolumeDataSizeMB_hot="UPDATE_HOT_VOLUME_SIZE_MB"
   * maxVolumeDataSizeMB_cold="UPDATE_COLD_VOLUME_SIZE_MB"
 
-**Step 4:**
+**Step 5:**
+
+Before you start using CCA after an updating to a new release, run the playbook `validate_cca_infrastructure_parameters.yml` to verify that all files in your `cca_splunk_infrastructure` repo are up to date with the required versions in the CCA framework. The verification needs to run in check mode, see command below.
+
+```
+cd ~/data/main/cca_splunk_infrastructure
+./cca_ctrl -c
+```
+
+To run an infrastructure playbook:
+```
+cd ~/data/main/cca_splunk_infrastructure
+./cca_ctrl -c
+```
+
+
 
 If you have servers that is not yet setup for Splunk Enterprise, start by running the `configure_linux_servers.yml` playbook that will prepare the server with users, services and settings to install Splunk Enterprise on it. See [README.md](/roles/cca.core.linux/README.md)
 for cca.core.linux role.
@@ -188,9 +230,15 @@ When the server configuration is completed, run playbook for managing one of the
 
 If you are to install a multisite index and search head cluster. Start with configuring the index cluster using the playbook [manage_index_clusters.yml](/playbooks/manage_index_clusters.yml) before you run the playbook [manage_searchhead_cluster.yml](/playbooks/manage_searchhead_clusters.yml)
 
-**Step 5:**
+**Step 6:**
 
 Now when your Splunk infrastructure is running smooth, it's time to onboard data and apps. Follow the documentation at [cca.splunk.onboarding](/roles/cca.splunk.onboarding/README.md). When the apps and configuration are completed, run one of the deploy_* playbooks to deploy your apps to the destination server.
+
+To run an onboarding playbook:
+```
+cd ~/data/main/cca_splunk_onboarding
+./cca_ctrl -c
+```
 
 ## README's
 
@@ -203,5 +251,5 @@ Now when your Splunk infrastructure is running smooth, it's time to onboard data
 * [cca.core.linux](/roles/cca.core.linux/README.md)
 * [cca.common.setup-wizard](/roles/cca.common.setup-wizard/README.md)
 * [cca.splunk.onboarding](/roles/cca.splunk.onboarding/README.md)
-* [cca.splunk.user-profiles](/roles/cca.splunk.user-profiles/README.md)
+* [cca.splunk.user-profile](/roles/cca.splunk.user-profile/README.md)
 * [cca.setup.cca-manager](/roles/cca.setup.cca-manager/README.md)

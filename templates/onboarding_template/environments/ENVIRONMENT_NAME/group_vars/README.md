@@ -31,10 +31,10 @@ rsync_opts:
 Standard rsync arguments applies, `rsync_opts` defined here are merged with default `rsync_opts` from `group_vars/all/onboarding`
 
 ```
-dest_dir: 'master-apps|shcluster/apps|deployment-apps'
+dest_dir: 'manager-apps|master-apps|shcluster/apps|deployment-apps'
 ```
 
-Apps will be installed in SPLUNK_HOME/etc/apps by default. If needed override by specifying dest_dir variable and set it to either of `master-apps|shcluster/apps|deployment-apps`
+Apps will be installed in SPLUNK_HOME/etc/apps by default. If needed override by specifying dest_dir variable and set it to either of `manager-apps|master-apps|shcluster/apps|deployment-apps`
 
 
 ## Example app configuration
@@ -73,9 +73,9 @@ selected_deployment_apps:
 
 # Cluster Manager Apps
 
-For cluster manager apps, all apps located in `master-apps/ENVIRONMENT_NAME/cluster_ID` will be included in the deployment towards the cluster manager. Additional selected master-apps can be specified.
+For cluster manager apps, all apps located in `manager-apps/ENVIRONMENT_NAME/cluster_ID` will be included in the deployment towards the cluster manager. Additional selected manager-apps can be specified.
 ```
-selected_master_apps:
+selected_manager_apps:
   - name: 'innovationfleet_props_conf'
     source_app: 'innovationfleet_props_conf'
     state: 'present'

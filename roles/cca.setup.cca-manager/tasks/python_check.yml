@@ -7,12 +7,12 @@
        supported_python_dist_version=false
        supported_python_source_version=false
 
-       if [[ -f /usr/bin/python{{ cca_python_minor_version }} ]] ; then
+       if [[ -f /usr/bin/python{{ cca_python_minor_version }} ]] ; then
          supported_python_dist_version=true
        fi
 
-       if [[ -f /usr/local/bin/python{{ cca_python_minor_version }} ]] ; then
-         if [[ $(/usr/local/bin/python{{ cca_python_minor_version }} --version | grep -c "Python {{ cca_python_minor_version }}") -gt 0 ]] ; then
+       if [[ -f /usr/local/bin/python{{ cca_python_minor_version }} ]] ; then
+         if [[ $(/usr/local/bin/python{{ cca_python_minor_version }} --version | grep -c "Python {{ cca_python_minor_version }}") -gt 0 ]] ; then
            supported_python_source_version=true
          fi
        fi

@@ -7,43 +7,74 @@
 # Prerequisite:
 #
 # Author: André Enemark
+#         Roger Lindquist
 #
-# Release: 2022.2.4
+# Release: 2023.1.1
 
- - ansible.builtin.set_fact:
-     repo_base_path: "{{ cca_environment.default_repo_base_path }}"
+- name: Prompt for environment name where to store initial templates
+  ansible.builtin.pause:
+    prompt: "Enter a environment name without space characters ({{ cca_environment.default_environment_dir }})"
+  register: wizard_environment
 
- - name: Prompt for a directory name where to store Splunk CCA Infrastructure config, default {{ cca_environment.default_infra_repo_name }}
-   ansible.builtin.pause:
-     prompt: "Enter directory name in which to save the infra config ({{ cca_environment.default_infra_repo_name }})"
-   register: wizard_infra_repo_path
+- ansible.builtin.set_fact:
+    environment_dir: "{{ cca_environment.default_environment_dir if wizard_environment.user_input | length == 0 else wizard_environment.user_input }}"
 
- - ansible.builtin.set_fact:
-     infra_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_infra_repo_name if wizard_infra_repo_path.user_input | length == 0 else repo_base_path +'/'+ wizard_infra_repo_path.user_input }}"
+- ansible.builtin.set_fact:
+   cca_splunk_secret_path: "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all"
 
- - ansible.builtin.set_fact:
-     absolute_infra_repo_path: "{{ infra_repo_path }}"
+- ansible.builtin.set_fact:
+   cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
 
- - name: Prompt for a directory name where to store Splunk CCA Onboarding config, default {{ cca_environment.default_onboarding_repo_name }}
-   ansible.builtin.pause:
-     prompt: "Enter directory name in which to save the onboarding config ({{ cca_environment.default_onboarding_repo_name }})"
-   register: wizard_onboarding_repo_path
+- name: Set splunk secret to an existing one or new
+  ansible.builtin.set_fact:
+    tmp_splunk_secret: "{{ cca_environment.random_splunk_secret }}"
 
- - ansible.builtin.set_fact:
-     onboarding_repo_path: "{{ repo_base_path +'/'+ cca_environment.default_onboarding_repo_name if wizard_onboarding_repo_path.user_input | length == 0 else repo_base_path +'/'+ wizard_onboarding_repo_path.user_input }}"
+- name: Accept random splunk secret or provide your own
+  ansible.builtin.pause:
+    prompt: "Press enter for random secret or enter an existing one that is exactly 254 character, ({{ tmp_splunk_secret }})"
+  register: wizard_splunk_secret
 
- - name: Check uniqueness of infra and onboarding directory
-   ansible.builtin.assert:
-     that:
-       - infra_repo_path != onboarding_repo_path
-     fail_msg:
-       Error, the directory name of both infra and onboarding are the same,
-       please change one of these directories name.
+- name: Assert length of Splunk secret
+  ansible.builtin.assert:
+    that:
+      - wizard_splunk_secret.user_input | length == 254
+    fail_msg: The provided splunk secret is not 254 characters, got ({{ wizard_splunk_secret.user_input | length }})
+  when:
+    - wizard_splunk_secret.user_input != ''
 
- - name: Prompt for environment name where to store initial templates
-   ansible.builtin.pause:
-     prompt: "Enter a environment name without space characters ({{ cca_environment.default_environment_dir }})"
-   register: wizard_environment
+- ansible.builtin.set_fact:
+    splunk_secret: "{{ tmp_splunk_secret if wizard_splunk_secret.user_input | length == 0 else wizard_splunk_secret.user_input }}"
 
- - ansible.builtin.set_fact:
-     environment_dir: "{{ cca_environment.default_environment_dir if wizard_environment.user_input | length == 0 else wizard_environment.user_input }}"
+- name: Vault the splunk secret
+  ansible.builtin.set_fact:
+    vaulted_secret_value: >-
+      {{ splunk_secret | vault(lookup('ansible.builtin.file', ansible_env.ANSIBLE_VAULT_PASSWORD_FILE))
+      | split() | join('\r\n')
+      | regex_replace('1.2;AES256;filter_default', '1.1;AES256') }}
+
+- name: Create necessary directory if they are missing
+  ansible.builtin.file:
+    path: '{{ item.path }}'
+    state: '{{ item.type }}'
+    mode: '0755'
+  loop:
+    - { type: 'directory', path: '{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all' }
+    - { type: 'touch', path: '{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets' }
+    - { type: 'directory', path: '{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all' }
+
+- name: Save the clear text secret as an ansible vault in infra repo
+  ansible.builtin.lineinfile:
+    path: "{{ vars.cca_splunk_secret_file }}"
+    line: 'cca_splunk_secret: !vault "{{ vaulted_secret_value }}"'
+    regex: '^cca_splunk_secret:'
+
+- name: Get checksum of splunk secret
+  ansible.builtin.shell:
+    cmd: "echo -n {{ splunk_secret }} | sha256sum | awk '{ print $1 }'"
+  register: splunk_secret_checksum
+
+- name: Store checksum of the splunk.secret file
+  ansible.builtin.lineinfile:
+    path: "{{ vars.cca_splunk_secret_file }}"
+    line: "cca_splunk_secret_sha256: '{{ splunk_secret_checksum.stdout }}'"
+    regex: '^cca_splunk_secret_sha256:'

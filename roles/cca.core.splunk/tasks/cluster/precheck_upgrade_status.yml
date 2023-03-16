@@ -18,3 +18,13 @@
     fail_msg: One of the precheck flags are not as expected
   when:
     - cluster_precheck | default(false)
+
+- name: Verify that all index cluster peers has the same version
+  ansible.builtin.assert:
+    that:
+      - cluster_peer_splunk_version.stdout.split() | length == 1
+    fail_msg: >
+      Review cluster statue, {{ cluster_peer_splunk_version.stdout }} versions detected.
+  when:
+    - cluster_precheck | default(true)
+  check_mode: false

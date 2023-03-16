@@ -13,6 +13,7 @@
   ansible.builtin.shell:
     cmd: cat /etc/default/grub | grep GRUB_CMDLINE_LINUX | awk -F\" '{ print $2 }' | sed -E 's:transparent_hugepage=[[:alpha:]]{1,}[[:space:]]{0,}::' | xargs
   register: grub_cmdline_linux_result
+  changed_when: false
 
 - name: Update the grub file if needed based on regexp and new line
   ansible.builtin.lineinfile:

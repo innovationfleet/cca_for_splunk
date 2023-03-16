@@ -7,12 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.1.1
 - name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ cluster }}/'
-    dest: '{{ splunk_path }}/etc/master-apps/'
+    src: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/'
+    dest: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/'
     copy_links: true
     recursive: true
     checksum: true
@@ -23,7 +23,7 @@
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: 'sudo -u {{ splunk_user }} rsync'
-    rsync_opts: '{{ master_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else master_apps_rsync_opts }}'
+    rsync_opts: '{{ manager_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else manager_apps_rsync_opts }}'
   register: cluster_apps_update_status
   check_mode: true
   no_log: "{{ hide_password }}"
@@ -33,16 +33,19 @@
   ansible.builtin.assert:
     that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
     success_msg: 'No critical app directories will be deleted on the cluster manager'
-    fail_msg: 'An app directory deletion is detected on the cluster_manager'
+    fail_msg: >-
+      An app directory deletion is detected on the cluster_manager. This is not allowed by
+      default. If you expect these directories to be deleted, set accept_manager_app_removal
+      to true in the extra_vars CCA dialogue.
   with_items: "{{ cluster_apps_update_status.stdout_lines | default('') | list }}"
   when:
-    - not accept_master_app_removal | default(false)
+    - not accept_manager_app_removal | default(false)
 
 - name: Deploy the apps from the staging directory to the cluster manager
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ cluster }}/'
-    dest: '{{ splunk_path }}/etc/master-apps/'
+    src: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/'
+    dest: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/'
     copy_links: true
     recursive: true
     checksum: true
@@ -53,5 +56,5 @@
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: 'sudo -u {{ splunk_user }} rsync'
-    rsync_opts: '{{ master_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else master_apps_rsync_opts }}'
+    rsync_opts: '{{ manager_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else manager_apps_rsync_opts }}'
   notify: notify cluster bundle push

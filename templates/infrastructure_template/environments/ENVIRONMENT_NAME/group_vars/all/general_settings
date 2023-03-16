@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_general_settings_file_version: '2022.2.1'
+cca_infrastructure_general_settings_file_version: '2023.1.1'
 
 # General settings for Splunk.
 # Group and host settings should be configured in
@@ -209,6 +209,19 @@ splunk_conf_general_settings:
             state: 'absent'
           - option: 'serverCert'
             value: "{{ cca_splunk_certs_home_path + '/' +  cca_splunk_certs_server_cert }}"
+
+      - section: 'config_change_tracker'
+        options:
+          - option: 'disabled'
+            value: 'false'
+            state: "{{ 'present'
+                    if
+                      current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+                    else
+                      'absent' }}"
+        comment: >-
+           Enable config audit as it will assist in management of configuration
+           changes
 
 
   - name: Splunk splunk-launch.conf

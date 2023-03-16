@@ -3,7 +3,7 @@
 #
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_defaults_file_version: '2022.3.2'
+cca_onboarding_defaults_file_version: '2023.1.1'
 
 splunk_download_url: 'https://download.splunk.com/products/splunk/releases'
 splunk_path: "/opt/splunk"
@@ -47,4 +47,7 @@ stop_enterprise_systemd_command: "systemctl stop {{ systemd_enterprise_name }}"
 start_uf_systemd_command: "systemctl start {{ systemd_uf_name }}"
 restart_uf_systemd_command: "systemctl restart {{ systemd_uf_name }}"
 stop_uf_systemd_command: "systemctl stop {{ systemd_uf_name }}"
+
+# Calculated value depending on Splunk Enterprise version
+cluster_manager_config_bundle_dir: "{{ 'manager-apps' if current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=') else 'master-apps' }}"
 

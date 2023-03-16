@@ -15,7 +15,7 @@ cca_infra_lock_wait_sec: 1800
 
 # License Information, it's highly recommended to use a DNS alias as
 # reference to the host that serves as the license manager
-cca_splunk_license_manager_uri: 'https://UPDATE_LICENSE_MANGER_FQDN:8089'
+cca_splunk_license_manager_uri: 'https://UPDATE_LICENSE_MANAGER_FQDN:8089'
 
 # Clustering information, fill in the list of clusters that should
 # be referenced by the search heads in shcluster. Note that "clustermanager:"

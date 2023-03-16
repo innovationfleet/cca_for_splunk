@@ -1,0 +1,44 @@
+---
+# tasks file for cca.splunk.role-searchhead
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.1.1
+
+- name: Include task to login
+  ansible.builtin.include_tasks: splunk_login.yml
+
+- name: Start kvstore engine upgrade
+  run_once: true
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk start-shcluster-upgrade kvstore -version {{ cca_splunk_kvstore_engine_version }}"
+  register:
+    kvstore_engine_upgrade_result
+  changed_when: false
+
+- name: Assert that upgrade status is as expected
+  run_once: true
+  ansible.builtin.assert:
+    that:
+      - kvstore_engine_upgrade_result.stdout == "SHC KV Store upgrade has been successfully triggered"
+    fail_msg: >-
+      Kvstore migration status is not as expected.
+  when:
+    - not ansible_check_mode
+
+- name: Wait for kvstore engine upgrade to complete
+  run_once: true
+  ansible.builtin.shell:
+    cmd: "{{ splunk_path }}/bin/splunk show kvstore-status --verbose | grep serverVersion | sort -u | grep -v '{{ cca_splunk_kvstore_engine_version }}' | wc -l"
+  register:
+    kvstore_upgrade_status
+  until: kvstore_upgrade_status.stdout == '0'
+  retries: "{{ kvstore_upgrade_retry | default('60') }}"
+  delay: "{{ retry_delay | default('30') }}"
+  changed_when: false
+  when:
+    - not ansible_check_mode

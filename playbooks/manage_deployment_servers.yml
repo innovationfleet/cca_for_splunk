@@ -4,107 +4,122 @@
 # MENU_DESC=Manage Deployment Servers
 # EXTRA_VARS=hide_password(true)
 
-# Initialize playbook run on manager server
-- hosts: manager
+- name: Initialize playbook run on manager server - Deployment Servers
+  hosts: manager
   connection: local
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
-    - include_role:
+    - name: Include initialize task
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           initialize.yml
       vars:
         target: "deployment_servers"
 
-# Verify that connection to all servers are ok before we start
-- hosts: deployment_servers
+
+- name: Verify that connection to all servers are ok before we start
+  hosts: deployment_servers
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   strategy: linear
+  any_errors_fatal: true
   pre_tasks:
-    - include_role:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           wait_for_connection.yml
 
-    - include_role:
+    - name: Include pre tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_tasks.yml
 
-# Configure the Splunk instances
-- hosts: deployment_servers
+
+- name: Configure the Splunk instances
+  hosts: deployment_servers
   become: true
   become_method: sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 1
+  any_errors_fatal: true
   pre_tasks:
-    - setup:
+    - name: Gather only network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
 
-    - name: Debug all vars
-      debug:
-        msg: '{{ hostvars[inventory_hostname] }}'
-      when:
-        debug | default(false)
-
   tasks:
-    - include_role:
+    - name: Ensure Splunk is installed
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-    - include_role:
+
+    - name: Configure server certificate in Splunk
+      ansible.builtin.include_role:
         name: cca.splunk.ssl-certificates
         tasks_from:
           server_certificate.yml
-    - include_role:
+
+    - name: Configure web server certificate in Splunk
+      ansible.builtin.include_role:
         name: cca.splunk.ssl-certificates
         tasks_from:
           web_certificate.yml
-    - include_role:
+
+    - name: Include role to configure outputs certificates
+      ansible.builtin.include_role:
         name: cca.splunk.ssl-certificates
         tasks_from:
           outputs_certificate.yml
-    - include_role:
+
+    - name: Configure settings for Splunk UI
+      ansible.builtin.include_role:
         name: cca.splunk.frontend
-    - include_role:
+
+    - name: Manage Splunk conf settings
+      ansible.builtin.include_role:
         name: cca.core.splunk
-    - include_role:
+
+    - name: Manage settings for the Splunk user profile
+      ansible.builtin.include_role:
         name: cca.splunk.user-profile
         tasks_from:
           configure_user_profile.yml
 
   post_tasks:
-    - name: Add file to inform that this host is managed by ansible
-      include_role:
-        name: cca.core.splunk
-        tasks_from:
-          ansible_managed.yml
-
     - name: Check if there is any pending actions
-      include_role:
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           check_pending_actions.yml
 
     - name: Restart splunkd if needed
-      include_role:
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           restart_splunkd.yml
       when:
-        - stat_splunkd_restart_pending.stat.exists == true
+        - stat_splunkd_restart_pending.stat.exists
 
-    - include_role:
+    - name: Include post tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_tasks.yml
 
 
-# Finalize playbook run on manager server
-- hosts: manager
+- name: Finalize playbook run on manager server
+  hosts: manager
   connection: local
   strategy: linear
   pre_tasks:
-    - include_role:
+    - name: Include finalize task
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           finalize.yml

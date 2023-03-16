@@ -15,11 +15,11 @@
   become: false
   connection: local
   ansible.builtin.file:
-    path: '/tmp/{{ inventory_hostname }}/{{ shcluster }}'
+    path: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}'
     state: absent
   delegate_to: localhost
   when:
-    - shcluster is defined
+    - shcluster_label is defined
   changed_when: false
   check_mode: false
 
@@ -28,12 +28,12 @@
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ shcluster_apps_sourcedir }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - shcluster is defined
+    - shcluster_label is defined
   changed_when: false
   check_mode: false
 
@@ -42,7 +42,7 @@
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ selected_shcluster_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/{{ item.name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -59,7 +59,7 @@
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/{{ item.name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -78,7 +78,7 @@
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster }}/apps/{{ item.name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost

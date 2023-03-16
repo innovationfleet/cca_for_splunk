@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_deployment_servers_file_version: '2022.3.1'
+cca_infrastructure_deployment_servers_file_version: '2023.1.1'
 
 # This group_vars file holds a skeleton to custom Splunk configuration
 # CCA already have the essential configuration covered in
@@ -13,33 +13,21 @@ splunk_conf_group_settings:
    filename: serverclass.conf
    filepath: '{{ splunk_path }}/etc/system/local'
    sections:
-     - section: 'global'
-       options:
-         - option: 'crossServerChecksum'
-           value: 'true'
-         - option: 'disbled'
-           value: "{{ 'false'
-                      if
-                         current_splunk_enterprise_version is version('8.2.6', '>')
-                      else
-                       'true'
-                   }}"
-           comment: >-
-             Only enable Deployment Server functionality if Splunk Enterprise runs on a version
-             more recent than 8.2.6. Vulnerability description at Splunk.
-             https://www.splunk.com/en_us/product-security/announcements/svd-2022-0608.html
-         - option: 'serverName'
-           value: '{{ inventory_hostname }}'
-         - option: 'pass4SymmKey'
-           value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
-
-     - section: 'license'
-       options:
-         - option: 'master_uri'
-           value: "{{ cca_splunk_license_manager_uri }}"
-           state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
-           comment: >-
-             Configure license master uri with a DNS alias, to ease future license master migration
+    - section: 'global'
+      options:
+       - option: 'crossServerChecksum'
+         value: 'true'
+       - option: 'disabled'
+         value: "{{ 'false'
+                    if
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('8.2.6', '>')
+                    else
+                     'true'
+                 }}"
+         comment: >-
+           Only enable Deployment Server functionality if Splunk Enterprise runs on a version
+           more recent than 8.2.6. Vulnerability description at Splunk.
+           https://www.splunk.com/en_us/product-security/announcements/svd-2022-0608.html
 
 
  - name: Splunk server.conf
@@ -50,9 +38,26 @@ splunk_conf_group_settings:
       options:
        - option: 'master_uri'
          value: "{{ cca_splunk_license_manager_uri }}"
-         state: "{{ 'absent' if is_license_manager | default(false) else 'present' }}"
+         state: "{{ 'present'
+                    if
+                      current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '<=')
+                    and
+                      not is_license_manager | default(false)
+                    else
+                      'absent' }}"
          comment: >-
-          Configure license master uri with a DNS alias, to ease future license master migration
+           Deprecated value from Splunk version 9.0+
+       - option: 'manager_uri'
+         value: "{{ cca_splunk_license_manager_uri }}"
+         state: "{{ 'present'
+                    if
+                      current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+                    and
+                      not is_license_manager | default(false)
+                    else
+                      'absent' }}"
+         comment: >-
+           Configure license manager uri with a DNS alias, to ease future license manager migration
 
     - section: ''
       options:

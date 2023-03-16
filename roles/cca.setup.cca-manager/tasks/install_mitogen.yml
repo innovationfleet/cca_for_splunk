@@ -17,7 +17,7 @@
 
 - name: Add Mitogen settings to .profile_local for CCA usage
   ansible.builtin.lineinfile:
-    dest: "{{ cca_manager_user_dir }}/.profile_local"
+    dest: "{{ cca_manager_user_dir }}.profile_local"
     regex: "{{ item.regex }}"
     line: "{{ item.value }}"
     firstmatch: true

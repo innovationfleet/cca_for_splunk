@@ -24,15 +24,14 @@
   register: bootstrap_shc_result
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
-  failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '10'
-  delay: '30'
+  failed_when: bootstrap_shc_result.rc != 0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c1
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -51,7 +50,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -65,7 +64,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -88,14 +87,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c2
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -115,7 +113,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -129,7 +127,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -152,14 +150,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c3
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -179,7 +176,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -193,7 +190,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -216,14 +213,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c4
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -243,7 +239,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -257,7 +253,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -280,14 +276,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c5
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -307,7 +302,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -321,7 +316,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -344,14 +339,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c6
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -371,7 +365,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -385,7 +379,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -408,14 +402,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c7
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -435,7 +428,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -449,7 +442,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -472,14 +465,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c8
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -499,7 +491,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -513,7 +505,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -536,14 +528,13 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: '5'
-  delay: '30'
+  retries: 10
+  delay: 30
   when:
     - inventory_hostname in groups.searchhead_members_shcluster_c9
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
-  no_log: "{{ hide_password }}"
   run_once: true
 
 - name: Set the Search Head Cluster bootstrap state, stored as state file on the deployer
@@ -563,7 +554,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(initialized_flag {{ ":" }} 1)')
+  until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -577,7 +568,7 @@
   ansible.builtin.command:
     cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
-  until: shcluster_status_result.stdout | default('') | regex_search('(service_ready_flag {{ ":" }} 1)')
+  until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false

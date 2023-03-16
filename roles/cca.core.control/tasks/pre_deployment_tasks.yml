@@ -9,6 +9,24 @@
 #
 # Release: 2022.3.1
 
+- name: Get cluster manager status
+  ansible.builtin.include_tasks: index_clusters/cluster_manager_status.yml
+  when:
+    - inventory_hostname in groups.cluster_managers
+
+- name: Assert master-apps migration on Cluster Manager
+  ansible.builtin.assert:
+    that:
+      - master_apps_migration_completed | default(None)
+    fail_msg: >-
+      The Cluster Manager is running Splunk Enterprise version 9+ and CCA has
+      discovered that the status of the deprecated master-apps is unknown.
+      Please run the CCA playbook manage_index_clusters.yml from the infrastructure
+      repo. When completed, return here and deploy manager-apps again.
+  when:
+    - inventory_hostname in groups.cluster_managers
+    - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+
 - name: Include licensed CCA pre deployment tasks
   ansible.builtin.include_role:
     name: "{{ cca_control_pre_deployment.role }}"

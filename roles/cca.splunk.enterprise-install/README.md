@@ -68,9 +68,6 @@ Tasks
 
 
 ### Standalone tasks
-* `kvstore_backup.yml`
-  * Not implemented in main or playbook.
-  * Task to backup kvstore as part of upgrade sequence.
 * `prompt_unmanaged.yml`
   * Assert if the server is managed by CCA
 * `cluster/init_upgrade.yml`

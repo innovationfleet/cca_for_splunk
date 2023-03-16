@@ -1,0 +1,76 @@
+---
+# tasks file for cca.core.control
+#
+# Description: Match stored file version against hard coded requirements
+#
+# Prerequisite:
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.1.1
+
+- name: To support Splunk Enterprise version 9+, verify that there is a valid defaults file version
+  ansible.builtin.assert:
+    that:
+      - hostvars[groups[group] | first]['cca_onboarding_defaults_file_version'] is version('2023.1.1', '>=')
+    fail_msg: >-
+      FAILED: Splunk version 9 needs an updated defaults file.
+      Copy latest version from templates/onboaring_templates/ENVIRONMENT_NAME/group_vars/all/defaults and replace the
+      current file.
+  register: onboarding_template_version_assert_result
+  ignore_errors: true
+
+- name: Set variable that an assert has failed.
+  ansible.builtin.set_fact:
+    passed_assert_status: false
+  when:
+    - onboarding_template_version_assert_result.failed | default(None)
+
+- name: To support Splunk Enterprise version 9+, verify that there is a valid group_vars file version
+  ansible.builtin.assert:
+    that:
+      - hostvars[groups[group] | first]['cca_onboarding_' + group + '_file_version'] is version('2023.1.1', '>=')
+    fail_msg: >-
+      FAILED: Splunk version 9 needs an updated group_vars file for group=({{ group }}).
+      Copy latest version from templates/onboarding_templates/ENVIRONMENT_NAME/group_vars.
+  register: onboarding_template_version_assert_result
+  ignore_errors: true
+
+- name: To support Splunk Enterprise version 9+, verify that there is a valid onboarding file version
+  ansible.builtin.assert:
+    that:
+      - hostvars[groups[group] | first]['cca_onboarding_onboarding_file_version'] is version('2023.1.1', '>=')
+    fail_msg: >-
+      FAILED: Splunk version 9 needs an updated onboarding file.
+      Copy latest version from templates/onboarding_templates/ENVIRONMENT_NAME/group_vars/all/onboarding.
+  register: onboarding_template_version_assert_result
+  ignore_errors: true
+
+- name: Set variable that an assert has failed.
+  ansible.builtin.set_fact:
+    passed_assert_status: false
+  when:
+    - onboarding_template_version_assert_result.failed | default(None)
+
+- name: Check if manager-apps directory exists in onboarding repo
+  ansible.builtin.stat:
+    path: "{{ absolute_file_store_path }}/etc/manager-apps"
+  register: stat_onboarding_repo_manager_apps
+
+- name: Fail playbook if manager-apps is missing in onboarding repo
+  ansible.builtin.assert:
+    that:
+      - stat_onboarding_repo_manager_apps.stat.exists
+    fail_msg: >-
+      FAILED: Splunk version 9 needs an update to the repo directory for manager-apps.
+      Change directory to {{ absolute_file_store_path }}/etc, execute git mv master-apps manager-apps .
+      Perform a git commit of the changes and create a symbolic link to the legacy name,
+      ln -s manager-apps master-apps . Perform a git commit of the symbolic link.
+  register: onboarding_repo_master_apps_migration_assert_result
+  ignore_errors: true
+
+- name: Set variable that an assert has failed.
+  ansible.builtin.set_fact:
+    passed_assert_status: false
+  when:
+    - onboarding_repo_master_apps_migration_assert_result.failed | default(None)

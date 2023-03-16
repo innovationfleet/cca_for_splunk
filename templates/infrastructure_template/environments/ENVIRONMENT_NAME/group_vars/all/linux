@@ -17,16 +17,41 @@ cca_baseline_software:
   - 'bind-utils'
 control:
   linux_configuration:
-    splunk_user: True
-    fs_path: False
-    configure_firewall: True
-    server_hardening: True
-    baseline_software: True
-    splunk_limits: True
-    splunk_service: True
-    splunk_polkit: True
-    thp: True
-    selinux: True
-    sudoers: True
-    user_profile: True
+    splunk_user: true
+    fs_path: false
+    configure_firewall: false
+    server_hardening: true
+    baseline_software: true
+    splunk_limits: true
+    splunk_service: true
+    splunk_polkit: true
+    thp: true
+    selinux: true
+    sudoers: true
+    user_profile: true
+
+firewall_zone_name: 'UPDATE_ZONE_NAME'
+firewall_zone_description: 'UPDATE_ZONE_DESCRIPTION'
+firewall_zone_target: '%%REJECT%%'
+
+firewall_ports:
+# Splunk ports
+
+  - port: '{{ web_server_port_ssl }}'
+    protocol: tcp
+  - port: '{{ splunk_enterprise_mgmt_port }}'
+    protocol: tcp
+  - port: '{{ s2s_tcp_port_ssl }}'
+    protocol: tcp
+  - port: '{{ cca_splunk_cluster_peer_replication_port }}'
+    protocol: tcp
+  - port: '{{ cca_splunk_shcluster_member_replication_port }}'
+    protocol: tcp
+  - port: '{{ cca_splunk_kvstore_replication_port }}'
+    protocol: tcp
+# Base ports
+  - port: 443
+    protocol: tcp
+  - port: 22
+    protocol: tcp
 

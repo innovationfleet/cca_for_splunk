@@ -1,4 +1,4 @@
 [default]
 repo_type=main
 CcaRepo=cca_for_splunk
-EnforceMultiplexer=False
+EnforceMultiplexer=false

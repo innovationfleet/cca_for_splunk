@@ -12,9 +12,16 @@
   ansible.builtin.lineinfile:
     path: '{{ splunk_path }}/etc/passwd'
     regex: '^:{{ cca_splunk_admin_user }}:'
-    line: ":{{ cca_splunk_admin_user }}:{{ cca_splunk_admin_password_hash }}::Local Administrator Account:admin:{{ cca_splunk_admin_email | default('noreply@localhost') }}:::18956"
+    line: >-
+      :{{ cca_splunk_admin_user }}:{{ cca_splunk_admin_password_hash }}
+      {#- -#}
+      ::Local Administrator Account:admin
+      {#- -#}
+      :{{ cca_splunk_admin_email | default('noreply@localhost') }}
+      {#- -#}
+      :::18956
     mode: '0600'
-    create: yes
+    create: true
   notify: notify splunkd restart
 
 - name: Add additional local users to Splunk

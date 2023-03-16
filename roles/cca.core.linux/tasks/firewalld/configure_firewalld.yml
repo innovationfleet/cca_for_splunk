@@ -1,0 +1,29 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2023.1.1
+
+- name: Copy firewall zone templates to destination
+  ansible.builtin.template:
+    src: "firewalld/custom_zone.j2"
+    dest: "/etc/firewalld/zones/{{ firewall_zone_name }}.xml"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart firewalld
+
+- name: Flush handlers to run handler immediately
+  meta: flush_handlers
+
+- name: "Set default zone to {{ firewall_zone_name }}"
+  ansible.builtin.command: firewall-cmd --set-default-zone={{ firewall_zone_name }}
+  register: default_zone_set
+  changed_when:
+    - '"ZONE_ALREADY_SET" not in default_zone_set.stderr'
+  

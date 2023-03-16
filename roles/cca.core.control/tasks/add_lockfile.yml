@@ -21,7 +21,7 @@
 
 - name: Get runid from infra lock file
   ansible.builtin.set_fact:
-    runid_in_lockfile: "{{ lookup('file', '/tmp/.cca_infra_lock-' + environment_name ) }}"
+    runid_in_lockfile: "{{ lookup('file', '/tmp/.cca_infra_lock-' + environment_name) }}"
   when:
     - stat_dot_infra_lock.stat.exists
     - cca_runid is defined
@@ -40,7 +40,7 @@
     path: "/tmp/.cca_data_onboarding_lock-{{ environment_name }}"
   register: stat_dot_data_onboarding_lock
   until: not stat_dot_data_onboarding_lock.stat.exists
-  retries: "{{ cca_data_onboarding_lock_retries | default(120) | int }}"
+  retries: "{{ cca_data_onboarding_lock_retries | default(120) | int }}"
   delay: "{{ cca_data_onboarding_lock_retry_delay | default(15) | int }}"
   when:
     - not my_runid | default(false)
@@ -48,7 +48,7 @@
     - target is defined
     - target == "deploy_apps" or
       target == "deploy_deployment-apps" or
-      target == "deploy_master-apps" or
+      target == "deploy_manager-apps" or
       target == "deploy_shcluster_apps"
 
 - name: Create lock file to manage multi user execution
@@ -63,7 +63,7 @@
     - target is defined
     - target == "deploy_apps" or
       target == "deploy_deployment-apps" or
-      target == "deploy_master-apps" or
+      target == "deploy_manager-apps" or
       target == "deploy_shcluster_apps"
 
 - name: Wait for data infrastructure lock file to be deleted by other process. If unexpected then delete /tmp/.cca_infra_lock-ENV_NAME
@@ -71,7 +71,7 @@
     path: "/tmp/.cca_infra_lock-{{ environment_name }}"
   register: stat_dot_infra_lock
   until: not stat_dot_infra_lock.stat.exists
-  retries: "{{ cca_infra_lock_retries | default(120) | int }}"
+  retries: "{{ cca_infra_lock_retries | default(120) | int }}"
   delay: "{{ cca_infra_lock_retry_delay | default(15) | int }}"
   when:
     - not my_runid | default(false)

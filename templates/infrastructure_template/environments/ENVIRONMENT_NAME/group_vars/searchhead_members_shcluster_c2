@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_searchhead_members_shcluster_c2_file_version: '2022.3.1'
+cca_infrastructure_searchhead_members_shcluster_c2_file_version: '2023.1.1'
 
 splunk_conf_group_settings:
 
@@ -10,22 +10,11 @@ splunk_conf_group_settings:
    sections:
     - section: 'general'
       options:
-       - option: 'serverName'
-         value: '{{ inventory_hostname }}'
-       - option: 'pass4SymmKey'
-         value: '{{ cca_splunk_server_general_pass4SymmKey_hash }}'
        - option: 'site'
          value: '{{ site }}'
          comment: >-
            Set site reference in host inventory for all search heads
            For a search head, "site0" disables search affinity
-
-    - section: 'config_change_audit'
-      options:
-       - option: 'disabled'
-         value: 'false'
-       - option: 'mode'
-         value: 'auto'
 
     - section: "{{ 'replication_port-ssl://' + cca_splunk_shcluster_member_replication_port }}"
       options:
@@ -53,7 +42,7 @@ splunk_conf_group_settings:
          comment: >-
            Set deployer_fqdn on each searchhead peer in the inventory file
        - option: 'pass4SymmKey'
-         value: '{{ cca_splunk_shcluster_c1_pass4SymmKey_hash }}'
+         value: '{{ cca_splunk_shcluster_c2_pass4SymmKey_hash }}'
        - option: 'replication_factor'
          value: "{{ groups['searchhead_members_shcluster_c2'] | length }}"
          comment: >-

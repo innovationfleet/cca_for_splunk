@@ -7,31 +7,31 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2023.1.1
 
 - name: Cleanup manager before staging apps
   become: false
   connection: local
   ansible.builtin.file:
-    path: '/tmp/{{ inventory_hostname }}/{{ cluster }}'
+    path: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}'
     state: absent
   delegate_to: localhost
   when:
-    - cluster is defined
+    - cluster_label is defined
   changed_when: false
   check_mode: false
 
-- name: Stage manager with master apps from cluster directory
+- name: Stage manager with manager apps from cluster directory
   become: false
   connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ master_apps_sourcedir }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ cluster }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ manager_apps_sourcedir }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - cluster is defined
+    - cluster_label is defined
   changed_when: false
   check_mode: false
 
@@ -39,51 +39,53 @@
   become: false
   connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ selected_master_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ cluster }}/{{ item.name }}/'
+    src: '{{ absolute_file_store_path }}/etc/{{ selected_manager_apps_sourcedir }}/{{ item.source_app }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - selected_master_apps_sourcedir is defined
+    - selected_manager_apps_sourcedir is defined
     - item.state is defined
     - item.state != 'absent'
-  loop: '{{ selected_master_apps | default([]) if selected_master_apps | default([]) is iterable else [] }}'
+  loop: '{{ selected_manager_apps | default([]) if selected_manager_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
 
-- name: Stage manager with versioned apps destined for master-apps folder on cluster manager
+- name: Stage manager with versioned apps destined for {{ cluster_manager_config_bundle_dir }} folder on cluster manager
   become: false
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ cluster }}/{{ item.name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
     - versioned_apps_sourcedir is defined
     - item.dest_dir is defined
-    - item.dest_dir == 'master-apps'
+    - item.dest_dir == 'manager-apps' or
+      item.dest_dir == 'master-apps'
     - item.state is defined
     - item.state != 'absent'
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
 
-- name: Stage manager with selected apps destined for master-apps folder on cluster manager
+- name: Stage manager with selected apps destined for {{ cluster_manager_config_bundle_dir }} folder on cluster manager
   become: false
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ cluster }}/{{ item.name }}/'
+    dest: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
     - selected_apps_sourcedir is defined
     - item.dest_dir is defined
-    - item.dest_dir == 'master-apps'
+    - item.dest_dir == 'manager-apps' or
+      item.dest_dir == 'master-apps'
     - item.state is defined
     - item.state != 'absent'
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
