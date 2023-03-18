@@ -39,8 +39,9 @@
       until: last_check_restart_bundle_epoch.stdout | int > current_epoch | int
       changed_when: false
       when:
-        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '<=') or
-          "'Created new bundle with checksum' in validate_bundle_check_restart_status.stdout"
+        - (current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '<='))
+            or
+          ('Created new bundle with checksum' in validate_bundle_check_restart_status.stdout)
 
     - name: Check validation status
       ansible.builtin.shell:
