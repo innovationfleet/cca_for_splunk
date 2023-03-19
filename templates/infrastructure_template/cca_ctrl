@@ -1,5 +1,5 @@
-
 #!/usr/bin/env bash
+
 
 set -o errexit
 set -o pipefail
@@ -38,11 +38,11 @@ ScriptName=${0##*/}
 
 # CCA for Splunk globals
 CcaScriptName="cca_ctrl"
-
 CcaRepo="cca_for_splunk"
 CcaRepoPath=~/clones/cca_for_splunk
 CcaInfraRepoPath=~/data/main/cca_splunk_infrastructure
 CcaOnbRepoPath=~/data/main/cca_splunk_onboarding
+
 CcaRepoShort="cca"
 ScriptParams=$@
 Setup=false
@@ -80,6 +80,7 @@ BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2023.1.1"
 CookieFile="${ScriptPath}/.cookie"
 LicenseFile=~/clones/cca_for_splunk/LICENSE
 InfoFile=~/clones/cca_for_splunk/RELEASE_NOTES.txt
+
 Debug=false
 
 

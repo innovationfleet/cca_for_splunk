@@ -5,7 +5,7 @@
   gather_facts: 'no'
   serial: 1
   pre_tasks:
-    - ansible.builtin.setup:
+    - setup:
         gather_subset: 'network'
 
     - name: Setup CCA manager
