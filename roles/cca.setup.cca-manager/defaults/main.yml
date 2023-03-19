@@ -16,8 +16,8 @@ cca_ansible_minor_version: '2.12'
 cca_ansible_release: '2.12.5'
 cca_manager_user_dir: "{{ ansible_facts.user_dir }}"
 cca_manager_tools_directories:
-  - "{{ cca_manager_user_dir }}tools/python-venv"
-  - "{{ cca_manager_user_dir }}tools/mitogen"
+  - "{{ cca_manager_user_dir }}/tools/python-venv"
+  - "{{ cca_manager_user_dir }}/tools/mitogen"
 
 cca_manager_directories:
   - "{{ cca_manager_user_dir + '/' + cca_manager_data_dirname | default(none) + 'secrets' }}"
