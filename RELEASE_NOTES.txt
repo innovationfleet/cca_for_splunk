@@ -116,6 +116,7 @@
                     Incorrect values needs to be set to absent to be removed by CCA.
                   * Changed regex_search to 'value' in output to reduce Ansible warnings.
                   * Corrected condition when to wait for a new cluster bundle to be ready.
+                  * Corrected path in cca_manger setup wizard.
 
 
         2022.3.2

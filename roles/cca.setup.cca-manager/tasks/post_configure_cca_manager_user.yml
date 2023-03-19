@@ -40,8 +40,8 @@
     path: "{{ item }}"
     state: 'touch'
   with_items:
-    - "{{ cca_manager_user_dir }}.profile_local"
-    - "{{ cca_manager_user_dir }}.bash_profile"
+    - "{{ cca_manager_user_dir }}/.profile_local"
+    - "{{ cca_manager_user_dir }}/.bash_profile"
 
 - name: Get python path
   ansible.builtin.command:
@@ -50,7 +50,7 @@
 
 - name: Add settings to .profile_local for CCA usage
   ansible.builtin.lineinfile:
-    dest: "{{ cca_manager_user_dir }}.profile_local"
+    dest: "{{ cca_manager_user_dir }}/.profile_local"
     regex: "{{ item.regex }}"
     line: "{{ item.value }}"
     firstmatch: true
@@ -71,7 +71,7 @@
 
 - name: Add settings to .bash_profile for CCA usage
   ansible.builtin.lineinfile:
-    dest: "{{ cca_manager_user_dir }}.bash_profile"
+    dest: "{{ cca_manager_user_dir }}/.bash_profile"
     regex: "{{ item.regex }}"
     line: "{{ item.value }}"
     firstmatch: true

@@ -33,5 +33,5 @@ cca_ansible_roles_path: "{{ './roles:~/clones/' + cca_repo_name | default('cca_f
 cca_install_mitogen: false
 cca_use_mitogen_strategy: true
 cca_manager_mitogen_repo_url: 'https://github.com/mitogen-hq/mitogen.git'
-cca_manager_mitogen_path: '{{ cca_manager_user_dir }}tools/mitogen'
+cca_manager_mitogen_path: '{{ cca_manager_user_dir }}/tools/mitogen'
 cca_manager_mitogen_release: 'v0.3.3'

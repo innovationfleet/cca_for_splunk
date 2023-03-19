@@ -26,7 +26,7 @@
 
 - name: Generate a .profile for the user
   ansible.builtin.copy:
-    dest: "{{ cca_manager_user_dir }}.profile"
+    dest: "{{ cca_manager_user_dir }}/.profile"
     backup: true
     content: |
       ###############################
