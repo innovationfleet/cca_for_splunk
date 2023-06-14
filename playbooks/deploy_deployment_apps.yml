@@ -1,8 +1,8 @@
-# Playbook to deploy apps to standalone splunk instances
+# Playbook to deploy deployment-apps to splunk instances
 # Initial
 #
 # REPO_TYPE=onboarding
-# MENU_DESC=Deploy apps to Deployment Servers
+# MENU_DESC=Deploy deployment-apps to Deployment Servers
 # EXTRA_VARS=hide_password(true) accept_deployment_app_removal(false)
 
 - name: Initialize playbook run on manager server - Deploy Deployment Apps
@@ -18,13 +18,14 @@
       vars:
         target: "deploy_deployment-apps"
 
-# Deploy apps to Splunk servers
+# Deploy deployment-apps to Splunk servers
 - hosts: deployment_servers
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -35,8 +36,18 @@
           pre_deployment_tasks.yml
 
   tasks:
-    - include_role:
+    - name: Include onboarding role for deployment-apps
+      include_role:
         name: cca.splunk.onboarding
+      vars:
+        - deploy_scope: "deployment-apps"
+
+    - name: Include onboarding role for apps to deployment server
+      include_role:
+        name: cca.splunk.onboarding
+      vars:
+        - deploy_scope: "apps"
+    
 
   post_tasks:
     - include_role:

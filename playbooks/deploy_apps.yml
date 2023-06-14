@@ -1,7 +1,7 @@
-# Playbook to deploy apps to standalone splunk instances
+# Playbook to deploy etc/apps to Splunk instances
 #
 # REPO_TYPE=onboarding
-# MENU_DESC=Deploy to standalone Splunk instances
+# MENU_DESC=Deploy etc/apps to Splunk instances
 # EXTRA_VARS=hide_password(true)
 
 - name: Initialize playbook run on manager server - Deploy Apps
@@ -17,13 +17,15 @@
       vars:
         target: "deploy_apps"
 
-# Deploy apps to Splunk servers
+# Deploy etc/apps to Splunk servers
 - hosts: forwarders:&ag1
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    - deploy_scope: "apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -40,13 +42,15 @@
         tasks_from:
           post_deployment_tasks.yml
 
-# Deploy apps to Splunk servers
+# Deploy etc/app to Splunk servers
 - hosts: forwarders:&ag2
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    - deploy_scope: "apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -63,13 +67,15 @@
         tasks_from:
           post_deployment_tasks.yml
 
-# Deploy apps to Splunk servers
+# Deploy etc/app to Splunk servers
 - hosts: forwarders:&ag3
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    - deploy_scope: "apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -86,13 +92,15 @@
         tasks_from:
           post_deployment_tasks.yml
 
-# Deploy apps to Splunk servers
-- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:deployment_servers:data_collection_nodes
+# Deploy etc/app to Splunk servers
+- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:deployment_servers:data_collection_nodes:searchhead_deployers:cluster_managers
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    - deploy_scope: "apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'

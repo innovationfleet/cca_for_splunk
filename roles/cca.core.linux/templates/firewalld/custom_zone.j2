@@ -5,4 +5,7 @@
   {% for item in firewall_ports %}
   <port port="{{ item.port }}" protocol="{{ item.protocol }}"/>
   {% endfor %}
+
+  <icmp-block name="echo-request"/>
+  <icmp-block-inversion/>
 </zone>

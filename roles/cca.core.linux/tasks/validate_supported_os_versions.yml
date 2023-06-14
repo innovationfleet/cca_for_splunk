@@ -4,18 +4,22 @@
 # Description:
 #   Validates that the managed host is running on a tested and supported
 #   OS version.
+#   There are breaking changes between in EL9 that is used by RHEL 9, Rocky 9,
+#   CentOS 9 and Amazon 2023. Host versions need to be grouped with correct
+#   cca_splunk_systemd_template_version and package_manager values.
 #
 # Prerequisite:
 #   Gather at least network facts from the target host
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.4
+# Release: 2023.2.1
 #
 
 - name: List of supported RedHat versions
   ansible.builtin.set_fact:
      redhat_support: true
+     package_manager: 'yum'
   when:
     - ansible_distribution == "RedHat"
     - ansible_distribution_major_version == "7" or
@@ -25,6 +29,7 @@
 - name: List of supported CentOS versions
   ansible.builtin.set_fact:
      centos_support: true
+     package_manager: 'yum'
   when:
     - ansible_distribution == "CentOS"
     - ansible_distribution_major_version == "7" or
@@ -34,17 +39,28 @@
 - name: List of supported Rocky Linux versions
   ansible.builtin.set_fact:
      rocky_support: true
+     package_manager: 'yum'
   when:
     - ansible_distribution == "Rocky"
     - ansible_distribution_major_version == "8"
     - ansible_architecture == "x86_64"
 
-- name: List of supported Amazon Linux versions
+- name: List of supported Amazon Linux 2 versions
   ansible.builtin.set_fact:
     amazon_al2_support: true
+    package_manager: 'yum'
   when:
     - ansible_distribution == "Amazon"
     - ansible_distribution_major_version == "2"
+    - ansible_architecture == "x86_64"
+
+- name: List of supported Amazon Linux 2023+ versions
+  ansible.builtin.set_fact:
+    amazon_al2023_support: true
+    package_manager: 'dnf'
+  when:
+    - ansible_distribution == "Amazon"
+    - ansible_distribution_major_version == "2023"
     - ansible_architecture == "x86_64"
 
 - name: Assert that only supported OS Versions is found
@@ -53,7 +69,8 @@
       - redhat_support is defined or
         centos_support is defined or
         rocky_support is defined or
-        amazon_al2_support is defined
+        amazon_al2_support is defined or
+        amazon_al2023_support is defined
     fail_msg: >-
         This Ansible framework has not been against the following OS/Version combination:
           ansible_distribution = {{ ansible_distribution }}

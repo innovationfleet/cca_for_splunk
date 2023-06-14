@@ -9,10 +9,8 @@
 #
 # Release: 2023.1.1
 
-- name: Check if there is a pending deployment server reload
-  ansible.builtin.stat:
-    path: "{{ deployment_server_reload_pending }}"
-  register: stat_deployment_server_reload_pending
+- name: Include task to check pending actions
+  ansible.builtin.include_tasks: check_pending_actions.yml
 
 - name: Reload Deployment Server
   block:
@@ -29,4 +27,9 @@
         state: absent
   when:
     - stat_deployment_server_reload_pending.stat.exists
+    - not stat_splunkd_restart_pending.stat.exists
 
+- name: Restart Deployment Server
+  ansible.builtin.include_tasks: restart_splunkd.yml
+  when:
+    - stat_splunkd_restart_pending.stat.exists

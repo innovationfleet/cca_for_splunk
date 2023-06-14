@@ -31,6 +31,45 @@
 
     Release notes:
 
+        2023.2.2
+            - Bumped recommended Splunk Enterprise Version to 9.0.5.
+            - Monitoring console needs to have the shcluster_label set for search head members,
+              added shcluster_label to group_vars file for searchhead_members_shcluster_c*
+            - Improved description on playbook tasks
+            - Combined deployment-apps and apps deployment in deploy_deployment_apps.yml
+              playbook.
+            - Added restart trigger in manage_searchhead_clusters.yml playbook.
+            - Better support for local user handling.
+            - CCA Manager setup now add aliases for infra and onboarding repos. See alias in
+              roles/cca.setup.cca-manager/tasks/post_configure_cca_manager_user.yml
+
+            Bug fixes:
+              * Corrected hosts groups in deploy_apps.yml playbook.
+              * Changed to package variable in check_for_os_updates.yml
+              * Corrected general typos in text and variables.
+
+
+        2023.2.1
+            - Support for Amazon Linux 2023, cgroupv1 is enforced for systemd services.
+            - Modified handling of Systemd templates that is dependent on cgroups v1. Splunk
+              supports only cgroupv1 and if cgroupv2 is discovered on a supported system, then
+              it's reconfigured to use the legacy version.
+            - Updated splunk .profile to store bash history when muliple terminals are used in parallel.
+            - Automation readiness playbook and documentation updates.
+            - Improved error messages in data onboarding deployments.
+            - Changed onboarding main task to use playbook vars to decide what to deploy where.
+            - Improved first SSH connection attempt, handles initial initialization of SSH and wait
+              for existance of loaded SSH keys.
+
+            Bug fixes:
+              * Corrected build script for cca_ctrl to output relevant error for missing paths
+                and avoid checking of path when cca_ctrl is launched within a main repo.
+              * Corrected data type of index "_configtracker" from metrics index to event index
+              * Unset LS_COLORS to respect terminal colors set by user profile.
+              * Fixed checkbox list in cca_ctrl that now limit hosts to 21 rows and then show
+                scrollbar.
+
+
         2023.1.1
              - Bumped recommended Splunk Enterprise Version to 9.0.4.
              - Splunk Enterprise 9 support

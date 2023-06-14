@@ -1,7 +1,7 @@
-# Playbook to deploy apps to Search Head Cluster
+# Playbook to deploy shcluster/apps to Search Head Cluster
 #
 # REPO_TYPE=onboarding
-# MENU_DESC=Deploy to SHC
+# MENU_DESC=Deploy shcuster/apps to Search Head Deployer
 # EXTRA_VARS=hide_password(true) accept_shc_app_removal(false) force_bundle_push(false)
 
 - name: Initialize playbook run on manager server - Deploy Search Head Cluster Apps
@@ -17,13 +17,15 @@
       vars:
         target: "deploy_shcluster_apps"
 
-# Configure the deployer
+#Deploy shcluster/apps to Search head deployers
 - hosts: searchhead_deployers
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    - deploy_scope: "shcluster_apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'

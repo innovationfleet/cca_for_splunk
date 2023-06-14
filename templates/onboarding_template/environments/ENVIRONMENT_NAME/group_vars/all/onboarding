@@ -9,12 +9,12 @@ environment_name: "{{ inventory_dir_array[-1] }}"
 absolute_file_store_path: '{{ inventory_dir }}/../../splunk'
 versioned_apps_sourcedir: 'apps/versioned'
 selected_apps_sourcedir: 'apps/selectable'
-deployment_apps_sourcedir: 'deployment-apps/{{ environment_name }}'
+deployment_apps_sourcedir: 'deployment-apps/{{ environment_name }}'
 selected_deployment_apps_sourcedir: 'deployment-apps/selectable'
 shcluster_apps_sourcedir: 'shcluster/{{ environment_name }}/{{ shcluster_label }}/apps'
 selected_shcluster_apps_sourcedir: 'shcluster/selectable'
-manager_apps_sourcedir: "{{ cluster_manager_config_bundle_dir }}/{{ environment_name }}/{{ cluster_label }}"
-selected_manager_apps_sourcedir: "{{ cluster_manager_config_bundle_dir }}/selectable"
+manager_apps_sourcedir: '{{ cluster_manager_config_bundle_dir }}/{{ environment_name }}/{{ cluster_label }}'
+selected_manager_apps_sourcedir: '{{ cluster_manager_config_bundle_dir }}/selectable'
 
 # Default rsync options for onboarding deployment
 deployment_apps_rsync_opts:

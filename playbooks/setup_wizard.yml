@@ -10,7 +10,7 @@
     script_cwd: "{{ ansible_env.PWD | replace('/playbooks','') }}"
     pwd_array: "{{ script_cwd.split('/') }}"
     cca_repo_base: "{{ pwd_array[:-1] | join('/') }}"
-    splunk_enterprise_version: "9.0.4"
+    splunk_enterprise_version: "9.0.5"
 
     cca_environment:
       infrastructure_repo_dir: '{{ user_home }}/data/main/cca_splunk_infrastructure'
@@ -77,7 +77,7 @@
 
     - name: Set fact that the current splunk secret is the secret found in cca_splunk_secret_file
       ansible.builtin.set_fact:
-        cca_identical: "{{ true if splunk_secret == vars_current_wizard.cca_splunk_secret | default('') }}"
+        use_existing_cca_splunk_secret: "{{ true if splunk_secret == vars_current_wizard.cca_splunk_secret | default('') }}"
 
     - name: Instantiate cli user, password and password hash
       ansible.builtin.include_role:

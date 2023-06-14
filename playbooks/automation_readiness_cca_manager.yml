@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "2023.1.1"
+        cca_release: "2023.2.2"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:
@@ -51,11 +51,14 @@
 
             ( ansible_distribution == 'Ubuntu' and
               ansible_distribution_major_version == '20' and
-              ansible_architecture == 'x86_64' )
+              ansible_architecture == 'x86_64' ) or
 
+            ( ansible_distribution == 'Amazon' and
+              ansible_distribution_major_version == '2023' and
+              ansible_architecture == 'x86_64' )
         fail_msg: >-
           To currently use all feature of the CCA Manager, the OS version needs to be one of
-          the following. RedHat 8, CentOS 8 Stream, Rocky Linux 8, Amazon 2, Ubuntu.
+          the following. RedHat 8, CentOS 8 Stream, Rocky Linux 8, Amazon 2, Amazon Linux 2023 or Ubuntu.
           cca_for_splunk will still be possible to use on other OS and versions, however
           not tested.
         success_msg: >-
@@ -372,7 +375,7 @@
 
     - name: If setup wizard is not yet executed. A Splunk Enterprise tgz file should be available in /var/tmp folder
       shell:
-        cmd: 'find /var/tmp -name "splunk-8.*-Linux-x86_64.tgz" -type f 2>/dev/null'
+        cmd: 'find /var/tmp -name "splunk-[8|9].*-Linux-x86_64.tgz" -type f 2>/dev/null'
       register: tmp_splunk_enterprise_tgz
       failed_when: tmp_splunk_enterprise_tgz.rc > 1
       ignore_errors: true
@@ -383,9 +386,9 @@
         that:
           - tmp_splunk_enterprise_tgz.stdout != ""
         fail_msg: >-
-          A Splunk enterprise tgz file is missing from /var/tmp
+          A supported Splunk enterprise tgz file is missing from /var/tmp
         success_msg: >-
-         Found a Splunk enterprise file
+         Found a supported Splunk enterprise file: {{ tmp_splunk_enterprise_tgz.stdout | replace('/var/tmp/','') }}
       run_once: true
       delegate_to: localhost
       ignore_errors: true

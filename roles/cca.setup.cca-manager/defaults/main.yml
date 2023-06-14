@@ -20,8 +20,8 @@ cca_manager_tools_directories:
   - "{{ cca_manager_user_dir }}/tools/mitogen"
 
 cca_manager_directories:
-  - "{{ cca_manager_user_dir + '/' + cca_manager_data_dirname | default(none) + 'secrets' }}"
-  - "{{ cca_manager_user_dir + '/' + cca_manager_data_dirname | default(none) + 'main' }}"
+  - "{{ cca_manager_user_dir + '/' + cca_manager_data_dirname | default() + 'secrets' }}"
+  - "{{ cca_manager_user_dir + '/' + cca_manager_data_dirname | default() + 'main' }}"
 
 cca_manager_ansible_vault_secret_path: '~/{{ cca_manager_data_dirname | default(none) }}secrets/cca_ansible_vault_secret'
 cca_ansible_roles_path: "{{ './roles:~/clones/' + cca_repo_name | default('cca_for_splunk') +'/roles' }}"

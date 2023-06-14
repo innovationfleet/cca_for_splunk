@@ -1,8 +1,8 @@
-# Playbook to deploy apps to Index cluster
+# Playbook to deploy manager-apps to Cluster Manager
 #
 # REPO_TYPE=onboarding
-# MENU_DESC=Deploy to Cluster Manager
-# EXTRA_VARS=hide_password(true) accept_manager_app_removal(false)
+# MENU_DESC=Deploy manager-apps to Cluster Manager
+# EXTRA_VARS=hide_password(true) accept_manager_app_removal(false) accept_bundle_validation_errors(false)
 
 - name: Initialize playbook run on manager server - Deploy Manager Apps
   hosts: manager
@@ -17,13 +17,15 @@
       vars:
         target: "deploy_manager-apps"
 
-# Configure the deployer
+# Deploy manager-apps to Splunk servers
 - hosts: cluster_managers
   become: true
   become_method: sudo
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
+  vars:
+    - deploy_scope: "manager-apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'

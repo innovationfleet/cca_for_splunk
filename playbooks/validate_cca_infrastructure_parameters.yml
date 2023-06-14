@@ -18,4 +18,4 @@
         tasks_from:
           initialize.yml
       vars:
-        target: "cca_infastructure_settings"
+        target: "cca_infrastructure_settings"

@@ -105,7 +105,7 @@ s2s_tcp_port="9997"
 s2s_tcp_port_ssl="9998"
 web_server_port="8000"
 web_server_port_ssl="8000"
-splunk_enterprise_version="9.0.4"
+splunk_enterprise_version="9.0.5"
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
 cca_onboarding_hosts_file_version='2023.1.1'
@@ -376,7 +376,7 @@ searchhead_members_shcluster_c9
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c1:vars]
 default_tcpout=cluster_peers_cluster_c1
 configure_outputs_ssl=true
@@ -420,7 +420,7 @@ cluster_manager_cluster_c1_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c2:vars]
 default_tcpout=cluster_peers_cluster_c2
 configure_outputs_ssl=true
@@ -464,7 +464,7 @@ cluster_manager_cluster_c2_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c3:vars]
 default_tcpout=cluster_peers_cluster_c3
 configure_outputs_ssl=true
@@ -508,7 +508,7 @@ cluster_manager_cluster_c3_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c4:vars]
 default_tcpout=cluster_peers_cluster_c4
 configure_outputs_ssl=true
@@ -552,7 +552,7 @@ cluster_manager_cluster_c4_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c5:vars]
 default_tcpout=cluster_peers_cluster_c5
 configure_outputs_ssl=true
@@ -596,7 +596,7 @@ cluster_manager_cluster_c5_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c6:vars]
 default_tcpout=cluster_peers_cluster_c6
 configure_outputs_ssl=true
@@ -640,7 +640,7 @@ cluster_manager_cluster_c6_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c7:vars]
 default_tcpout=cluster_peers_cluster_c7
 configure_outputs_ssl=true
@@ -684,7 +684,7 @@ cluster_manager_cluster_c7_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c8:vars]
 default_tcpout=cluster_peers_cluster_c8
 configure_outputs_ssl=true
@@ -728,7 +728,7 @@ cluster_manager_cluster_c8_ag3
 # UPDATE available sites to match your environment
 # cluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_NAME
+# onboarding repository in etc/splunk/manager-apps/ENVIRONMENT_NAME/CLUSTER_LABEL
 [cluster_manager_cluster_c9:vars]
 default_tcpout=cluster_peers_cluster_c9
 configure_outputs_ssl=true
@@ -995,13 +995,12 @@ cluster_peers_cluster_c9_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c1:vars]
 default_tcpout=cluster_peers_cluster_c1
 shcluster_label="shcluster_c1"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c1_member_conf"
-shcluster_label="shcluster_c1"
 
 [searchhead_deployer_shcluster_c1:children]
 searchhead_deployer_shcluster_c1_ag1
@@ -1027,13 +1026,12 @@ searchhead_deployer_shcluster_c1_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c2:vars]
 #default_tcpout=
 shcluster_label="shcluster_c2"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c2_member_conf"
-shcluster_label="shcluster_c2"
 
 [searchhead_deployer_shcluster_c2:children]
 searchhead_deployer_shcluster_c2_ag1
@@ -1059,13 +1057,12 @@ searchhead_deployer_shcluster_c2_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c3:vars]
 #default_tcpout=
 shcluster_label="shcluster_c3"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c3_member_conf"
-shcluster_label="shcluster_c3"
 
 [searchhead_deployer_shcluster_c3:children]
 searchhead_deployer_shcluster_c3_ag1
@@ -1091,13 +1088,12 @@ searchhead_deployer_shcluster_c3_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c4:vars]
 #default_tcpout=
 shcluster_label="shcluster_c4"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c4_member_conf"
-shcluster_label="shcluster_c4"
 
 [searchhead_deployer_shcluster_c4:children]
 searchhead_deployer_shcluster_c4_ag1
@@ -1123,13 +1119,12 @@ searchhead_deployer_shcluster_c4_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c5:vars]
 #default_tcpout=
 shcluster_label="shcluster_c5"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c5_member_conf"
-shcluster_label="shcluster_c5"
 
 [searchhead_deployer_shcluster_c5:children]
 searchhead_deployer_shcluster_c5_ag1
@@ -1155,13 +1150,12 @@ searchhead_deployer_shcluster_c5_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c6:vars]
 #default_tcpout=
 shcluster_label="shcluster_c6"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c6_member_conf"
-shcluster_label="shcluster_c6"
 
 [searchhead_deployer_shcluster_c6:children]
 searchhead_deployer_shcluster_c6_ag1
@@ -1187,13 +1181,12 @@ searchhead_deployer_shcluster_c6_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c7:vars]
 #default_tcpout=
 shcluster_label="shcluster_c7"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c7_member_conf"
-shcluster_label="shcluster_c7"
 
 [searchhead_deployer_shcluster_c7:children]
 searchhead_deployer_shcluster_c7_ag1
@@ -1219,13 +1212,12 @@ searchhead_deployer_shcluster_c7_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c8:vars]
 #default_tcpout=
 shcluster_label="shcluster_c8"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c8_member_conf"
-shcluster_label="shcluster_c8"
 
 [searchhead_deployer_shcluster_c8:children]
 searchhead_deployer_shcluster_c8_ag1
@@ -1251,13 +1243,12 @@ searchhead_deployer_shcluster_c8_ag3
 # within this group.
 # shcluster_label can be changed to a name with alphanumeric english characters,
 # hyphen (-) and underscore (_). The name must match the directory in the
-# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_NAME
+# onboarding repository in etc/splunk/shcluster/ENVIRONMENT_NAME/SHCLUSTER_LABEL
 [searchhead_deployer_shcluster_c9:vars]
 #default_tcpout=
 shcluster_label="shcluster_c9"
 configure_outputs_ssl=true
 app_name_shc_member_conf="shcluster_c9_member_conf"
-shcluster_label="shcluster_c9"
 
 [searchhead_deployer_shcluster_c9:children]
 searchhead_deployer_shcluster_c9_ag1

@@ -1,6 +1,6 @@
 # Installed bashrc file for CCA for Splunk Automation Frawework
 #
-# Version: 2022.1.1
+# Version: 2023.2.1
 
 # Source bashrc global definitions
 if [[ -f /etc/bashrc ]] ; then
