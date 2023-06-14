@@ -1,0 +1,61 @@
+---
+# tasks file for cca.core.linux
+#
+# Description: Ensure correct owner and user permission on filesystem
+#
+# Prerequisite: Fileystem is accessible
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.2.2
+
+
+-  name: Set owner and group for mount point
+   ansible.builtin.file:
+    path: "{{ splunk_path | default('') }}"
+    state: directory
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+    mode: '0700'
+   when:
+     - splunk_path is defined
+
+-  name: Set owner and group for mount point
+   ansible.builtin.file:
+    path: "{{ splunk_volume_path_hot | default('') }}"
+    state: directory
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+    mode: '0700'
+   when:
+     - splunk_volume_path_hot is defined
+
+-  name: Set owner and group for mount point
+   ansible.builtin.file:
+    path: "{{ splunk_volume_path_cold | default('') }}"
+    state: directory
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+    mode: '0700'
+   when:
+     - splunk_volume_path_cold is defined
+
+-  name: Set owner and group for mount point
+   ansible.builtin.file:
+    path: "{{ splunk_log_path | default('') }}"
+    state: directory
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+    mode: '0700'
+   when:
+     - splunk_log_path is defined
+
+-  name: Set owner and group for mount point
+   ansible.builtin.file:
+    path: "{{ splunk_misc_path | default('') }}"
+    state: directory
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+    mode: '0700'
+   when:
+     - splunk_misc_path is defined

@@ -76,7 +76,7 @@ else
 fi
 
 WhiptailHight=30
-BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2023.1.1"
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2023.2.2"
 CookieFile="${ScriptPath}/.cookie"
 LicenseFile=~/clones/cca_for_splunk/LICENSE
 InfoFile=~/clones/cca_for_splunk/RELEASE_NOTES.txt
@@ -237,7 +237,7 @@ cat <<EOF
 * This script will exit now. If you would like to configure
   your environment run the script again with
 
-  ./cca_control --setup
+  ./cca_ctrl --setup
 EOF
 
 exit 0
@@ -427,11 +427,11 @@ function whiptail_checklist () {
   shift
   local Items=("$@")
 
-  # Limit check list to 10 lines before adding scrollbar
+  # Limit check list to 21 lines before adding scrollbar
   local CheckListLen=$(( ${#Items[@]} / 3))
-  if [[ $CheckListLen -gt 30 ]] ; then
+  if [[ $CheckListLen -gt 21 ]] ; then
 
-    CheckListLen=30
+    CheckListLen=21
 
   fi
 
@@ -1103,22 +1103,24 @@ set +e
 
  test -f .storage/settings && source <(grep = .storage/settings)
 
-   if [[ ! -f ${CcaRepoPath}/${CcaScriptName} ]] ; then
 
+   if [[ ! -f ${CcaRepoPath}/${CcaScriptName} ]] ; then
      echo
-     echo "The main CCA repository or cca_ctlr file couldn't be found."
+     echo "The main CCA repository or cca_ctrl file couldn't be found."
      echo "The CCA Repo needs to exist in path: (${CcaRepoPath})"
      echo "Infrastructure Repo needs to exist in path: (${CcaInfraRepoPath})"
      echo "Onboarding Repo needs to exist in path: (${CcaOnbRepoPath})"
      echo "Please copy the cca_ctrl from the CCA repo to this directory"
      echo "and rerun the script again to see if this solves the issue."
+     echo "Thank you!"
+     echo
 
      trap_cancel "Exit"
 
    fi
 
-   if ! [[ ${ScriptPath} =~ (${CcaInfraRepoPath}|${CcaOnbRepoPath}|${CcaRepoPath}) ]] ; then
 
+   if ! [[ ${ScriptPath} =~ (${CcaInfraRepoPath}|${CcaOnbRepoPath}|${CcaRepoPath}) ]] ; then
      echo "The Open Source version of CCA for Splunk has fixed paths"
      echo "for the cca_for_splunk, cca_splunk_infrastructure and"
      echo "cca_splunk_onboarding repo."
@@ -1133,9 +1135,9 @@ set +e
 
    fi
 
-
    if [[ $(file_md5 "${ScriptPath}/${ScriptName}") == \
-       $(file_md5 ${CcaRepoPath}/${CcaScriptName}) ]] ;\
+       $(file_md5 ${CcaRepoPath}/${CcaScriptName}) || \
+         ${repo_type} == main ]] ;\
 
    then
 
@@ -1172,7 +1174,7 @@ function validate_os () {
    if [ "$(uname -s)" == "Darwin" ]; then
 
       sed_cmd="gsed"
-      if which ${sed_cmd} ; then
+      if which ${sed_cmd} > /dev/null ; then
 
          :
 
@@ -1217,7 +1219,7 @@ function trap_cancel () {
 
 ###############################################################################
 # Validate and check if s´terminal multiplexer should be used for running
-# cca_control. .storage/settings has option to control multiplexer option,
+# cca_ctrl. .storage/settings has option to control multiplexer option,
 # default is enabled. MultiplexerControl=true|false
 # Arguments:
 #   None
@@ -1241,7 +1243,7 @@ function multiplexer_control () {
     else
 
       echo
-      echo "Run cca_control in a screen or tmux session"
+      echo "Run cca_ctrl in a screen or tmux session"
       echo "If you would like to supress this message and run without using"
       echo "terminal Multiplexer, set EnforceMultiplexer to False in .storage/settings"
       exit 13
@@ -1280,7 +1282,7 @@ accept_eula
 # TODO Validate data in Splunk CCA and report errors before continuing
 
 
-# List of applicable playbooks, store selected playbook in SelectePlaybook
+# List of applicable playbooks, store selected playbook in Selected Playbook
 # variable.
 select_playbook
 

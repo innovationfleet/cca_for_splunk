@@ -136,23 +136,19 @@ Description
   * Example config for an environment specific app, not versioned and specific to this organization.
     ```
     selected_apps:
-      - name: 'splunk_httpinput'
+      - name: 'innovationfleet-splunk_httpinput'
         source_app: 'innovationfleet-splunk_httpinput'
         state: 'present'
-        rsync_opts:
-          - "--exclude=default"
     ```
 
   * Example config for an environment specific app that should be deployed towards one target only.
     Multiple apps with the same name but different target hosts can be configured.
     ```
     selected_apps:
-      - name: 'splunk_httpinput'
+      - name: 'innovationfleet-splunk_httpinput'
         source_app: 'innovationfleet-splunk_httpinput'
         state: 'present'
         target: '<INVENTORY_HOST>'
-        rsync_opts:
-          - "--exclude=default"
     ```
 
   * Example config for an generic app, version 3.7.0 of Splunk DB Connect. Version info available as part of the app name. Supports easy upgrade/downgrade by updating the app version and re-deploy.

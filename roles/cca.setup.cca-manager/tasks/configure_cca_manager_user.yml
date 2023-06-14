@@ -90,7 +90,14 @@
         source ~/.bashrc
 
       fi
+
+      # Unser LS Colors to keep coloring of directory names
       unset LS_COLORS
+
+      # Append history while using multiple terminal sessions to one host
+      shopt -s histappend
+      PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
+
     mode: 400
 
 - name: Get python path

@@ -13,3 +13,5 @@
   ansible.builtin.systemd:
     name: firewalld
     state: started
+  when:
+    - firewall_zone_name is defined

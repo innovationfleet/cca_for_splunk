@@ -2,7 +2,7 @@
 #
 # REPO_TYPE=infra
 # MENU_DESC=Configure linux server to work with CCA and Splunk Enterprise
-# VARS=hide_password(true)
+# EXTRA_VARS=hide_password(true)
 
 # Configure all servers
 - name: Configure all splunk_servers

@@ -72,7 +72,6 @@ def decrypt(secret, ciphertext):
         cipher = Cipher(algorithm, mode=modes.GCM(iv, tag), backend=default_backend())
         decryptor = cipher.decryptor()
         plaintext = decryptor.update(ciphertext).decode()
-        print(plaintext)
 
     return plaintext
 

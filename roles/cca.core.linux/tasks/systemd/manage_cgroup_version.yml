@@ -1,0 +1,46 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+# META_DATE
+#
+# META_VERSION
+
+- name: Get cgroup version support
+  ansible.builtin.command:
+    cmd: |
+      grep -c "group2 /sys/fs/cgroup cgroup2" /etc/mtab
+  register: cgroup_version_result
+  changed_when: false
+  failed_when:
+    - cgroup_version_result.rc > 1
+
+- name: Set kernel supported cgroup version
+  ansible.builtin.set_fact:
+    kernel_supported_cgroup_version: "{{ 'cgroupv1' if cgroup_version_result.stdout | int == 0 else 'cgroupv2' }}"
+
+- name: Get current configured systemd cgroup version
+  ansible.builtin.command:
+    cmd: |
+      grep -c "cgroup /sys/fs/cgroup/systemd cgroup" /etc/mtab
+  register: systemd_cgroup_version_result
+  changed_when: false
+  failed_when:
+    - systemd_cgroup_version_result.rc > 1
+
+- name: Set current systemd cgroup version
+  ansible.builtin.set_fact:
+    current_systemd_cgroup_version: "{{ 'cgroupv1' if systemd_cgroup_version_result.stdout | int == 1 else 'cgroupv2' }}"
+
+- name: Configure legacy cgroup version until Splunk supports cgroupv2
+  ansible.builtin.command:
+    cmd: |
+       grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+  when:
+   - cca_splunk_systemd_cgroup_support == 'cgroupv1'
+   - current_systemd_cgroup_version != 'cgroupv1'
+  notify: notify server reboot

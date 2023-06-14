@@ -1,0 +1,27 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#   The enterprise-bootstrap makes all necessary configurations that is needed
+#   to manage splunk as a non privileged user, set ulimits, create service
+#   files, install required packages and harden the server.
+#
+#   The task include_external_roles takes a list of additional roles that is
+#   needed, i.e. configure additional server parameters, disks, etc.
+#
+# Prerequisite:
+#   A filesystem needs to exist for Splunk Enterprise install path. Recommended
+#   is to keep the default /opt/splunk and configure it as own LVM.
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.2.1
+
+- name: Get facts for current distribution
+  ansible.builtin.setup:
+
+- name: Load OS specific variables if found, else default
+  ansible.builtin.include_vars: '{{ item }}'
+  with_first_found:
+    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
+    - 'default.yml'

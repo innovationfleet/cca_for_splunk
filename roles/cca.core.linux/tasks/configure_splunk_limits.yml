@@ -17,7 +17,7 @@
     value: '64000'
     use_max: yes
     dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
-    
+
 - name: 'Set ulimits for {{ splunk_user }} - soft nofile'
   pam_limits:
     domain: "{{ splunk_user }}"
@@ -26,7 +26,7 @@
     value: '32000'
     use_max: yes
     dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
-    
+
 - name: 'Set ulimits for {{ splunk_user }} - hard noproc'
   pam_limits:
     domain: "{{ splunk_user }}"
@@ -47,7 +47,7 @@
   pam_limits:
     domain: "{{ splunk_user }}"
     limit_item: fsize
-    limit_type: soft
+    limit_type: hard
     value: '-1'
     dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
 

@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_cluster_manager_cluster_c2_file_version: '2023.1.1'
+cca_infrastructure_cluster_manager_cluster_c2_file_version: '2023.2.1'
 
 splunk_conf_group_settings:
 
@@ -353,8 +353,6 @@ splunk_conf_group_settings:
 
     - section: '_configtracker'
       options:
-       - option: 'datatype'
-         value: 'metric'
        - option: 'frozenTimePeriodInSecs'
          value: "{{ splunk_retentiontime_configtracker | default('2592000') }}"
          comment: >-

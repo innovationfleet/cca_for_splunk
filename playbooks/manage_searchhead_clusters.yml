@@ -144,6 +144,9 @@
       ansible.builtin.include_role:
         name: cca.core.splunk
 
+    - name: Trigger restart if pending restart from splunk config
+      ansible.builtin.meta: flush_handlers
+
     - name: Include role to configure Splunk user profile
       ansible.builtin.include_role:
         name: cca.splunk.user-profile

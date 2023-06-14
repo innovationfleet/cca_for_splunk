@@ -68,6 +68,15 @@
     - { regex: 'ANSIBLE_STDOUT_CALLBACK', value: 'export ANSIBLE_STDOUT_CALLBACK=yaml' }
     - { regex: "python='/usr/bin/python'", value: "alias python='{{ result_python_path.stdout }}'" }
     - { regex: 'source ~/tools/python-venv/ansible', value: 'source ~/tools/python-venv/ansible{{ cca_ansible_minor_version }}/bin/activate' }
+    - { regex: 'export CCA_INFRASTRUCTURE_REPO_DIR', value: 'export CCA_INFRASTRUCTURE_REPO_DIR=~/main/cca_splunk_infrastructure' }
+    - { regex: 'export CCA_ONBOARDING_REPO_DIR', value: 'export CCA_ONBOARDING_REPO_DIR=~/main/cca_splunk_onboarding' }
+    - { regex: 'export CCA_REPO_DIR', value: 'export CCA_REPO_DIR=~/main/cca_for_splunk' }
+    - { regex: 'alias cdso', value: 'alias cdso="cd $CCA_ONBOARDING_REPO_DIR"' }
+    - { regex: 'alias cdsi', value: 'alias cdsi="cd $CCA_INFRASTRUCTURE_REPO_DIR"' }
+    - { regex: 'alias cddo', value: 'alias cddo="cd ~/development/$(basename $CCA_ONBOARDING_REPO_DIR)"' }
+    - { regex: 'alias cddi', value: 'alias cddi="cd ~/development/$(basename $CCA_INFRASTRUCTURE_REPO_DIR)"' }
+    - { regex: 'alias cdsc', value: 'alias cdsc="cd $CCA_REPO_DIR"' }
+    - { regex: 'alias cddc', value: 'alias cddc="cd ~/development/$(basename $CCA_REPO_DIR)"' }
 
 - name: Add settings to .bash_profile for CCA usage
   ansible.builtin.lineinfile:

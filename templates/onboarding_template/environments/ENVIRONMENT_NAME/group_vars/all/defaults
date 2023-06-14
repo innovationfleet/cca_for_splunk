@@ -3,7 +3,7 @@
 #
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_defaults_file_version: '2023.1.1'
+cca_onboarding_defaults_file_version: '2023.2.1'
 
 splunk_download_url: 'https://download.splunk.com/products/splunk/releases'
 splunk_path: "/opt/splunk"
@@ -33,7 +33,7 @@ dot_cca_splunk_bootstrap: "{{ splunk_path }}/.cca_splunk_bootstrap"
 hide_password: true
 
 # Check for invalid configuration patterns
-invalid_config_regex: '({|}|\[|\]|UPDATE)'
+invalid_config_regex: '({|}|\[|\]|UPDATE|MissingValueFor)'
 
 # Default service names and commands
 systemd_enterprise_name: "Splunkd.service"

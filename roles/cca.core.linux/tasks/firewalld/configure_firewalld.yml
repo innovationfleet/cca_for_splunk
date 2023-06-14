@@ -7,7 +7,7 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2023.1.1
+# Release: 2023.2.1
 
 - name: Copy firewall zone templates to destination
   ansible.builtin.template:
@@ -17,13 +17,18 @@
     group: root
     mode: '0644'
   notify: restart firewalld
+  when:
+    - firewall_zone_name is defined
 
 - name: Flush handlers to run handler immediately
   meta: flush_handlers
+  when:
+    - firewall_zone_name is defined
 
 - name: "Set default zone to {{ firewall_zone_name }}"
   ansible.builtin.command: firewall-cmd --set-default-zone={{ firewall_zone_name }}
   register: default_zone_set
   changed_when:
     - '"ZONE_ALREADY_SET" not in default_zone_set.stderr'
-  
+  when:
+    - firewall_zone_name is defined

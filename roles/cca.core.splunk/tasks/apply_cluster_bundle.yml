@@ -67,6 +67,8 @@
         msg: "FATAL: Bundle validation errors found"
       failed_when:
         - cluster_bundle_restart_status.stdout | default('') | regex_search('bundle_validation_errors')
+      when:
+        - not accept_bundle_validation_errors | default(false)
 
     - name: Create a state file if a index peer restart is needed
       ansible.builtin.file:

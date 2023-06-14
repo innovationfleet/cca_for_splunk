@@ -1,6 +1,7 @@
 # Configure the manager server
-# Run the playbook with
-# ansible-playbook -i HOST_IP, setup_cca_manager.yml
+# See the README.md in roles/cca.setup.cca-manager/README.md
+# and find the scenario that matches your setup.
+#
 - hosts: all
   gather_facts: 'no'
   serial: 1

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.3
+# Release: 2023.2.1
 
 - name: Check if splunk is running by examine pid file
   ansible.builtin.stat:
@@ -16,7 +16,8 @@
 
 - name: Check current installed splunk version
   ansible.builtin.shell:
-    cmd: "timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | awk '{ print $2 }'"
+    cmd: >-
+     timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | grep -E "Splunk [0-9\.]+ \(build" | awk '{ print $2 }'
   register: splunk_enterprise_version_result
   when:
     - stat_splunk_pid.stat.exists

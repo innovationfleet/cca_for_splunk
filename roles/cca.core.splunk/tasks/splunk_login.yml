@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2023.2.1
 
 - name: Execute a splunkd stop, start when in force mode
   ansible.builtin.command:
@@ -24,7 +24,7 @@
     cmd: "timeout 5 {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
-  retries: 5
+  retries: 10
   delay: 10
   changed_when: false
   check_mode: false

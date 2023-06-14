@@ -15,13 +15,10 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.2
+# Release: 2023.2.1
 
-- name: Load OS specific variables if found, else default
-  ansible.builtin.include_vars: '{{ item }}'
-  with_first_found:
-    - '{{ ansible_distribution }}-{{ ansible_distribution_major_version}}.yml'
-    - 'default.yml'
+- name: Include task to get facts and vars
+  ansible.builtin.include_tasks: get_facts.yml
 
 - name: Validate supported OS versions
   ansible.builtin.include_tasks: validate_supported_os_versions.yml
@@ -58,7 +55,7 @@
     - control.linux_configuration.server_hardening | default(true)
 
 - name: Configure baseline software needed for Ansible management for Splunk
-  ansible.builtin.include_tasks: configure_baseline_software.yml
+  ansible.builtin.include_tasks: "package/{{ package_manager }}/configure_baseline_software.yml"
   when:
     - control.linux_configuration.baseline_software | default(true)
 
@@ -97,5 +94,5 @@
 - name: Import external roles for post server configuration
   ansible.builtin.include_tasks: include_external_post_roles.yml
 
-# TODO  - name: Save state of installation
-#    import_tasks: save_state.yml
+- name: Ensure owner on Splunk directories
+  ansible.builtin.include_tasks: configure_fs_rights.yml

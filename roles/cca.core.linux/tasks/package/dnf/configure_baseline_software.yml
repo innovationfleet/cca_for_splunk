@@ -1,0 +1,29 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.2.1
+
+- name: Ensure cron functionallity is kept while systemd.timer is present
+  ansible.builtin.dnf:
+    name: "cronie"
+    state: present
+
+- name: Enable and start cron service
+  ansible.builtin.systemd:
+    name: 'crond.service'
+    enabled: true
+    state: started
+
+- name: Install wanted baseline software on server
+  ansible.builtin.dnf:
+    name: "{{ ensure_baseline_software }}"
+    state: present
+  loop_control:
+    loop_var: ensure_baseline_software
+  loop: '{{ cca_baseline_software | default([]) if cca_baseline_software | default([]) is iterable else [] }}'

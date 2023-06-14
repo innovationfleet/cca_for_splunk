@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2023.2.1
 
 # tasks file for cca.splunk.onboarding
 
@@ -15,31 +15,37 @@
   ansible.builtin.include_tasks: stage_shcluster_apps.yml
   when:
     - shcluster_label is defined
+    - deploy_scope | default('') == "shcluster_apps"
 
 - name: Include task for shcluster app deployment
   ansible.builtin.include_tasks: deploy_shcluster_apps.yml
   when:
     - shcluster_label is defined
+    - deploy_scope | default('') == "shcluster_apps"
 
 - name: Include task for master apps staging
   ansible.builtin.include_tasks: stage_manager_apps.yml
   when:
     - cluster_label is defined
+    - deploy_scope | default('') == "manager-apps"
 
 - name: Include task for master apps deployment
   ansible.builtin.include_tasks: deploy_manager_apps.yml
   when:
     - cluster_label is defined
+    - deploy_scope | default('') == "manager-apps"
 
 - name: Include task for apps deployment to splunk instance
   ansible.builtin.include_tasks: deploy_apps.yml
+  when:
+    - deploy_scope | default('') == "apps"
 
 - name: Include task for deployment apps staging
   ansible.builtin.include_tasks: stage_deployment_apps.yml
   when:
-    - selected_deployment_apps is defined
+    - deploy_scope | default('') == "deployment-apps"
 
 - name: Include task for serverclass apps deployment to splunk deployment servers
   ansible.builtin.include_tasks: deploy_deployment_apps.yml
   when:
-    - selected_deployment_apps is defined
+    - deploy_scope | default('') == "deployment-apps"
