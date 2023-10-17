@@ -1,0 +1,16 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2023.2.2
+
+- name: Install/upgrade chrony
+  ansible.builtin.include_tasks: ntp/ensure_chrony.yml
+
+- name: Configure chrony
+  ansible.builtin.include_tasks: ntp/configure_chrony.yml

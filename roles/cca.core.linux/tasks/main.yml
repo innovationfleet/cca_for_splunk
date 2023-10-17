@@ -96,3 +96,8 @@
 
 - name: Ensure owner on Splunk directories
   ansible.builtin.include_tasks: configure_fs_rights.yml
+
+- name: Configure NTP with chrony
+  ansible.builtin.include_tasks: configure_ntp.yml
+  when:
+    - control.linux_configuration.configure_ntp | default(false)

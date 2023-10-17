@@ -33,14 +33,14 @@
   changed_when: false
   check_mode: false
 
-- name: Collect full Seach Head Cluster status
+- name: Collect full Search Head Cluster status
   ansible.builtin.command:
-    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
+    cmd: "timeout 180 {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
   register: verbose_shcluster_status
   changed_when: false
   check_mode: false
 
-- name: Collect Captain information from Seach Head Cluster status
+- name: Collect Captain information from Search Head Cluster status
   ansible.builtin.shell:
     cmd: |
       timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status |

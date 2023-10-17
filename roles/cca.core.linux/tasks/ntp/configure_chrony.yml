@@ -1,0 +1,27 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2023.2.2
+
+- name: Copying template for chrony.conf and setting permissions, will restart Chrony if any changes
+  ansible.builtin.template:
+    src: "ntp/chrony.conf.j2"
+    dest: "/etc/chrony.conf"
+    owner: "root"
+    group: "root"
+    mode: 0660
+  register: chrony_template_status
+
+- name: Restart chrony systemd service
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: yes
+    name: chronyd.service
+  when:
+    - chrony_template_status.changed

@@ -6,9 +6,8 @@
 # Prerequisite:
 #
 # Roger Lindquist (github.com/rlinq)
-# META_DATE
 #
-# META_VERSION
+# Release: 2023.3.1
 
 - name: Get cgroup version support
   ansible.builtin.command:
@@ -43,4 +42,10 @@
   when:
    - cca_splunk_systemd_cgroup_support == 'cgroupv1'
    - current_systemd_cgroup_version != 'cgroupv1'
+  register: grubby_kernel_update_status
   notify: notify server reboot
+
+- name: Include role for reboot handler
+  ansible.builtin.include_tasks: standalone_reboot.yml
+  when:
+   - grubby_kernel_update_status.changed | default(false)

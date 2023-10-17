@@ -31,12 +31,13 @@ We have also described installation steps according to our best practices, follo
 
 Our recommendation is to have a designated central server that has access to your Splunk infrastructure servers & that this central server has a technical user that you can access via `sudo` command.
 
-Current the following Operating System (OS)'s are fully supported to run CCA for Splunk.
+Operating System (OS)'s are fully supported to run the CCA Manager. Note that target OS's for Splunk can differ over time. See explicit documentation for OS support for Splunk using CCA for Splunk.
 
-* RedHat 8
-* CentOS 8 Stream
+* RedHat 7-9
+* CentOS 8-9 Stream
 * Rocky Linux 8
 * Amazon Linux 2
+* Amazon Linux 2023
 * Ubuntu 20
 
 ### Hardware requirements
@@ -109,8 +110,8 @@ source ansible2.12/bin/activate
 ~/tools/python-venv/ansible2.12/bin/python3.9 -m pip install --upgrade pip
 pip install ansible-core==2.12.5
 pip install pcrypt
-ansible-galaxy collection install community.general
-ansible-galaxy collection install ansible.posix
+ansible-galaxy collection install community.general --server https://old-galaxy.ansible.com/
+ansible-galaxy collection install ansible.posix --server https://old-galaxy.ansible.com/
 
 ```
 Add the following line to your user profile to activate the Python virtual environment every time you login.

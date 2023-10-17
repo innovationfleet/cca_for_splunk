@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2023.3.1
 
 - name: Check if we have the cert file on the server
   ansible.builtin.stat:
@@ -86,16 +86,6 @@
     that:
       - status_privkey_sha256sum.stdout == status_cert_privkey_sha256sum.stdout
     fail_msg: "The private key signature didn't match the certificate"
-  check_mode: false
-
-- name: Decrypt private key if it's needed
-  ansible.builtin.command:
-    cmd: >
-      openssl rsa
-      -in {{ cca_splunk_certs_staging_path }}/{{ privkey_staging_file_name }}
-      -passin pass:'{{ privkey_password }}'
-      -out {{ cca_splunk_certs_path }}/{{ privkey_file_name }}
-  no_log: '{{ hide_password }}'
   check_mode: false
 
 - name: Copy private key from staging path and build final cert in block

@@ -31,6 +31,31 @@
 
     Release notes:
 
+        2023.3.1
+
+            - Added cleanup function for unused Splunk tgz files during Splunk Enterprise
+              installation.
+            - New task for setting up NTP
+            - Added support for Amazon 2023 Dnf Updates with releasever. If unset the latest
+              available version is detected and used. Hosts inventory file supports setting on
+              group or host level. Set dnf_releasever="VERSION_NAME" to pin a specific update
+              release.
+            - Bumped soft ulimits for open files to 128000 and hard ulimits to 256000, run
+              configure_linux_servers.yml playbook to apply updates and reboot the servers.
+              Split playbook hosts in sections by choice, to avoid that restarts happens on
+              all servers at the same time.
+            - Bumped recommended Splunk Enterprise Version to 9.0.6.
+            - Added support for Splunk 9.1.x.
+            - Added support for RHEL, CentOS and Rocky Linux version 9.
+            - Restructured README for easier readability.
+            - Updated documentation and tasks to use legacy Ansible Galaxy.
+
+            Bug fixes:
+              * Corrected handling of inputs, outputs and server certificates when
+                using selfsigned certificates.
+              * Deploy playbooks didn't deploy standard apps on search head deployers
+                and cluster managers.
+
         2023.2.2
             - Bumped recommended Splunk Enterprise Version to 9.0.5.
             - Monitoring console needs to have the shcluster_label set for search head members,
