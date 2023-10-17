@@ -40,8 +40,17 @@
         verbosity: 3
 
   tasks:
-    - include_role:
+    - name: Include onboarding role for apps to search head deployer
+      include_role:
         name: cca.splunk.onboarding
+      vars:
+        - deploy_scope: "apps"
+
+    - name: Include onboarding role for shcluster/apps to search head deployer
+      include_role:
+        name: cca.splunk.onboarding
+      vars:
+        - deploy_scope: "shcluster_apps"
 
   post_tasks:
     - include_role:

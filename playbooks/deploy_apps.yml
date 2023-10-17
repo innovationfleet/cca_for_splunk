@@ -93,7 +93,7 @@
           post_deployment_tasks.yml
 
 # Deploy etc/app to Splunk servers
-- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:deployment_servers:data_collection_nodes:searchhead_deployers:cluster_managers
+- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:data_collection_nodes
   become: true
   become_method: sudo
   become_user: splunk

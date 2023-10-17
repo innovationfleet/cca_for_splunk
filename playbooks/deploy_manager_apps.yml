@@ -40,8 +40,17 @@
         verbosity: 3
 
   tasks:
-    - include_role:
+    - name: Include onboarding role for apps to cluster manager
+      include_role:
         name: cca.splunk.onboarding
+      vars:
+        - deploy_scope: "apps"
+
+    - name: Include onboarding role for manager-apps to cluster manager
+      include_role:
+        name: cca.splunk.onboarding
+      vars:
+        - deploy_scope: "manager-apps"
 
   post_tasks:
     - include_role:

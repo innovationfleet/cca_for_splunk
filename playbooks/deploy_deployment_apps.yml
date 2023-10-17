@@ -25,7 +25,7 @@
   become_user: splunk
   gather_facts: false
   any_errors_fatal: true
-  
+
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -47,7 +47,7 @@
         name: cca.splunk.onboarding
       vars:
         - deploy_scope: "apps"
-    
+
 
   post_tasks:
     - include_role:
