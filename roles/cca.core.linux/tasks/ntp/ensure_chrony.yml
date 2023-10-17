@@ -1,0 +1,16 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2023.2.2
+
+- name: Enable and make sure Chrony is started
+  ansible.builtin.systemd:
+    name: "chronyd.service"
+    enabled: true
+    state: "started"
