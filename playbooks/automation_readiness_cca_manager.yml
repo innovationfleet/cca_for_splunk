@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "2023.2.2"
+        cca_release: "2023.3.1"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:
@@ -34,15 +34,18 @@
       assert:
         that:
           - ( ansible_distribution == 'RedHat' and
-              ansible_distribution_major_version == '8' and
+              ( ansible_distribution_major_version == '8' or
+              ansible_distribution_major_version == '9' ) and
               ansible_architecture == 'x86_64' ) or
 
             ( ansible_distribution == 'CentOS' and
-              ansible_distribution_major_version == '8' and
+              ( ansible_distribution_major_version == '8' or
+              ansible_distribution_major_version == '9' ) and
               ansible_architecture == 'x86_64' ) or
 
             ( ansible_distribution == 'Rocky' and
-              ansible_distribution_major_version == '8' and
+              ( ansible_distribution_major_version == '8' or
+              ansible_distribution_major_version == '9' ) and
               ansible_architecture == 'x86_64' ) or
 
             ( ansible_distribution == 'Amazon' and
@@ -289,7 +292,7 @@
 
     - name: Check if we have a cca directories for splunk infrastructure config
       shell:
-        cmd: 'find {{ playbook_dir }}/../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+        cmd: 'find {{ playbook_dir }}/../../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
       register:
         cca_infra_companion_directory
       failed_when: cca_infra_companion_directory.rc > 1
@@ -317,7 +320,7 @@
 
     - name: Check if we have a cca directories for splunk onboarding config
       shell:
-        cmd: 'find {{ playbook_dir }}/../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=onboarding" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+        cmd: 'find {{ playbook_dir }}/../../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=onboarding" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
       register:
         cca_onboarding_companion_directory
       failed_when: cca_onboarding_companion_directory.rc > 1
@@ -345,7 +348,7 @@
 
     - name: When setup wizard is completed, we should have access to an Splunk Enterprise tgz file in infra repo
       shell:
-        cmd: 'find {{ playbook_dir }}/../../{{ cca_infra_companion_directory.stdout }} -name "splunk-8.*-Linux-x86_64.tgz" -type f'
+        cmd: 'find {{ playbook_dir }}/../../../ -path "*{{ cca_infra_companion_directory.stdout.splitlines() | first | default("~/cca_splunk_infrastructure") }}*" -name "splunk-[8|9]*-Linux-x86_64.tgz" -type f'
       register: splunk_enterprise_tgz
       ignore_errors: true
 
@@ -405,7 +408,7 @@
         that:
           - not mgr_readiness_score | int < max_readiness_score | int
         fail_msg: >-
-          Your Manager readiness score is {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
+          Your Manager readiness score is {{ mgr_readiness_score }} out of {{ max_readiness_score }}.
           Please review the output and the documentation on how to improve your automation
           readiness, so that you can start using CCA for Splunk from this host.
           Readiness score: {{ mgr_readiness_score }}.
