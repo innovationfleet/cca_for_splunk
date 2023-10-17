@@ -7,23 +7,24 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.3.1
 # Configure systemd limits for Splunk user
 - name: 'Set ulimits for {{ splunk_user }} - hard nofile'
   pam_limits:
     domain: "{{ splunk_user }}"
     limit_item: nofile
     limit_type: hard
-    value: '64000'
+    value: '256000'
     use_max: yes
     dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+  notify: notify server reboot
 
 - name: 'Set ulimits for {{ splunk_user }} - soft nofile'
   pam_limits:
     domain: "{{ splunk_user }}"
     limit_item: nofile
     limit_type: soft
-    value: '32000'
+    value: '128000'
     use_max: yes
     dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
 
@@ -34,6 +35,7 @@
     limit_type: hard
     value: '64000'
     dest: '/etc/security/limits.d/10-{{ splunk_user }}.conf'
+  notify: notify server reboot
 
 - name: 'Set ulimits for {{ splunk_user }} - soft nproc'
   pam_limits:
