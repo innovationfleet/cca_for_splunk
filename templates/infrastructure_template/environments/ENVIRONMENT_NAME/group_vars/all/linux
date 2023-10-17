@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_linux_file_version: '2022.2.1'
+cca_infrastructure_linux_file_version: '2023.2.1'
 
 external_bootstrap_pre_roles:
 external_bootstrap_roles:
@@ -29,7 +29,10 @@ control:
     selinux: true
     sudoers: true
     user_profile: true
+    configure_ntp: false
 
+# ntp_servers takes a list of NTP server addresses
+ntp_servers: UPDATE_NTP_SERVERS_LIST
 firewall_zone_name: 'UPDATE_ZONE_NAME'
 firewall_zone_description: 'UPDATE_ZONE_DESCRIPTION'
 firewall_zone_target: '%%REJECT%%'

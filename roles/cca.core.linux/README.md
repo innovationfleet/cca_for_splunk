@@ -113,7 +113,7 @@ Tasks
 * `dot_bootstrap.yml`
   * Mark this server instance as bootstrapped
 * `configure_firewall.yml`
-  * Not defined
+  * Configure internal firewall, by changing default zone
 * `configure_server_hardening.yml`
   * Not defined
 * `configure_baseline_software.yml`
@@ -134,6 +134,8 @@ Tasks
   * Configure sudo all for Splunk manager user
 * `include_external_post_roles.yml`
   * Execute external roles at last in the main
+* `configure_ntp.yml`
+  * Configure NTP client on host, with Chrony program
 
 ### Standalone tasks
 * `server_reboot_handler.yml`
