@@ -18,6 +18,19 @@
     patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
   register: find_cca_splunk_tgz
 
+- name: Find all Splunk tgz files in the tmp directory
+  find:
+    paths: "{{ cca_splunk_var_tmp }}"
+    patterns: 'splunk-*-Linux-x86_64.tgz'
+  register: find_cca_splunk_tmp_tgz
+
+- name: Cleanup all Splunk tgz files in tmp except current version
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ find_cca_splunk_tmp_tgz.files }}"
+  when: "'splunk-{{ splunk_enterprise_version }}' not in item.path"
+
 - name: Assert that we have a splunk tar file
   become: false
   delegate_to: localhost
