@@ -7,7 +7,10 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2023.3.1
+
+# facts_variable: 'cca_splunk_outputs_ssl' is set in validate_manual_certificates.yml
+# for manual certs or as a fallback here if the cert enrollment method is selfsigned
 - name: Set fact for outputs cert to be used in common tasks
   ansible.builtin.set_fact:
     cert_file_name: '{{ cca_splunk_certs_outputs_cert }}'
@@ -15,7 +18,6 @@
     privkey_file_name: '{{ cca_splunk_certs_outputs_key }}'
     privkey_staging_file_name: '{{ cca_splunk_certs_outputs_staging_key }}'
     privkey_password: '{{ cca_splunk_certs_outputs_sslpassword }}'
-    encrypt_private_key: '{{ openssl_certs_outputs_encryption }}'
     facts_variable: 'cca_splunk_outputs_ssl'
     cert_type: 'outputs'
   no_log: "{{ hide_password }}"
@@ -30,3 +32,9 @@
   when:
     - cca_splunk_cert_enrollment_method == 'manual'
     - final_cert_file_result.changed
+
+- name: "Set fact if {{ cert_type }} cert is found and valid"
+  ansible.builtin.set_fact:
+    {"{{ facts_variable }}":true}
+  when:
+    - cca_splunk_cert_enrollment_method == 'selfsigned'
