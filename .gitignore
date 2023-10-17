@@ -4,6 +4,7 @@
 # Vi
 *.bak
 *.swp
+*.save*
 
 # VS Code
 .vs
