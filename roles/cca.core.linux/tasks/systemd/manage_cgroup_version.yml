@@ -46,6 +46,7 @@
   notify: notify server reboot
 
 - name: Include role for reboot handler
-  ansible.builtin.include_tasks: standalone_reboot.yml
+  ansible.builtin.include_tasks:
+    file: server_reboot_handler.yml
   when:
    - grubby_kernel_update_status.changed | default(false)
