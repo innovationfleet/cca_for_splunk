@@ -48,6 +48,16 @@
       ansible_distribution_major_version == "9"
     - ansible_architecture == "x86_64"
 
+- name: List of supported Oracle Linux versions
+  ansible.builtin.set_fact:
+     oracle_support: true
+     package_manager: 'dnf'
+  when:
+    - ansible_distribution == "OracleLinux"
+    - ansible_distribution_major_version == "8" or
+      ansible_distribution_major_version == "9"
+    - ansible_architecture == "x86_64"
+
 - name: List of supported Amazon Linux 2 versions
   ansible.builtin.set_fact:
     amazon_al2_support: true
@@ -66,14 +76,35 @@
     - ansible_distribution_major_version == "2023"
     - ansible_architecture == "x86_64"
 
-- name: Assert that only supported OS Versions is found
+- name: List of supported Debian versions
+  ansible.builtin.set_fact:
+     debian_support: true
+     package_manager: 'apt'
+  when:
+    - ansible_distribution == "Debian"
+    - ansible_distribution_major_version == "12"
+    - ansible_architecture == "x86_64"
+
+- name: List of supported Ubuntu versions
+  ansible.builtin.set_fact:
+     ubuntu_support: true
+     package_manager: 'apt'
+  when:
+    - ansible_distribution == "Ubuntu"
+    - ansible_distribution_major_version == "22"
+    - ansible_architecture == "x86_64"
+
+- name: Assert that only supported OS Versions are found
   ansible.builtin.assert:
     that:
       - redhat_support is defined or
         centos_support is defined or
         rocky_support is defined or
+        oracle_support is defined or
         amazon_al2_support is defined or
-        amazon_al2023_support is defined
+        amazon_al2023_support is defined or
+        debian_support is defined or
+        ubuntu_support is defined
     fail_msg: >-
         This Ansible framework has not been against the following OS/Version combination:
           ansible_distribution = {{ ansible_distribution }}
