@@ -2,21 +2,23 @@
 # See the README.md in roles/cca.setup.cca-manager/README.md
 # and find the scenario that matches your setup.
 #
-- hosts: all
-  gather_facts: 'no'
+- name: Setup CCA Manager
+  hosts: all
+  gather_facts: false
   serial: 1
   pre_tasks:
-    - setup:
+    - name: Collect network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Setup CCA manager
-      include_role:
-        name: ./roles/cca.setup.cca-manager
+      ansible.builtin.include_role:
+        name: "./roles/{{ cca_manager_role | default('cca.setup.cca-manager') }}"
       when:
         - not post_docker_setup is defined
 
     - name: Post confgiuration of CCA Manager if running in docker instance
-      include_role:
+      ansible.builtin.include_role:
         name: ./roles/cca.setup.cca-manager
         tasks_from:
           post_configure_cca_manager_user.yml

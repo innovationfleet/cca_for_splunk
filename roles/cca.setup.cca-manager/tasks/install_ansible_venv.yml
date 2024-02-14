@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.1
+# Release: 2023.1.1
 
 - name: Build CCA Ansible install script to install in venv
   ansible.builtin.copy:
@@ -19,11 +19,16 @@
       source ansible{{ cca_ansible_minor_version }}/bin/activate
       {{ cca_manager_user_dir }}/tools/python-venv/ansible{{ cca_ansible_minor_version }}/bin/python{{ cca_python_minor_version }} -m pip install --upgrade pip
       pip install ansible-core=={{ cca_ansible_release }}
-      ansible-galaxy collection install community.general --server https://old-galaxy.ansible.com/
-      ansible-galaxy collection install ansible.posix --server https://old-galaxy.ansible.com/
-      pip install pcrypt
+      ansible-galaxy collection install community.general
+      ansible-galaxy collection install community.crypto
+      ansible-galaxy collection install ansible.posix
+      pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3
     mode: 0755
+  tags:
+    - skip_ansible_lint
 
 - name: Run script to install ansible in virtual environment
   ansible.builtin.command:
     cmd: "{{ cca_manager_user_dir }}/tools/build_ansible_venv.sh"
+  tags:
+    - skip_ansible_lint

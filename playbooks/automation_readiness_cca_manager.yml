@@ -11,11 +11,11 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "2023.3.1"
+        cca_release: "2024.1.1"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:
-        max_readiness_score: 3100
+        max_readiness_score: "{{ 3000 if ansible_distribution == 'MacOSX' else 2700 }}"
 
     - name: Set start score for manager
       set_fact:
@@ -48,22 +48,32 @@
               ansible_distribution_major_version == '9' ) and
               ansible_architecture == 'x86_64' ) or
 
-            ( ansible_distribution == 'Amazon' and
-              ansible_distribution_major_version == '2' and
-              ansible_architecture == 'x86_64' ) or
-
             ( ansible_distribution == 'Ubuntu' and
               ansible_distribution_major_version == '20' and
               ansible_architecture == 'x86_64' ) or
 
             ( ansible_distribution == 'Amazon' and
               ansible_distribution_major_version == '2023' and
-              ansible_architecture == 'x86_64' )
+              ansible_architecture == 'x86_64' ) or
+
+            ( ansible_distribution == "OracleLinux" and
+              ( ansible_distribution_major_version == "8" or
+                ansible_distribution_major_version == "9" ) and
+              ansible_architecture == "x86_64" ) or
+
+            ( ansible_distribution == "MacOSX" and
+              ( ansible_distribution_major_version == "13" or
+                ansible_distribution_major_version == "14" ) and
+              ( ansible_architecture == "x86_64" or
+                ansible_architecture == "arm64" ) )
+
         fail_msg: >-
           To currently use all feature of the CCA Manager, the OS version needs to be one of
-          the following. RedHat 8, CentOS 8 Stream, Rocky Linux 8, Amazon 2, Amazon Linux 2023 or Ubuntu.
-          cca_for_splunk will still be possible to use on other OS and versions, however
-          not tested.
+          the following. RedHat 8-9, CentOS 8-9 Stream, Rocky Linux 8-9, Amazon Linux 2023,
+          OracleLinux 8-9 or MacOSX 12-14.
+          cca_for_splunk can still be possible to use on other OS and versions, however
+          not tested. You are currently on OS ({{ ansible_distribution }}),
+          Major Version ({{ ansible_distribution_major_version }}) and ({{ ansible_architecture }})
         success_msg: >-
           OK - Your CCA manager runs a fully supported OS ({{ ansible_distribution }}) and
           Major Version ({{ ansible_distribution_major_version }})
@@ -80,9 +90,9 @@
       connection: local
       assert:
         that:
-          - ansible_version.full is version('2.11.0', '>=')
+          - ansible_version.full is version('2.14.12', '>=')
         fail_msg:
-          You need to have ansible-core version 2.11 or 2.12 on your control host to use
+          You need to have ansible-core version 2.14.12+ on your control host to use
           the automation framework. Detected version {{ ansible_version.full }}
         success_msg: >-
           You are running an validated ansible version {{ ansible_version.full }}
@@ -105,7 +115,7 @@
           - ansible_env.VIRTUAL_ENV is defined
         fail_msg: >-
           To ensure correct version of Python and Ansible, a virtual environment is needed
-          Create a virtual environment with python >= 3.9.0 and activate it
+          Create a virtual environment with python >= 3.11.1 and activate it
         success_msg: >-
           Virtual environment found, continue to validate it
       run_once: true
@@ -131,9 +141,9 @@
     - name: Check that required Python version is used in the virtual ENV
       assert:
         that:
-          - cca_python3_version_status.stdout is version('3.9.0', '>=')
+          - cca_python3_version_status.stdout is version('3.11.1', '>=')
         fail_msg: >-
-          You need to have Python3 version 3.9+ on your control host to use
+          You need to have Python3 version 3.11.1+ on your control host to use
           the automation framework. Detected version {{ cca_python3_version_status.stdout }}
         success_msg: >-
           You are running an validated Python3 version {{ cca_python3_version_status.stdout }}
@@ -371,37 +381,62 @@
 
     - name: Increase score for successful task
       set_fact:
-        mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 202 }}"
       when:
         - not assert_result.failed | default(true)
         - cca_infra_companion_directory.rc == 0
 
-    - name: If setup wizard is not yet executed. A Splunk Enterprise tgz file should be available in /var/tmp folder
-      shell:
-        cmd: 'find /var/tmp -name "splunk-[8|9].*-Linux-x86_64.tgz" -type f 2>/dev/null'
-      register: tmp_splunk_enterprise_tgz
-      failed_when: tmp_splunk_enterprise_tgz.rc > 1
-      ignore_errors: true
+    - name: Test existence of commands on macOS
+      command: "which {{ item }}"
+      loop:
+        - bash
+        - basename
+        - readlink
+        - dirname
+        - git
+        - gsed
+        - tput
+        - rsync
+        - wget
+        - getopt
+        - test
+        - whiptail
+        - md5sum
+      register: command_results
+      changed_when: false
+      failed_when: false
+      when:
+        - ansible_distribution == 'MacOSX'
 
-    - name: Assert that a temporary Splunk enterprise file exists in /var/tmp
-      connection: local
+    - name: Create list of command results
+      set_fact:
+        command_list: "{{ command_list | default([]) + [{ 'name': item.item, 'exists': item.rc == 0 }] }}"
+      loop: "{{ command_results.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      no_log: true
+      when:
+        - ansible_distribution == 'MacOSX'
+
+    - name: Assert command existence
       assert:
         that:
-          - tmp_splunk_enterprise_tgz.stdout != ""
+          - command_list | map(attribute='exists') | list | difference([true]) == []
         fail_msg: >-
-          A supported Splunk enterprise tgz file is missing from /var/tmp
-        success_msg: >-
-         Found a supported Splunk enterprise file: {{ tmp_splunk_enterprise_tgz.stdout | replace('/var/tmp/','') }}
-      run_once: true
-      delegate_to: localhost
-      ignore_errors: true
+          One or more commands do not exist: {{ command_list | selectattr('exists', 'equalto', false) | map(attribute='name') | list }}.
+          Install and configure required packages with
+          "brew install bash coreutils git git-lfs gnu-getopt gnu-sed gnu-tar ncurses newt rsync wget md5sha1sum"
+        success_msg: "All required commands exist on MacOS"
       register: assert_result
+      when:
+        - ansible_distribution == 'MacOSX'
 
     - name: Increase score for successful task
       set_fact:
-        mgr_readiness_score: "{{ mgr_readiness_score | int + 402 }}"
+        mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
-        not assert_result.failed
+        - not assert_result.failed | default(true)
+        - ansible_distribution == 'MacOSX'
 
     - name: END - Evaluate automation readiness score
       assert:
