@@ -9,7 +9,7 @@
 #
 # Release: 2023.2.1
 
-- name: Ensure cron functionallity is kept while systemd.timer is present
+- name: Ensure cron functionality is kept while systemd.timer is present
   ansible.builtin.dnf:
     name: "cronie"
     state: present
