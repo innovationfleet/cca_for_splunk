@@ -31,6 +31,94 @@
 
     Release notes:
 
+    2024.1.1
+              - Important:
+                  * If you are running on Linux Kernel 5.8 or later, execute the 'configure_linux_server.yml'
+                    playbook on all Splunk servers to install and configure the included
+                    'cca_cgroup_version_daemon'. This is a systemd service that takes care of re-enabling
+                    support for cgroup v1. In the event that the Kernel is updated to a version requiring
+                    the switch to cgroup v2, 'the Splunkd.service' may fail to start after a reboot.
+                  * For the initial installation of Splunk using CCA, there are no additional steps to
+                    be performed.
+              - Bumped Splunk Enterprise version to 9.1.3, Splunk 9.1 track is recommended for production
+                usage.
+              - Added script to ease download of supported Splunk Enterprise versions.
+                ${CCA_REPO_DIR}/roles/cca.splunk.enterprise-install/files/bin/download_splunk_enterprise.sh
+                Tgz files are downloaded and stored in ${CCA_INFRASTRUCTURE_DIR}/splunk/var/images/
+              - Updated conditions that rely on ansible groups so inventory can be made smaller and
+                unused groups can be removed from the inventory.
+              - Improved handling of cluster bundle validation errors. Fail task only on critical
+                errors.
+              - Changed static retries for splunk commands. They are all having default values and
+                are configurable with custom tuning values on global, group or host level.
+                List of configurable variables:
+                  * cca_splunk_bootstrap_shcluster_captain_retries
+                  * cca_splunk_cluster_bundle_status_retries
+                  * cca_splunk_finalize_upgrade_retries
+                  * cca_splunk_kvstore_backup_status_retries
+                  * cca_splunk_kvstore_status_retries
+                  * cca_splunk_login_retries
+                  * cca_splunkd_restart_retries
+                  * cca_splunkd_start_retries
+                  * cca_splunkd_status_retries
+              - Improved logic to store staging apps during deployment, related to data onboarding.
+              - Improved detection filter in rsync to avoid false positives during deployment-apps
+                deployment.
+              - Refactoring cca.splunk.ssl-certificates tasks to better detect certificate update
+                needs.
+              - Updated prerequisites running CCA on Manager server
+                  * Updated python version to 3.11.3+, install a new venv, update .profile_local
+                    with new venv path.
+                  * Updated ansible version to 2.14.13, install new ansible version in venv and
+                    all included modules.
+                  * Removed support for Amazon Linux 2 for CCA Manager due to ansible and python
+                    dependency incompatibility.
+              - Python Packages installed by the setup wizard, verify that older installations has
+                them installed.
+                   pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3
+              - Added cleanup files for installation of Splunk Enterprise versions, 8.10, 8.11.2,
+                8.12,9.08 and 9.1.3.
+              - Updated forwarders template to enable Http Event Collector via
+                etc/system/local/inputs.conf
+              - Updated the rolling update playbook to handle Linux kernels with no standard
+                cgroupv1 support, including latest kernel updates for Fedora and RHEL 9.
+              - Added a cca_cgroup_version_daemon to make sure cgroupv1 is available even if host
+                has been updated manually without CCA. Run configure_linux_server playbook to
+                create and enable it.
+
+              Bug fixes:
+                * Corrected splunkd restart and reload deploy-server handler that caused both
+                  a splunkd restart and reload deploy-server during the same change.
+                * Corrected an issue with incorrect clean up of staging directories for app
+                  onboarding on CCA manager server.
+
+        2023.3.2
+
+              - Standard Data Onboarding is a steamlined and simplified version of CCA Onboarding
+                and are now available in the open source version.
+                *  All onboarding apps needs to be placed in splunk/etc/apps/selectable or
+                    splunk/etc/apps/versioned directories.
+                *  Onboarding group_vars files has been simplified, uses sections for selected_apps
+                    and versioned_apps only. Updated template files are available in
+                    templates/onboarding_template/environments/ENVIRONMENT_NAME/group_vars.
+                *  Directories in onboarding repo for splunk/etc/manager-apps,
+                    splunk/etc/deployment-apps and splunk/etc/shcluster/apps are no longer used in
+                    standard data onboarding and can safely be removed if available in a onboarding
+                    repo.
+              - Added requirement to have community.crypto module install. Install via
+                ansible-galaxy collection install community.crypto
+              - Added option to skip the check if splunkd is started. To fix fatal errors it can
+                be necessary to skip health check and update conf files first. Use this
+                as extra-vars ensure_splunkd_started as false.
+              - To ease usage of CCA for Splunk, data onboarding has been simplified and this release
+                starts with preparing tasks and playbooks for next step where Standard Onboarding
+                are default in CCA for Splunk.
+              - Refactor tasks for cca.splunk.ssl-certificates role.
+              - Updated supported OS versions to include Debian(12) and Ubuntu(22) with support for
+                grub and polkit.
+              - Updated supported OS versions to include OracleLinux 8 and 9.
+
+
         2023.3.1
 
             - Added cleanup function for unused Splunk tgz files during Splunk Enterprise
