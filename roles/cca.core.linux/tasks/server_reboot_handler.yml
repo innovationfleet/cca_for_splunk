@@ -7,11 +7,15 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2024.1.1
+
 - name: Include role to check if there is a pending reboot
   ansible.builtin.include_tasks: check_pending_actions.yml
   when:
     - not cca_skip_server_reboot | default(false)
+
+- name: Gather facts about configured services
+  ansible.builtin.service_facts:
 
 - name: Control service during server reboot and reboot server if required
   block:
@@ -20,6 +24,8 @@
         name: Splunkd.service
         state: stopped
         enabled: false
+      when:
+        - ansible_facts.services['Splunkd.service'] is defined
 
     - name: Reboot the server based on notification state and wait for it to come back
       ansible.builtin.reboot:
@@ -32,6 +38,8 @@
         name: Splunkd.service
         enabled: true
         daemon_reload: true
+      when:
+        - ansible_facts.services['Splunkd.service'] is defined
 
     - name: Delete statefile based on reboot status
       ansible.builtin.file:
