@@ -1,0 +1,39 @@
+---
+# tasks file for cca.splunk.ssl-certificates
+#
+# Description: Included by <cert_type>_certificates.yml task that are called
+#              directly in the manage playbooks.
+#
+# Prerequisite:
+#
+# Author: META_AUTHOR
+#
+# Release: 2023.3.2
+
+- name: Include licensed CCA certificate tasks
+  ansible.builtin.include_role:
+    name: "{{ cca_control_cert.role }}"
+    tasks_from:
+      "{{ cca_control_cert.task }}"
+  loop_control:
+    loop_var: cca_control_cert
+  loop: '{{ cca_control_certificates_tasks | default([]) if cca_control_certificates_tasks | default([]) is iterable else [] }}'
+  when:
+    - cca_splunk_cert_enrollment_method =='api'
+
+- name: Validate certificates on remote target to find if they need updates
+  include_tasks: validate_target_certificates.yml
+  when:
+    - cca_splunk_cert_enrollment_method != 'selfsigned'
+
+- name: Include task to deploy manual certs
+  include_tasks: deploy_certs.yml
+  when:
+    - cca_splunk_cert_enrollment_method != 'selfsigned'
+    - final_cert_file_result.changed
+
+- name: "Set fact if {{ cert_type }} cert is found and valid"
+  ansible.builtin.set_fact:
+    {"{{ facts_variable }}":true}
+  when:
+    - cca_splunk_cert_enrollment_method == 'selfsigned'

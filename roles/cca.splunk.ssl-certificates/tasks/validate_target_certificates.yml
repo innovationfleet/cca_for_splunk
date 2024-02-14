@@ -1,0 +1,54 @@
+---
+# tasks file for cca.splunk.ssl-certificates
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.1.1
+
+- name: Run certificate validation in a block
+  block:
+    - name: "Ensure that {{ privkey_staging_file_name }} has a proper EOL"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.lineinfile:
+        line: '# CCA Managed private key file for Splunk Enterprise'
+        regexp: '^# CCA Managed'
+        dest: '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+        insertafter: 'EOF'
+
+    - name: "Ensure that {{ cert_staging_file_name }} has a proper EOL"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.lineinfile:
+        line: '# CCA Managed certificate file for Splunk Enterprise'
+        regexp: '^# CCA Managed'
+        dest: '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+        insertafter: 'EOF'
+
+    - name: "Set fact for {{ cert_type }} cert file names and concatenation order"
+      ansible.builtin.set_fact:
+        certificate_data:
+          - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+          - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+          - "{{ cca_splunk_extension_cert_rootca_fullpath if cca_splunk_extension_cert_rootca_fullpath is defined else cca_splunk_extension_certs_path + '/' + cca_splunk_extension_cert_rootca }}"
+
+    - name: "DRY RUN - Perform a final {{ cert_type }} cert build"
+      ansible.builtin.template:
+        src: ../templates/etc/auth/certs/build_final_cert.j2
+        dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
+      check_mode: true
+      register: final_cert_file_result
+
+    - name: "Set fact if {{ cert_type }} cert is found and valid"
+      ansible.builtin.set_fact:
+        {"{{ facts_variable }}":true}
+      when:
+        - not final_cert_file_result.changed
+  when:
+    - cca_splunk_cert_enrollment_method != 'selfsigned'

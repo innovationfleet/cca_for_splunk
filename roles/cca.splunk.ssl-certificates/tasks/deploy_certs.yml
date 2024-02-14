@@ -45,7 +45,16 @@
     mode: '664'
   check_mode: false
   when:
-    - cca_splunk_cert_enrollment_method != "selfsigned"
+    - cca_splunk_cert_enrollment_method == "manual"
+
+- name: Copy Root CA cert
+  ansible.builtin.copy:
+    src: '{{ cca_splunk_extension_cert_rootca_fullpath }}'
+    dest: '{{ cca_splunk_certs_path }}'
+    mode: '664'
+  check_mode: false
+  when:
+    - cca_splunk_cert_enrollment_method == "api"
 
 - name: Get private key signature from local key file
   ansible.builtin.shell:
@@ -103,6 +112,17 @@
           - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
           - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
           - '{{ cca_splunk_extension_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
+      when:
+        - cca_splunk_cert_enrollment_method == "manual"
+
+    - name: Set fact for cert file names and concatenation order
+      ansible.builtin.set_fact:
+        certificate_data:
+          - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+          - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+          - '{{ cca_splunk_extension_cert_rootca_fullpath }}'
+      when:
+        - cca_splunk_cert_enrollment_method == "api"
 
     - name: "Perform a final {{ cert_type }} cert build"
       ansible.builtin.template:
