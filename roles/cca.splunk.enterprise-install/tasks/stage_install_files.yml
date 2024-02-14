@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2024.1.1
 
 - name: Find Splunk install file in repo directory
   become: false
@@ -31,7 +31,7 @@
   loop: "{{ find_cca_splunk_tmp_tgz.files }}"
   when: "'splunk-{{ splunk_enterprise_version }}' not in item.path"
 
-- name: Assert that we have a splunk tar file
+- name: Assert that we have a matching splunk tgz file
   become: false
   delegate_to: localhost
   connection: local
@@ -39,9 +39,10 @@
     that:
       find_cca_splunk_tgz.files | length == 1
     fail_msg: >-
-      Found {{ find_cca_splunk_tgz.files | length }} Splunk tar file on the
+      Found {{ find_cca_splunk_tgz.files | length }} Splunk install files on the
       host that matches splunk-{{ splunk_enterprise_version }}-*64.tgz.
-      It needs to be exaclty one, and we found these {{ find_cca_splunk_tgz.files }}
+      Download one using this command,
+      ${CCA_REPO_DIR}/roles/cca.splunk.enterprise-install/files/bin/download_splunk_enterprise.sh
   when:
     - not stat_splunk_enterprise_bin.stat.exists or
       enterprise_upgrade | default(false)
@@ -53,7 +54,7 @@
     recursive: true
     checksum: true
     archive: false
-    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_opts:
       - "--include=dat/untracked_files_splunk_{{ splunk_enterprise_version }}_Linux.diff"
@@ -69,7 +70,7 @@
     recursive: true
     checksum: true
     archive: false
-    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_opts:
       - "--include=splunk-{{ splunk_enterprise_version }}-*-Linux-x86_64.tgz"
