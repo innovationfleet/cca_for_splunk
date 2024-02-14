@@ -7,7 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.3.2
+
 
 - name: Start splunk on command line
   ansible.builtin.command:
@@ -15,4 +16,5 @@
   when:
     - stat_splunk_enterprise_bin.stat.exists
     - stat_ansible_managed.stat.exists
+    - ensure_splunkd_started | default(true)
   changed_when: false
