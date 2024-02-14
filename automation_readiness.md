@@ -33,10 +33,9 @@ Our recommendation is to have a designated central server that has access to you
 
 Operating System (OS)'s are fully supported to run the CCA Manager. Note that target OS's for Splunk can differ over time. See explicit documentation for OS support for Splunk using CCA for Splunk.
 
-* RedHat 7-9
+* RedHat 8-9
 * CentOS 8-9 Stream
-* Rocky Linux 8
-* Amazon Linux 2
+* Rocky Linux 8-9
 * Amazon Linux 2023
 * Ubuntu 20
 
@@ -44,7 +43,7 @@ Operating System (OS)'s are fully supported to run the CCA Manager. Note that ta
 Minimum hardware requirements:
 * CPU: 2 CPU
 * RAM: 4GB RAM (Onboarding repository size depends on the apps you have stored in it)
-* Disk: 40 GB
+* Disk: 40 GB (100 GB In enterprise environments with many apps)
 
 Feel free to try and run these playbooks elsewhere but on your own responsibility.
 
@@ -59,8 +58,8 @@ When it comes to determining which Splunk Enterprise version to use, our recomme
 
 For production environment(s) we recommend to use a stable version, usually the latest minor version of the latest major version is proven to be stable. Except for when a new major release, then the CCA compatibility and production stability will be assessed before that release is recommended to use in CCA.
 
-CCA for Splunk’s supported versions:
-* Splunk Enterprise 8.X
+CCA for Splunk's supported versions:
+* Splunk Enterprise 8.X and 9.X
 
 ### SSH Keys
 A remote user that has SSH key based login enabled and has `sudo ALL NO PASSWD` configured is also required on the Splunk Infrastructure servers that CCA for Splunk will manage.
@@ -90,7 +89,7 @@ ansible-playbook -i localhost, playbooks/automation_readiness_cca_manager.yml -v
 
 Here we list the different checks that are performed by the Automation Readiness Playbook and what should be configured to correct them if they didn't pass in your playbook execution.
 
-## Python 3.9 Installation
+## Python 3.11 Installation
 As a user with `sudo` privileges execute
 
 ```
@@ -102,22 +101,23 @@ Logon as the same user that executed the Automation Readiness Playbook. Execute 
 
 ```
 cd
-alias python='/usr/bin/python3.9'
-mkdir -p ~/tools/python-venv/ansible2.12
+alias python='/usr/bin/python3.11'
+mkdir -p ~/tools/python-venv/ansible2.14
 cd ~/tools/python-venv
-python -m venv ansible2.12
-source ansible2.12/bin/activate
-~/tools/python-venv/ansible2.12/bin/python3.9 -m pip install --upgrade pip
-pip install ansible-core==2.12.5
-pip install pcrypt
-ansible-galaxy collection install community.general --server https://old-galaxy.ansible.com/
-ansible-galaxy collection install ansible.posix --server https://old-galaxy.ansible.com/
+python -m venv ansible2.14
+source ansible2.14/bin/activate
+~/tools/python-venv/ansible2.14/bin/python3.11 -m pip install --upgrade pip
+pip install ansible-core==2.14.13
+pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3
+ansible-galaxy collection install community.general
+ansible-galaxy collection install ansible.posix
+ansible-galaxy collection install community.crypto
 
 ```
 Add the following line to your user profile to activate the Python virtual environment every time you login.
 
 ```
-source ~/tools/python-venv/ansible2.12/bin/activate
+source ~/tools/python-venv/ansible2.14/bin/activate
 ```
 Perform a test by logging out & in again and execute the following command.
 ```
@@ -126,13 +126,13 @@ if [[ -v VIRTUAL_ENV ]] ; then ansible --version ; else echo "VIRTUAL_ENV is not
 
 You should expect a similar output as below. If you are not getting the expected result, review the previous steps.
 ```
-ansible [core 2.12.5]
-  config file = /etc/ansible/ansible.cfg
-  configured module search path = ['/opt/cca_builder/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
-  ansible python module location = /opt/cca_builder/tools/python-venv/ansible2.12/lib64/python3.9/site-packages/ansible
-  ansible collection location = /opt/cca_builder/.ansible/collections:/usr/share/ansible/collections
-  executable location = /opt/cca_builder/tools/python-venv/ansible2.12/bin/ansible
-  python version = 3.9.7 (default, Sep 21 2021, 00:13:39) [GCC 8.5.0 20210514 (Red Hat 8.5.0-3)]
+ansible [core 2.14.13]
+  config file = None
+  configured module search path = ['/opt/cca_manager/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /opt/cca_manager/tools/python-venv/ansible2.14/lib64/python3.11/site-packages/ansible
+  ansible collection location = /opt/cca_manager/.ansible/collections:/usr/share/ansible/collections
+  executable location = /opt/cca_manager/tools/python-venv/ansible2.14/bin/ansible
+  python version = 3.11.6 (main, Nov 22 2023, 00:00:00) [GCC 11.4.1 20230605 (Red Hat 11.4.1-2)] (/opt/cca_manager/tools/python-venv/ansible2.14/bin/python3.11)
   jinja version = 3.1.2
   libyaml = True
   ```
@@ -165,14 +165,15 @@ The default strategy in Ansible is called linear and doesn't need to be specifie
 
 If we set it to `mitogen_linear` the playbooks will run much faster, up 4X.
 
-To use it your self, read up on [Ansible Mitogen](https://github.com/mitogen-hq/mitogen). Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
+To use it your self, read up on [Ansible Mitogen](https://github.com/mitogen-hq/mitogen).
+Temporarily we have forked and patched the mitogen package. Get latest from https://github.com/innovationfleet/mitogen Remember to checkout branch ansible.2.14.13 after cloning the repo. Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
 
 Add `export ANSIBLE_STRATEGY="mitogen_linear"`
 to start using the highly recommended strategy plugin.
 
 ### ANSIBLE_STRATEGY_PLUGINS
 
-Add `export ANSIBLE_STRATEGY_PLUGINS=~/tools/mitogen-0.3.2/ansible_mitogen/plugins/strategy` and set it to the directory where you have installed the mitogen package.
+Add `export ANSIBLE_STRATEGY_PLUGINS=~/tools/mitogen/ansible_mitogen/plugins/strategy` and set it to the directory where you have installed the mitogen package.
 
 ## Optional Environment variables
 
@@ -192,13 +193,17 @@ Increased readability of Ansible terminal output, yaml formatted. Add
 ```
 export ANSIBLE_PRIVATE_KEY_FILE=~/data/secrets/cca_ansible_id_rsa
 export ANSIBLE_ROLES_PATH=./roles:~/clones/cca_for_splunk/roles
-export ANSIBLE_STRATEGY_PLUGINS=~/tools/mitogen-0.3.2/ansible_mitogen/plugins/strategy
+export ANSIBLE_STRATEGY_PLUGINS=~/tools/mitogen/ansible_mitogen/plugins/strategy
 export ANSIBLE_STRATEGY="mitogen_linear"
 export ANSIBLE_CALLBACKS_ENABLED="ansible.posix.profile_tasks"
 export ANSIBLE_STDOUT_CALLBACK="yaml"
 export ANSIBLE_VAULT_PASSWORD_FILE=~/data/secrets/cca_ansible_vault_secret
+export ANSIBLE_INTERPRETER_PYTHON=auto_silent
+export CCA_INFRASTRUCTURE_REPO_DIR=~/data/main/cca_splunk_infrastructure
+export CCA_ONBOARDING_REPO_DIR=~/data/main/cca_splunk_onboarding
+export CCA_REPO_DIR=~/data/main/cca_for_splunk
 
-source ~/tools/python-venv/ansible2.12/bin/activate
+source ~/tools/python-venv/ansible2.14/bin/activate
 ```
 Wait with ANSIBLE_VAULT_PASSWORD_FILE until it exists.
 

@@ -46,7 +46,7 @@
 - name: Get local manager users home directory
   become: false
   ansible.builtin.command:
-    cmd: command echo ~
+    cmd: echo ~
   register: homedir
   changed_when:
     - false

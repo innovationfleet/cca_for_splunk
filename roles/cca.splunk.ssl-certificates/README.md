@@ -71,21 +71,21 @@ Description
 * `cca_splunk_extension_cert_rootca`
   * Filename of Root CA certificate. Name the certificate with its valid dates for both CA and Intermediate CA's, for example Innovationfleet_CA1_20291111_Issuing_CA1_2024111.pem
 * `cca_splunk_extension_server_cert`
-  * Filename of server certificate. Name the certificate with its valid date, for example splunk-server_20231210.cer. It makes it clear when the certs has to be renewed and.
+  * Filename of server certificate. Name the certificate with its valid date, for example splunk-server_20250114.cer. It makes it clear when the certs has to be renewed and.
 * `cca_splunk_extension_server_key`
-  * Give the corresponding private key the same date, for example splunk-server_20231210.key as they are related and should be replaced when renewing the certificates.
+  * Give the corresponding private key the same date, for example splunk-server_20250114.key as they are related and should be replaced when renewing the certificates.
 * `cca_splunk_extension_inputs_cert`
-  * Filename of server certificate. Name the certificate with its valid date, for example splunk-inputs_20231210.cer. It makes it clear when the certs has to be renewed and.
+  * Filename of server certificate. Name the certificate with its valid date, for example splunk-inputs_20250114.cer. It makes it clear when the certs has to be renewed and.
 * `cca_splunk_extension_inputs_key`
-  * Give the corresponding private key the same date, for example splunk-inputs_20231210.key as they are related and should be replaced when renewing the certificates.
+  * Give the corresponding private key the same date, for example splunk-inputs_20250114.key as they are related and should be replaced when renewing the certificates.
 * `cca_splunk_extension_outputs_cert`
-  * Filename of server certificate. Name the certificate with its valid date, for example splunk-outputs_20231210.cer. It makes it clear when the certs has to be renewed and.
+  * Filename of server certificate. Name the certificate with its valid date, for example splunk-outputs_20250114.cer. It makes it clear when the certs has to be renewed and.
 * `cca_splunk_extension_outputs_key`
-  * Give the corresponding private key the same date, for example splunk-outputs_20231210.key as they are related and should be replaced when renewing the certificates.
+  * Give the corresponding private key the same date, for example splunk-outputs_20250114.key as they are related and should be replaced when renewing the certificates.
 * `cca_splunk_extension_web_cert`
-  * Filename of server certificate. Name the certificate with its valid date, for example splunk-web_20231210.cer. It makes it clear when the certs has to be renewed and.
+  * Filename of server certificate. Name the certificate with its valid date, for example splunk-web_20250114.cer. It makes it clear when the certs has to be renewed and.
 * `cca_splunk_extension_web_key`
-  * Give the corresponding private key the same date, for example splunk-web_20231210.key as they are related and should be replaced when renewing the certificates.
+  * Give the corresponding private key the same date, for example splunk-web_20250114.key as they are related and should be replaced when renewing the certificates.
 
 ### group_vars/all/cca_splunk_settings
 * `cca_splunk_cert_prefix`
@@ -146,10 +146,10 @@ Tasks
   * Set facts for output certificate variables
 * `server_certificate.yml`
   * Set facts for server certificate variables
-* `validate_manual_certificates.yml`
+* `validate_target_certificates.yml`
   * Validates if certificate is available and valid, checks all 4 certificates.
     Compares checksums of certificates stored on Manager server and on Splunk server.
-    If the file doesn't exists or match each other it will trigger the `deploy_manual_certs.yml`
+    If the file doesn't exists or match each other it will trigger the `deploy_certs.yml`
     task under the condition that `cca_splunk_cert_enrollment_method` is set to manual.
 * `web_certificate.yml`
   * Set facts for web certificate variables

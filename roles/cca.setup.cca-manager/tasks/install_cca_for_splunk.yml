@@ -7,9 +7,16 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2024.1.1
+
+- name: Check if cca_for_splunk directory exists
+  ansible.builtin.stat:
+    path: '{{ cca_manager_cca_for_splunk_path }}'
+  register: stat_cca_for_splunk
 
 - name: Git checkout the latest CCA for Splunk release
   ansible.builtin.git:
     repo: '{{ cca_for_splunk_repo_url }}'
     dest: '{{ cca_manager_cca_for_splunk_path }}'
+  when:
+    - not stat_cca_for_splunk.stat.exists

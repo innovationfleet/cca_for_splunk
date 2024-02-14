@@ -34,7 +34,7 @@
       ansible.builtin.shell:
         cmd: "{{ splunk_path }}/bin/splunk show cluster-bundle-status --check-restart | grep -A4 last_validated_bundle | grep timestamp | awk -F= '{ print $2}' | awk -F' ' '{ print $1 }'"
       register: last_check_restart_bundle_epoch
-      retries: 40
+      retries: "{{ cca_splunk_cluster_bundle_status_retries | default(40) | int }}"
       delay: 15
       until: last_check_restart_bundle_epoch.stdout | int > current_epoch | int
       changed_when: false
@@ -47,7 +47,7 @@
       ansible.builtin.shell:
         cmd: "{{ splunk_path }}/bin/splunk show cluster-bundle-status --check-restart | grep cluster_status"
       register: cluster_bundle_validation_status
-      retries: 40
+      retries: "{{ cca_splunk_cluster_bundle_status_retries | default(40) | int }}"
       delay: 15
       until: "'None' in cluster_bundle_validation_status.stdout"
       changed_when: false
@@ -56,7 +56,7 @@
       ansible.builtin.shell:
         cmd: "{{ splunk_path }}/bin/splunk show cluster-bundle-status"
       register: cluster_bundle_restart_status
-      retries: "{{ cluster_bundle_status_command_retries | default(30) }}"
+      retries: "{{ cluster_bundle_status_command_retries | default(30) | int }}"
       delay: 60
       until: cluster_bundle_restart_status.stdout | default('') | regex_search('(cluster_status=None)')
       check_mode: no
@@ -64,11 +64,16 @@
 
     - name: Fail task if bundle validation errors are found
       ansible.builtin.debug:
-        msg: "FATAL: Bundle validation errors found"
-      failed_when:
-        - cluster_bundle_restart_status.stdout | default('') | regex_search('bundle_validation_errors')
+        msg: "FATAL: Bundle validation errors found [Critical]"
+      failed_when: "cluster_bundle_restart_status.stdout | default('') | regex_search('bundle_validation_errors') and '[Critical]' in cluster_bundle_restart_status.stdout | default('')"
+      register: bundle_validation_result
       when:
         - not accept_bundle_validation_errors | default(false)
+
+    - name: Save result for later printing (if [Not Critical])
+      set_fact:
+        not_critical_result: "{{ cluster_bundle_restart_status.stdout | default('') }}"
+      when: "'Not Critical' in cluster_bundle_restart_status.stdout | default('')"
 
     - name: Create a state file if a index peer restart is needed
       ansible.builtin.file:

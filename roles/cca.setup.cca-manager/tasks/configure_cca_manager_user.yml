@@ -91,7 +91,7 @@
 
       fi
 
-      # Unser LS Colors to keep coloring of directory names
+      # Unset LS Colors to keep coloring of directory names
       unset LS_COLORS
 
       # Append history while using multiple terminal sessions to one host
@@ -141,4 +141,3 @@
     backup: true
   with_items:
     - { regex: '^\[ -f ~/.profile', value: '[ -f ~/.profile ] && source ~/.profile' }
-

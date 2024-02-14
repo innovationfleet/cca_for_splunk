@@ -7,9 +7,9 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.1
+# Release: 2023.3.2
 
-# facts_variable: 'cca_splunk_outputs_ssl' is set in validate_manual_certificates.yml
+# facts_variable: 'cca_splunk_outputs_ssl' is set in validate_target_certificates.yml
 # for manual certs or as a fallback here if the cert enrollment method is selfsigned
 - name: Set fact for outputs cert to be used in common tasks
   ansible.builtin.set_fact:
@@ -22,19 +22,5 @@
     cert_type: 'outputs'
   no_log: "{{ hide_password }}"
 
-- name: Validate manual certs to find if they need updates
-  include_tasks: validate_manual_certificates.yml
-  when:
-    - cca_splunk_cert_enrollment_method == 'manual'
-
-- name: Include task to deploy manual certs
-  include_tasks: deploy_manual_certs.yml
-  when:
-    - cca_splunk_cert_enrollment_method == 'manual'
-    - final_cert_file_result.changed
-
-- name: "Set fact if {{ cert_type }} cert is found and valid"
-  ansible.builtin.set_fact:
-    {"{{ facts_variable }}":true}
-  when:
-    - cca_splunk_cert_enrollment_method == 'selfsigned'
+- name: Include task that includes common certificate tasks
+  include_tasks: certificates_main.yml

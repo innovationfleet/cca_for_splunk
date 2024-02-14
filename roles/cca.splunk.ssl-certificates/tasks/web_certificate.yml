@@ -7,9 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.1
-
-# facts_variable: 'cca_splunk_web_ssl' is set in validate_manual_certificates.yml
+# Release: 2023.3.2
+# facts_variable: 'cca_splunk_web_ssl' is set in validate_target_certificates.yml
 # for manual certs with no fallback for selfsigned certificates.
 - name: Set fact for web cert to be used in common tasks
   ansible.builtin.set_fact:
@@ -22,13 +21,5 @@
     cert_type: 'web'
   no_log: "{{ hide_password }}"
 
-- name: Validate manual certs to find if they need updates
-  include_tasks: validate_manual_certificates.yml
-  when:
-    - cca_splunk_cert_enrollment_method == 'manual'
-
-- name: Include task to deploy manual certs
-  include_tasks: deploy_manual_certs.yml
-  when:
-    - cca_splunk_cert_enrollment_method == 'manual'
-    - final_cert_file_result.changed
+- name: Include task that includes common certificate tasks
+  include_tasks: certificates_main.yml

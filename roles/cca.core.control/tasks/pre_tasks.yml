@@ -7,17 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2023.3.2
 
 - name: Get cluster manager status
   ansible.builtin.include_tasks: index_clusters/cluster_manager_status.yml
   when:
-    - inventory_hostname in groups.cluster_managers
+    - inventory_hostname in ( groups.cluster_managers | default([]) )
 
 - name: Migrate master-apps on Cluster Manager
   ansible.builtin.include_tasks: index_clusters/cluster_manager_cluster_bundle_dir.yml
   when:
-    - inventory_hostname in groups.cluster_managers
+    - inventory_hostname in ( groups.cluster_managers | default([]) )
     - splunk_enterprise_installed
     - current_splunk_enterprise_version | default(splunk_enterprise_version) | default(splunk_enterprise_version) is version('9.0.0', '>=')
     - not master_apps_migration_completed

@@ -1,0 +1,50 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2023.3.2
+
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: apt
+
+- name: Block for old config syntax
+  block:
+    - name: Information lower than 0.105
+      debug: 
+        msg: "Version lower than 0.106, implementing old syntax for config"
+
+    - name: Configure polkit rule in /etc/polkit.1/rules.d
+      ansible.builtin.template:
+        src: "etc/polkit-1/rules.d/10-Splunkd.pkla_legacy.j2"
+        dest: /etc/polkit-1/localauthority/50-local.d/10-Splunkd.pkla
+        mode: '0644'
+      register: polkit_template_status
+  when: ansible_facts.packages.get('policykit-1')[0].version < "0.106"
+
+- name: Block for new config syntax
+  block:
+    - name: Information greater than 0.105
+      debug: 
+        msg: "Version greater than 0.106, implementing new syntax for config"
+
+    - name: Configure polkit rule in /etc/polkit.1/rules.d
+      ansible.builtin.template:
+        src: "etc/polkit-1/rules.d/10-Splunkd.rules_{{ cca_splunk_polkit_template_version }}.j2"
+        dest: /etc/polkit-1/rules.d/10-Splunkd.rules
+        mode: '0644'
+      register: polkit_template_status
+  when: ansible_facts.packages.get('policykit-1')[0].version > "0.106"
+
+- name: Restart polkit systemd service
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: yes
+    name: polkit
+  when:
+    - polkit_template_status.changed

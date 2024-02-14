@@ -25,23 +25,46 @@
   register: grub_file_status
   notify: notify server reboot
 
-- name: Get stat from the custom grub.cfg file
+- name: Get stat from the custom /boot/grub/grub.cfg file
+  ansible.builtin.stat:
+    path: "/boot/grub/grub.cfg"
+  register: stat_grub_grubcfg
+
+- name: Get stat from the custom /boot/grub2/grub.cfg file
   ansible.builtin.stat:
     path: "/boot/grub2/grub.cfg"
   register: stat_grub2_grubcfg
 
-- name: Take backup of existing grub.cfg, with timestamp
-  ansible.builtin.copy:
-    src: '/boot/grub2/grub.cfg'
-    dest: "/root/grub_backup-{{ansible_date_time.date}}.cfg"
-    remote_src: true
+- name: Block for grub
+  block:
+    - name: Take backup of existing grub.cfg, with timestamp
+      ansible.builtin.copy:
+        src: '/boot/grub/grub.cfg'
+        dest: "/root/grub_backup-{{ansible_date_time.date}}.cfg"
+        remote_src: true
+
+    - name: Rebuild grub conf
+      ansible.builtin.shell:
+        cmd: 'grub-mkconfig -o /boot/grub/grub.cfg'
+      register: grub_mkconfig
   when:
-    - stat_grub2_grubcfg.stat.exists
+    - stat_grub_grubcfg.stat.exists
+    - not stat_grub2_grubcfg.stat.exists
     - grub_file_status.changed
 
-- name: Rebuild grub conf
-  ansible.builtin.shell:
-    cmd: 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+- name: Block for grub2
+  block:
+    - name: Take backup of existing grub.cfg, with timestamp
+      ansible.builtin.copy:
+        src: '/boot/grub2/grub.cfg'
+        dest: "/root/grub_backup-{{ansible_date_time.date}}.cfg"
+        remote_src: true
+
+    - name: Rebuild grub conf
+      ansible.builtin.shell:
+        cmd: 'grub2-mkconfig -o /boot/grub2/grub.cfg'
+      register: grub_mkconfig
   when:
+    - not stat_grub_grubcfg.stat.exists
+    - stat_grub2_grubcfg.stat.exists
     - grub_file_status.changed
-  register: grub_mkconfig

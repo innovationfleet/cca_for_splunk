@@ -1,6 +1,6 @@
 ![alt text](/media/CCAforSplunk_orange.png)
 <br>
-<img align="right" src="https://badgen.net/badge/Latest%20Premium%20Version/2023.3.1/green?icon=github"><img align="right" src="https://badgen.net/badge/Latest%20Release/2023.3.1/green?icon=github"><img align="right" src="https://badgen.net/badge/License/MIT/blue">
+<img align="right" src="https://badgen.net/badge/Latest%20Premium%20Version/2024.1.1/green?icon=github"><img align="right" src="https://badgen.net/badge/Latest%20Release/2024.1.1/green?icon=github"><img align="right" src="https://badgen.net/badge/License/MIT/blue">
 <br>
 ### A full lifecycle management interface for Splunk
 
@@ -10,7 +10,7 @@ Let's be honest, running Splunk is all about finding an efficient and scalable w
 That is precisely what we've done for years, and now it's time to share how you can do it to. Our solution enables a full lifecycle management of Splunk using a **C**ontinuous **C**onfiguration **A**utomation framework powered by Ansible.
 
 >[!NOTE]
-> This is a free read-only open-source project, a fully working but limited and unsupported version based on the full enterprise solution hence the low amount of commits in this repo. For a better overview of all improvments check out [release notes](https://github.com/innovationfleet/cca_for_splunk/blob/main/RELEASE_NOTES.txt). For enterprise use, we recommend our subscription service which includes an expanded feature set, full end user support and optional premium extentions to expand the frameworks capabilities. For subscribing customers we also offer additional services including strategic advisory, implementation- and custom feature development projects.
+> This is a free read-only open-source project, a fully working but limited and unsupported version based on the full enterprise solution hence the low amount of commits in this repo. For a better overview of all improvements check out [release notes](https://github.com/innovationfleet/cca_for_splunk/blob/main/RELEASE_NOTES.txt). For enterprise use, we recommend our subscription service which includes an expanded feature set, full end user support and optional premium extensions to expand the frameworks capabilities. For subscribing customers we also offer additional services including strategic advisory, implementation- and custom feature development projects.
 
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
@@ -25,7 +25,7 @@ The templates that we provide for configuring Splunk roles are used in our own M
 
 Playbooks are DRY (Don't Repeat Yourself), with almost no tasks - instead they are using common code in roles. So an update of a task has just to be done in one place, keeping code updates much cleaner and easier to overview.
 
-You can find a more indepth Project Presentation as well as a Q&A section in the [Wiki](https://github.com/innovationfleet/cca_for_splunk/wiki).
+You can find a more in-depth Project Presentation as well as a Q&A section in the [Wiki](https://github.com/innovationfleet/cca_for_splunk/wiki).
 
 ![alt text](https://www.orangecyberdefense.com/fileadmin/_processed_/d/8/csm_Splunk_vs_2_45d2f9bce5.png)
 
@@ -120,7 +120,7 @@ Open Source and Premium:
 
 2: **Setup the CCA manager**
 
-  - The CCA manager is the host that orcastrates and manages the automation and configuration deployment.
+  - The CCA manager is the host that orchestrates and manages the automation and configuration deployment.
     There are currently two ways to deploy the manager.
       1. Use the docker image for cca_for_splunk
       2. Setup the manager on a regular host and pull CCA for Splunk.

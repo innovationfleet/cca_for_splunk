@@ -7,10 +7,11 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2024.1.1
+
 - name: Deploy the apps from the apps directory to the splunk servers
   ansible.posix.synchronize:
-    src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
+    src: '{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
     dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
     copy_links: true
     recursive: true
@@ -21,7 +22,7 @@
     group: false
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ selectable_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else selectable_apps_rsync_opts }}'
   notify: notify standalone splunkd restart
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
@@ -29,12 +30,13 @@
     - item.state == 'present'
     - item.dest_dir is not defined or
       item.dest_dir == "etc"
-    - item.target is defined and item.target == inventory_hostname or
+    - (item.target is defined and
+      item.target == inventory_hostname) or
       item.target is not defined
 
 - name: Deploy generic apps from the apps generic directory to the splunk servers
   ansible.posix.synchronize:
-    src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
+    src: '{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
     dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
     copy_links: true
     recursive: true
@@ -45,7 +47,7 @@
     group: false
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ versioned_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else versioned_apps_rsync_opts }}'
   notify: notify standalone splunkd restart
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'

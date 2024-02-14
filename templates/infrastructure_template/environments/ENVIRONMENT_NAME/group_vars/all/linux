@@ -14,7 +14,8 @@ cca_baseline_software:
   - 'rsync'
   - 'git'
   - 'openssl'
-  - 'bind-utils'
+  - '{{"dnsutils" if package_manager == "apt" else "bind-utils" }}'
+  - '{{"acl" if package_manager == "apt" else None }}'
 control:
   linux_configuration:
     splunk_user: true

@@ -18,8 +18,3 @@ versioned_apps:
 #    source_app: ''
 #    state: ''
 
-# Apps destined for deployment-apps on deployment server
-selected_deployment_apps:
-#  - name: ''
-#    source_app: ''
-#    state: ''

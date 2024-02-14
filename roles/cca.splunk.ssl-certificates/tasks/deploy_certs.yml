@@ -1,0 +1,135 @@
+---
+# tasks file for cca.splunk.ssl-certificates
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.3.1
+
+- name: Check if we have the cert file on the server
+  ansible.builtin.stat:
+    path: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
+  register: stat_cert_file
+  check_mode: false
+
+- name: Ensure that the cert paths exists
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ splunk_user }}'
+    group: '{{ splunk_user_group_name }}'
+    mode: '775'
+  with_items:
+    - '{{ cca_splunk_certs_path }}'
+    - '{{ cca_splunk_certs_staging_path }}'
+  check_mode: false
+
+- name: Copy cert and private key to server
+  ansible.builtin.copy:
+    src: '{{ cca_splunk_extension_certs_path }}/{{ item }}'
+    dest: '{{ cca_splunk_certs_staging_path }}'
+    mode: '664'
+  no_log: "{{ hide_password }}"
+  with_items:
+    - '{{ cert_staging_file_name }}'
+    - '{{ privkey_staging_file_name }}'
+  check_mode: false
+
+- name: Copy Root CA cert
+  ansible.builtin.copy:
+    src: '{{ cca_splunk_extension_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
+    dest: '{{ cca_splunk_certs_path }}'
+    mode: '664'
+  check_mode: false
+  when:
+    - cca_splunk_cert_enrollment_method == "manual"
+
+- name: Copy Root CA cert
+  ansible.builtin.copy:
+    src: '{{ cca_splunk_extension_cert_rootca_fullpath }}'
+    dest: '{{ cca_splunk_certs_path }}'
+    mode: '664'
+  check_mode: false
+  when:
+    - cca_splunk_cert_enrollment_method == "api"
+
+- name: Get private key signature from local key file
+  ansible.builtin.shell:
+    cmd: >
+      openssl rsa -noout -modulus
+      -in {{ cca_splunk_certs_staging_path }}/{{ privkey_staging_file_name }}
+      -passin pass:'{{ privkey_password }}' | sha256sum | cut -d" " -f1
+  register: status_privkey_sha256sum
+  no_log: "{{ hide_password }}"
+  check_mode: false
+
+- name: Assert that no error is thrown when decrypting the private key
+  ansible.builtin.assert:
+    that:
+      status_privkey_sha256sum.stderr == ''
+    fail_msg: >-
+      Decryption of private key failed due to this error.
+
+      {{ status_privkey_sha256sum.stderr }}
+
+      Rerun playbook with extra_vars, set hide_password to false.
+      Possible a miss match of ssl passwords for.
+
+      {{ cca_splunk_certs_staging_path }}/{{ privkey_staging_file_name }}
+
+- name: Get private key signature from local cert file
+  ansible.builtin.shell:
+    cmd: >
+      openssl x509 -noout -modulus
+      -in {{ cca_splunk_certs_staging_path }}/{{ cert_staging_file_name }} |
+      sha256sum |
+      awk '{ print $1 }'
+  register: status_cert_privkey_sha256sum
+  check_mode: false
+
+- name: Assert that private key is matching in the certificate
+  ansible.builtin.assert:
+    that:
+      - status_privkey_sha256sum.stdout == status_cert_privkey_sha256sum.stdout
+    fail_msg: "The private key signature didn't match the certificate"
+  check_mode: false
+
+- name: Copy private key from staging path and build final cert in block
+  block:
+    - name: Copy private key
+      ansible.builtin.copy:
+        src: '{{ cca_splunk_certs_staging_path }}/{{ privkey_staging_file_name }}'
+        dest: '{{ cca_splunk_certs_path }}/{{ privkey_file_name }}'
+        mode: '664'
+        remote_src: true
+
+    - name: Set fact for cert file names and concatenation order
+      ansible.builtin.set_fact:
+        certificate_data:
+          - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+          - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+          - '{{ cca_splunk_extension_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
+      when:
+        - cca_splunk_cert_enrollment_method == "manual"
+
+    - name: Set fact for cert file names and concatenation order
+      ansible.builtin.set_fact:
+        certificate_data:
+          - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
+          - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
+          - '{{ cca_splunk_extension_cert_rootca_fullpath }}'
+      when:
+        - cca_splunk_cert_enrollment_method == "api"
+
+    - name: "Perform a final {{ cert_type }} cert build"
+      ansible.builtin.template:
+        src: ../templates/etc/auth/certs/build_final_cert.j2
+        dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
+      notify: notify splunkd restart
+
+    - name: "Set fact if {{ cert_type }} cert is found and valid"
+      ansible.builtin.set_fact:
+        {"{{ facts_variable }}":true}

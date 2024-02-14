@@ -7,7 +7,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.1
+# Release: 2024.1.1
 
 - name: Get cgroup version support
   ansible.builtin.command:
@@ -35,17 +35,63 @@
   ansible.builtin.set_fact:
     current_systemd_cgroup_version: "{{ 'cgroupv1' if systemd_cgroup_version_result.stdout | int == 1 else 'cgroupv2' }}"
 
+- name: Block for debian based hosts
+  block:
+    - name: Configure legacy cgroup version until Splunk supports cgroupv2
+      ansible.builtin.lineinfile:
+        backrefs: true
+        path: /etc/default/grub
+        regexp: "^(GRUB_CMDLINE_LINUX=\".*)\"$"
+        line: '\1 systemd.unified_cgroup_hierarchy=0"'
+
+    - name: Update Grub
+      ansible.builtin.command:
+        cmd: |
+          update-grub
+  when:
+    - cca_splunk_systemd_cgroup_support == 'cgroupv1'
+    - current_systemd_cgroup_version != 'cgroupv1'
+    - ansible_distribution == 'Debian' or
+      ansible_distribution == 'Ubuntu'
+  notify: notify server reboot
+
 - name: Configure legacy cgroup version until Splunk supports cgroupv2
   ansible.builtin.command:
     cmd: |
-       grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+      grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
   when:
-   - cca_splunk_systemd_cgroup_support == 'cgroupv1'
-   - current_systemd_cgroup_version != 'cgroupv1'
+    - cca_splunk_systemd_cgroup_support == 'cgroupv1'
+    - current_systemd_cgroup_version != 'cgroupv1'
+    - ansible_distribution != 'Debian'
+    - ansible_distribution != 'Ubuntu'
   register: grubby_kernel_update_status
   notify: notify server reboot
 
+- name: Copy cgroup handler script
+  ansible.builtin.copy:
+    src: "usr/local/bin/cca_cgroup_version_handler.sh"
+    dest: "/usr/local/bin/cca_cgroup_version_handler.sh"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0750'
+
+- name: Configure cgroup-daemon service in /etc/systemd/system/cca_cgroup_version_daemon.service
+  ansible.builtin.template:
+    src: "etc/systemd/system/cca_cgroup_version_daemon.service.j2"
+    dest: "/etc/systemd/system/cca_cgroup_version_daemon.service"
+    mode: '0644'
+
+- name: Configure systemd for the new service
+  ansible.builtin.systemd:
+    name: "cca_cgroup_version_daemon.service"
+    enabled: true
+    daemon_reload: true
+
+- name: Trigger restart if pending from cgroups update
+  meta: flush_handlers
+
 - name: Include role for reboot handler
-  ansible.builtin.include_tasks: standalone_reboot.yml
+  ansible.builtin.include_tasks:
+    file: server_reboot_handler.yml
   when:
    - grubby_kernel_update_status.changed | default(false)

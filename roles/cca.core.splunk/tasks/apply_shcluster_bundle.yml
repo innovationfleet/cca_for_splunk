@@ -7,9 +7,9 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.3.2
 # TODO: BUG - Add check to validate if there is a working captain among the SHC peers.
-# Possible skip bundle push if an brutal upgrade is performed. 
+# Possible skip bundle push if an brutal upgrade is performed.
 
 - name: Check if there is a pending bundle push
   ansible.builtin.stat:
@@ -34,7 +34,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c1
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c1 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -55,7 +55,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c2
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c2 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 #
 # Apply bundle on Search Head Cluster C3
@@ -75,7 +75,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c3
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c3 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -96,7 +96,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c4
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c4 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -117,7 +117,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c5
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c5 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -138,7 +138,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c6 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -159,7 +159,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c6 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -180,7 +180,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c7
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c7 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -201,7 +201,7 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c8
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c8 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 
 #
@@ -222,6 +222,6 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
   when:
-    - inventory_hostname in groups.searchhead_deployer_shcluster_c9
+    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c9 | default([]) )
     - stat_shcluster_bundle_push_pending.stat.exists
 

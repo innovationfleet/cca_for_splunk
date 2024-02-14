@@ -10,10 +10,10 @@ cca_ansible_private_key_file: '~/{{ cca_manager_data_dirname | default(none) }}s
 cca_for_splunk_repo_url: 'https://github.com/innovationfleet/cca_for_splunk'
 cca_for_splunk_directory: 'cca_for_splunk'
 cca_manager_cca_for_splunk_path: '{{ cca_manager_user_dir }}/clones/{{ cca_for_splunk_directory }}'
-cca_python_minor_version: '3.9'
-cca_python_release: '3.9.10'
-cca_ansible_minor_version: '2.12'
-cca_ansible_release: '2.12.5'
+cca_python_minor_version: '3.11'
+cca_python_release: '3.11.6'
+cca_ansible_minor_version: '2.14'
+cca_ansible_release: '2.14.13'
 cca_manager_user_dir: "{{ ansible_facts.user_dir }}"
 cca_manager_tools_directories:
   - "{{ cca_manager_user_dir }}/tools/python-venv"
@@ -30,8 +30,10 @@ cca_ansible_roles_path: "{{ './roles:~/clones/' + cca_repo_name | default('cca_f
 # CCA playbooks by at least 4X. Read more details about it below.
 # https://mitogen.networkgenomics.com/ansible_detailed.html
 # https://github.com/mitogen-hq/mitogen/tags
+# To be able to create a patch to handle Ansible CVE-2023-5764, we have temporarily
+# created a fork in the innovationfleet github.
 cca_install_mitogen: false
 cca_use_mitogen_strategy: true
-cca_manager_mitogen_repo_url: 'https://github.com/mitogen-hq/mitogen.git'
+cca_manager_mitogen_repo_url: 'https://github.com/innovationfleet/mitogen.git'
 cca_manager_mitogen_path: '{{ cca_manager_user_dir }}/tools/mitogen'
-cca_manager_mitogen_release: 'v0.3.3'
+cca_manager_mitogen_release: 'ansible.2.14.13'

@@ -14,7 +14,7 @@
     cmd: "timeout 5 {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
-  retries: 10
+  retries: "{{ cca_splunkd_status_retries | default(10) | int }}"
   delay: 10
   changed_when: false
   check_mode: false
@@ -25,7 +25,7 @@
   register: splunk_login_result
   no_log: "{{ hide_password }}"
   until: splunk_status_result.rc == 0
-  retries: 10
+  retries: "{{ cca_splunk_login_retries | default(10) | int }}"
   delay: 10
   failed_when: false
   changed_when: false

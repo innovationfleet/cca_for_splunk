@@ -18,7 +18,7 @@
       ansible.builtin.shell:
         cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
       register: kvstore_status
-      retries: 6
+      retries: "{{ cca_splunk_kvstore_status_retries | default(6) | int }}"
       delay: 10
       until: "'status : ready' in kvstore_status.stdout | default('') | string"
       changed_when: false

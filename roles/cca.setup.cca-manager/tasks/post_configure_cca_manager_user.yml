@@ -34,6 +34,8 @@
     cmd: "openssl rand -hex 32 >> {{ cca_manager_ansible_vault_secret_path }}"
   when:
     - not stat_vault_secret.stat.exists
+  tags:
+    - skip_ansible_lint
 
 - name: Touch file to ensure it exists
   ansible.builtin.file:
@@ -47,6 +49,8 @@
   ansible.builtin.command:
     cmd: "which python{{ cca_python_minor_version }}"
   register: result_python_path
+  tags:
+    - skip_ansible_lint
 
 - name: Add settings to .profile_local for CCA usage
   ansible.builtin.lineinfile:
@@ -77,6 +81,8 @@
     - { regex: 'alias cddi', value: 'alias cddi="cd ~/development/$(basename $CCA_INFRASTRUCTURE_REPO_DIR)"' }
     - { regex: 'alias cdsc', value: 'alias cdsc="cd $CCA_REPO_DIR"' }
     - { regex: 'alias cddc', value: 'alias cddc="cd ~/development/$(basename $CCA_REPO_DIR)"' }
+  when:
+    - manage_settings_in_profile_local | default(true)
 
 - name: Add settings to .bash_profile for CCA usage
   ansible.builtin.lineinfile:

@@ -14,7 +14,7 @@
     cmd: "{{ splunk_path }}/bin/splunk upgrade-finalize shcluster-members"
   register: splunk_upgrade_finalize_status
   until: splunk_upgrade_finalize_status.stdout | regex_search('Upgrade of search head cluster members finalized')
-  retries: 3
+  retries: "{{ cca_splunk_finalize_upgrade_retries | default(3) | int }}"
   delay: 10
   run_once: true
   when:

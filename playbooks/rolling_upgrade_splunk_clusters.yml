@@ -89,7 +89,7 @@
         tasks_from:
           shcluster/get_shcluster_status.yml
       when:
-        - inventory_hostname in groups.searchhead_members
+        - inventory_hostname in ( groups.searchhead_members | default([]) )
         - upgrade_check | default(true)
 
     - include_role:
@@ -97,7 +97,7 @@
         tasks_from:
           shcluster/precheck_upgrade_status.yml
       when:
-        - inventory_hostname in groups.searchhead_members
+        - inventory_hostname in ( groups.searchhead_members | default([]) )
         - upgrade_check | default(true)
 
     - include_role:
@@ -105,7 +105,7 @@
         tasks_from:
           cluster/get_cluster_status.yml
       when:
-        - inventory_hostname in groups.cluster_managers
+        - inventory_hostname in ( groups.cluster_managers | default([]) )
         - upgrade_check | default(true)
 
     - include_role:
@@ -113,7 +113,7 @@
         tasks_from:
           cluster/precheck_upgrade_status.yml
       when:
-        - inventory_hostname in groups.cluster_managers
+        - inventory_hostname in ( groups.cluster_managers | default([]) )
         - upgrade_check | default(true)
 
     - include_role:
@@ -121,16 +121,16 @@
         tasks_from:
           get_splunk_status.yml
       when:
-        - not inventory_hostname in groups.cluster_peers or
-          not inventory_hostname in groups.searchhead_members
+        - not inventory_hostname in ( groups.cluster_peers | default([]) ) or
+          not inventory_hostname in ( groups.searchhead_members | default([]) )
 
     - include_role:
         name: cca.core.splunk
         tasks_from:
           precheck_upgrade_status.yml
       when:
-        - not inventory_hostname in groups.cluster_peers or
-          not inventory_hostname in groups.searchhead_members
+        - not inventory_hostname in ( groups.cluster_peers | default([]) ) or
+          not inventory_hostname in ( groups.searchhead_members | default([]) )
 
 
 # Upgrade the manager node

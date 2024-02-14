@@ -27,7 +27,7 @@
 #
 # META_AUTHOR
 # META_DATE
-# META_VERSION
+# Release: 2023.3.2
 
 - name: Splunkd restart handler on non cluster instances
   ansible.builtin.file:
@@ -36,8 +36,8 @@
     mode: '664'
   listen: notify splunkd restart
   when:
-    - inventory_hostname not in groups.cluster_peers
-    - inventory_hostname not in groups.searchhead_members
+    - inventory_hostname not in ( groups.cluster_peers | default([]) )
+    - inventory_hostname not in ( groups.searchhead_members | default([]) )
 
 - name: Splunkd restart handler on SHC members
   ansible.builtin.file:
@@ -46,7 +46,7 @@
     mode: '664'
   listen: notify splunkd restart
   when:
-    - inventory_hostname in groups.searchhead_members
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
     - not force_splunkd_restart | default(false)
 
 - name: Override restart handler for SHC members
@@ -55,7 +55,7 @@
     state: absent
   listen: notify splunkd restart
   when:
-    - inventory_hostname in groups.searchhead_members
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
     - force_splunkd_restart | default(false)
 
 - name: Execute a splunkd stop,start when in force mode
@@ -87,7 +87,7 @@
     state: touch
     mode: '664'
   listen: notify shcluster bundle push
-  when: inventory_hostname in groups.searchhead_deployers
+  when: inventory_hostname in ( groups.searchhead_deployers | default([]) )
 
 - name: Splunk cluster bundle push handler on Cluster Manager
   ansible.builtin.file:
@@ -95,7 +95,7 @@
     state: touch
     mode: '664'
   listen: notify cluster bundle push
-  when: inventory_hostname in groups.cluster_managers
+  when: inventory_hostname in ( groups.cluster_managers | default([]) )
 
 - name: Splunkd restart handler on cluster peers for Cluster C1
   ansible.builtin.file:
@@ -103,9 +103,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c1
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c1 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c1 }}"
+  loop: "{{ groups.cluster_manager_cluster_c1 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C2
   ansible.builtin.file:
@@ -113,9 +113,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c2
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c2 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c2 }}"
+  loop: "{{ groups.cluster_manager_cluster_c2 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C3
   ansible.builtin.file:
@@ -123,9 +123,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c3
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c3 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c3 }}"
+  loop: "{{ groups.cluster_manager_cluster_c3 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C4
   ansible.builtin.file:
@@ -133,9 +133,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c4
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c4 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c4 }}"
+  loop: "{{ groups.cluster_manager_cluster_c4 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C5
   ansible.builtin.file:
@@ -143,9 +143,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c5
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c5 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c5 }}"
+  loop: "{{ groups.cluster_manager_cluster_c5 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C6
   ansible.builtin.file:
@@ -153,9 +153,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c6
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c6 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c6 }}"
+  loop: "{{ groups.cluster_manager_cluster_c6 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C7
   ansible.builtin.file:
@@ -163,9 +163,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c7
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c7 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c7 }}"
+  loop: "{{ groups.cluster_manager_cluster_c7 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C8
   ansible.builtin.file:
@@ -173,9 +173,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c8
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c8 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c8 }}"
+  loop: "{{ groups.cluster_manager_cluster_c8 | default([]) }}"
 
 - name: Splunkd restart handler on cluster peers for Cluster C9
   ansible.builtin.file:
@@ -183,9 +183,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.cluster_peers_cluster_c9
+  when: inventory_hostname in ( groups.cluster_peers_cluster_c9 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.cluster_manager_cluster_c9 }}"
+  loop: "{{ groups.cluster_manager_cluster_c9 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C1
   ansible.builtin.file:
@@ -193,9 +193,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c1
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c1 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c1 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C2
   ansible.builtin.file:
@@ -203,9 +203,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c2
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c2 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c2 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C3
   ansible.builtin.file:
@@ -213,9 +213,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c3
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c3 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c3 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C4
   ansible.builtin.file:
@@ -223,9 +223,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c4
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c4 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c4 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C5
   ansible.builtin.file:
@@ -233,9 +233,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c5
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c5 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c5 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C6
   ansible.builtin.file:
@@ -243,9 +243,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c6
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c6 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c6 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C7
   ansible.builtin.file:
@@ -253,9 +253,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c7
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c7 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c7 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C8
   ansible.builtin.file:
@@ -263,9 +263,9 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c8
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c8 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c8 | default([]) }}"
 
 - name: Splunkd restart handler on cluster members for Shcluster C9
   ansible.builtin.file:
@@ -273,7 +273,7 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members_shcluster_c9
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c9 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c9 | default([]) }}"
 

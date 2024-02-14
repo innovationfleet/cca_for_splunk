@@ -3,7 +3,7 @@
 # Description:
 #   The handlers listen to events from tasks and has different implementation
 #   depending on type of Splunk instance that issue a notify action.
-#   When splund restarts are notified on Indexer peers, the handler needs
+#   When splunkd restarts are notified on Indexer peers, the handler needs
 #   to resolve information of the correct Cluster Manager to inform.
 #   This is done by mapping a clustered cluster peer to the hostgroup of its
 #   manager.
@@ -19,9 +19,9 @@
 # Prerequisite:
 #   Index cluster groups needs to be named according to cluster_c1 - cluster_c9
 #
-# META_AUTHOR
-# META_DATE
-# META_VERSION
+# Author: META_AUTHOR
+#
+# Release: 2024.1.1
 
 - name: Splunkd restart handler on non cluster instances
   ansible.builtin.file:
@@ -30,8 +30,8 @@
     mode: '664'
   listen: notify splunkd restart
   when:
-    - inventory_hostname not in groups.cluster_peers
-    - inventory_hostname not in groups.searchhead_members
+    - inventory_hostname not in ( groups.cluster_peers | default([]) )
+    - inventory_hostname not in ( groups.searchhead_members | default([]) )
 
 - name: Splunkd restart handler on SHC members
   ansible.builtin.file:
@@ -39,12 +39,24 @@
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in groups.searchhead_members
+  when: inventory_hostname in ( groups.searchhead_members | default([]) )
 
 - name: Splunkd standalone restart handler on any server
   ansible.builtin.command:
     cmd: '{{ splunk_path }}/bin/splunk restart'
   listen: notify standalone splunkd restart
+  when:
+    - deploy_scope | default('') != 'deployment-apps'
+
+- name: Splunkd restart handler on Deployment Servers
+  ansible.builtin.file:
+    path: "{{ splunkd_restart_pending }}"
+    state: touch
+    mode: '664'
+  listen: notify standalone splunkd restart
+  when:
+    - inventory_hostname in ( groups.deployment_servers | default([]) )
+    - deploy_scope | default('') == 'deployment-apps'
 
 - name: Splunk shcluster bundle push handler on clustered search head peers
   ansible.builtin.file:
@@ -52,7 +64,7 @@
     state: touch
     mode: '644'
   listen: notify shcluster bundle push
-  when: inventory_hostname in groups.searchhead_deployers
+  when: inventory_hostname in ( groups.searchhead_deployers | default([]) )
 
 - name: Splunk cluster bundle push handler on Cluster Manager
   ansible.builtin.file:
@@ -60,7 +72,7 @@
     state: touch
     mode: '644'
   listen: notify cluster bundle push
-  when: inventory_hostname in groups.cluster_managers
+  when: inventory_hostname in ( groups.cluster_managers | default([]) )
 
 - name: Splunk deployment-server reload handler on Deployment Server
   ansible.builtin.file:
