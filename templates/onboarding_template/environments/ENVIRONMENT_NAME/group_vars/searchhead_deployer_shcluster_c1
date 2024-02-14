@@ -16,9 +16,3 @@ versioned_apps:
 #    source_app: ''
 #    state: ''
 
-# Apps destined for etc/shcluster on deployer
-selected_shcluster_apps:
-#  - name: ''
-#    source_app: ''
-#    state: ''
-

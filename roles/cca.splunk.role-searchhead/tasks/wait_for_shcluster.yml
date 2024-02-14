@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.3.2
 
 - name: Include task to login
   ansible.builtin.include_tasks: splunk_login.yml
@@ -19,55 +19,55 @@
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
 
 - name: Set fact if shcluster C2 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
 
 - name: Set fact if shcluster C3 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
 
 - name: Set fact if shcluster C4 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
 
 - name: Set fact if shcluster C5 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
 
 - name: Set fact if shcluster C6 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
 
 - name: Set fact if shcluster C7 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
 
 - name: Set fact if shcluster C8 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
 
 - name: Set fact if shcluster C9 is bootstrapped
   ansible.builtin.set_fact:
     status_shc_init: true
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
 
 - name: Wait until shcluster status is ok
   ansible.builtin.command:
@@ -86,7 +86,7 @@
   ansible.builtin.shell:
     cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
   register: kvstore_status
-  retries: 6
+  retries: "{{ cca_splunk_kvstore_status_retries | default(6) | int }}"
   delay: 10
   until: "'status : ready' in kvstore_status.stdout | default('') | string"
   changed_when: false

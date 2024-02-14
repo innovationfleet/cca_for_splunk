@@ -7,11 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2024.1.1
+
 - name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/'
+    src: '{{ manager_apps_staging_dir }}/'
     dest: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/'
     copy_links: true
     recursive: true
@@ -22,7 +23,7 @@
     group: false
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ manager_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else manager_apps_rsync_opts }}'
   register: cluster_apps_update_status
   check_mode: true
@@ -44,7 +45,7 @@
 - name: Deploy the apps from the staging directory to the cluster manager
   become: false
   ansible.posix.synchronize:
-    src: '/tmp/{{ inventory_hostname }}/{{ cluster_label }}/'
+    src: '{{ manager_apps_staging_dir }}//'
     dest: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/'
     copy_links: true
     recursive: true
@@ -55,6 +56,19 @@
     group: false
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: 'sudo -u {{ splunk_user }} rsync'
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ manager_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else manager_apps_rsync_opts }}'
   notify: notify cluster bundle push
+
+- name: Cleanup manager after staging apps are completed
+  become: false
+  connection: local
+  ansible.builtin.file:
+    path: '{{ manager_apps_staging_dir }}'
+    state: absent
+  delegate_to: localhost
+  when:
+    - cluster_label is defined
+    - cleanup_staging_apps | default(true)
+  changed_when: false
+  check_mode: false

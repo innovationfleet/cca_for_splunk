@@ -7,7 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release:2023.3.2
+
 - name: Check if a splunkd restart is pending
   ansible.builtin.stat:
     path: "{{ splunkd_restart_pending }}"
@@ -18,26 +19,26 @@
     path: "{{ rolling_restart_pending }}"
   register: stat_rolling_restart_pending
   when:
-    - inventory_hostname in groups.cluster_managers or
-      inventory_hostname in groups.searchhead_members
+    - inventory_hostname in ( groups.cluster_managers | default([]) ) or
+      inventory_hostname in ( groups.searchhead_members | default([]) )
 
 - name: Check if a cluster bundle push is pending
   ansible.builtin.stat:
     path: "{{ cluster_bundle_push_pending }}"
   register: stat_cluster_bundle_push_pending
   when:
-    - inventory_hostname in groups.cluster_managers
+    - inventory_hostname in ( groups.cluster_managers | default([]) )
 
 - name: Check if a shcluster bundle push is pending
   ansible.builtin.stat:
     path: "{{ shcluster_bundle_push_pending }}"
   register: stat_shcluster_bundle_push_pending
   when:
-    - inventory_hostname in groups.searchhead_deployers
+    - inventory_hostname in ( groups.searchhead_deployers | default([]) )
 
 - name: Check if a deployment server reload is pending
   ansible.builtin.stat:
     path: "{{ deployment_server_reload_pending }}"
   register: stat_deployment_server_reload_pending
   when:
-    - inventory_hostname in groups.deployment_servers
+    - inventory_hostname in ( groups.deployment_servers | default([]) )

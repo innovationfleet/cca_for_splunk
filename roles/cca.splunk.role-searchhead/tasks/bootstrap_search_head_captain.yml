@@ -7,7 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.3.2
+
 - name: Login to splunk
   ansible.builtin.include_tasks: splunk_login.yml
   run_once: true
@@ -25,10 +26,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc != 0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -40,10 +41,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c1 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c1 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
   run_once: true
 
 - name: Wait until cluster is initialized
@@ -56,7 +57,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -70,7 +71,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c1
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -87,10 +88,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -102,10 +103,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c2 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c2 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -119,7 +120,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -133,7 +134,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c2
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -150,10 +151,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -165,10 +166,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c3 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c3 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -182,7 +183,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -196,7 +197,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c3
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -213,10 +214,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -228,10 +229,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c4 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c4 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -245,7 +246,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -259,7 +260,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c4
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -276,10 +277,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -291,10 +292,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c5 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c5 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -308,7 +309,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -322,7 +323,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c5
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -339,10 +340,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -354,10 +355,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c6 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c6 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -371,7 +372,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -385,7 +386,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c6
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -402,10 +403,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -417,10 +418,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c7 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c7 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -434,7 +435,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -448,7 +449,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c7
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -465,10 +466,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -480,10 +481,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c8 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c8 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -497,7 +498,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -511,7 +512,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c8
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -528,10 +529,10 @@
   until: bootstrap_shc_result.rc == 0 or "node seems to have already joined another cluster" in bootstrap_shc_result.stderr
   changed_when: bootstrap_shc_result.rc == 0
   failed_when: bootstrap_shc_result.rc !=0 and "node seems to have already joined another cluster" not in bootstrap_shc_result.stderr
-  retries: 10
+  retries: "{{ cca_splunk_bootstrap_shcluster_captain_retries | default(10) | int }}"
   delay: 30
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
     - not ansible_check_mode
   notify:
     - notify shcluster bundle push
@@ -543,10 +544,10 @@
     state: touch
     mode: '664'
   delegate_to: "{{ item }}"
-  loop: "{{ groups.searchhead_deployer_shcluster_c9 }}"
+  loop: "{{ groups.searchhead_deployer_shcluster_c9 | default([]) }}"
   when:
     - bootstrap_shc_result.changed
-    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -560,7 +561,7 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
     - not ansible_check_mode
   run_once: true
 
@@ -574,6 +575,6 @@
   failed_when: false
   changed_when: false
   when:
-    - inventory_hostname in groups.searchhead_members_shcluster_c9
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
     - not ansible_check_mode
   run_once: true

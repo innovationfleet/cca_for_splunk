@@ -7,15 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
-# TODO: Make staging of files independent on check mode, i.e., set checkmode on all tasks
-# TODO: Add a random variable to the temp directories so that we avoid race conditions
+# Release: 2023.3.2
+
+- name: Set staging directory
+  ansible.builtin.set_fact:
+    shcluster_staging_dir: '/tmp/{{ cca_runid }}/{{ inventory_hostname }}/{{ shcluster_label }}'
 
 - name: Cleanup manager before staging apps
   become: false
   connection: local
   ansible.builtin.file:
-    path: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}'
+    path: '{{ shcluster_staging_dir }}'
     state: absent
   delegate_to: localhost
   when:
@@ -23,12 +25,22 @@
   changed_when: false
   check_mode: false
 
+- name: Ensure directory exists for staging apps
+  become: false
+  delegate_to: localhost
+  connection: local
+  ansible.builtin.file:
+    path: '{{ shcluster_staging_dir }}'
+    state: directory
+    mode: '0700'
+  changed_when: false
+
 - name: Stage manager with shcluster apps from shcluster directory
   become: false
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ shcluster_apps_sourcedir }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/'
+    dest: '{{ shcluster_staging_dir }}/apps/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -42,7 +54,7 @@
   connection: local
   ansible.builtin.copy:
     src: '{{ absolute_file_store_path }}/etc/{{ selected_shcluster_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/{{ item.name }}/'
+    dest: '{{ shcluster_staging_dir }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -58,8 +70,8 @@
   become: false
   connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/{{ item.name }}/'
+    src: '{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
+    dest: '{{ shcluster_staging_dir }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
@@ -77,13 +89,13 @@
   become: false
   connection: local
   ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '/tmp/{{ inventory_hostname }}/{{ shcluster_label }}/apps/{{ item.name }}/'
+    src: '{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
+    dest: '{{ shcluster_staging_dir }}/apps/{{ item.name }}/'
     remote_src: true
     mode: 'preserve'
   delegate_to: localhost
   when:
-    - selected_apps_sourcedir is defined
+    - selected_apps_source_path is defined
     - item.dest_dir is defined
     - item.dest_dir == 'shcluster/apps'
     - item.state is defined

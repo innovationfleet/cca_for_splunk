@@ -23,7 +23,7 @@
   when:
     - stat_splunk_enterprise_bin.stat.exists
     - enterprise_upgrade | default(false)
-    - inventory_hostname != groups.cluster_peers
+    - inventory_hostname != groups.cluster_peers | default([])
 
 - name: Find Splunk install file in tmp directory
   ansible.builtin.find:
@@ -95,7 +95,7 @@
     cmd: "timeout 30 {{ splunk_path }}/bin/splunk status"
   register: splunk_status_result
   until: splunk_status_result.stdout | regex_search('splunkd is running')
-  retries: 30
+  retries: "{{ cca_splunkd_status_retries | default(30) | int }}"
   delay: 10
   check_mode: false
   changed_when: false

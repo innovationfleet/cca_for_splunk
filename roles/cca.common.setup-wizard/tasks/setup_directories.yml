@@ -16,6 +16,7 @@
    loop:
      - "{{ cca_environment.infrastructure_repo_dir }}"
      - "{{ cca_environment.onboarding_repo_dir }}"
+     - "{{ cca_environment.onboarding_repo_dir }}/splunk/etc"
 
  - name: Copy template files for infrastructure - may take some time
    ansible.builtin.copy:
@@ -24,8 +25,25 @@
 
  - name: Copy template files for onboarding - may take some time
    ansible.builtin.copy:
-     src: "{{ script_cwd }}/templates/onboarding_template/"
-     dest: "{{ cca_environment.onboarding_repo_dir }}"
+     src: "{{ item.src }}"
+     dest: "{{ item.dest }}"
+   loop:
+     - src: "{{ script_cwd }}/templates/onboarding_template/cca_ctrl"
+       dest: "{{ cca_environment.onboarding_repo_dir }}"
+     - src: "{{ script_cwd }}/templates/onboarding_template/environments"
+       dest: "{{ cca_environment.onboarding_repo_dir }}"
+     - src: "{{ script_cwd }}/templates/onboarding_template/roles"
+       dest: "{{ cca_environment.onboarding_repo_dir }}"
+     - src: "{{ script_cwd }}/templates/onboarding_template/playbooks"
+       dest: "{{ cca_environment.onboarding_repo_dir }}"
+     - src: "{{ script_cwd }}/templates/onboarding_template/.gitattributes"
+       dest: "{{ cca_environment.onboarding_repo_dir }}"
+     - src: "{{ script_cwd }}/templates/onboarding_template/.gitignore"
+       dest: "{{ cca_environment.onboarding_repo_dir }}"
+     - src: "{{ script_cwd }}/templates/onboarding_template/.storage"
+       dest: "{{ cca_environment.onboarding_repo_dir }}/"
+     - src: "{{ script_cwd }}/templates/onboarding_template/splunk/etc/apps"
+       dest: "{{ cca_environment.onboarding_repo_dir }}/splunk/etc"
 
  - name: Move ENVIRONMENT_NAME to new env directory for infra - may take some time
    ansible.builtin.copy:
@@ -47,10 +65,6 @@
      dest: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/{{ environment_dir }}"
    loop:
      - "environments"
-     - "splunk/etc/deployment-apps"
-     - "splunk/etc/shcluster"
-     - "splunk/etc/master-apps"
-     - "splunk/etc/manager-apps"
 
  - name: Cleanup unused ENVIRONMENT_NAME directory for onboarding - may take some time
    ansible.builtin.file:
@@ -58,10 +72,6 @@
      state: 'absent'
    loop:
      - "environments"
-     - "splunk/etc/deployment-apps"
-     - "splunk/etc/shcluster"
-     - "splunk/etc/master-apps"
-     - "splunk/etc/manager-apps"
 
  - name: Set execute bit on cca_ctrl file
    ansible.builtin.file:

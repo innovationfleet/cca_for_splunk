@@ -16,8 +16,4 @@ versioned_apps:
 #    source_app: ''
 #    state: ''
 
-# Apps destined for manager-apps on cluster manager
-selected_manager_apps:
-#  - name: ''
-#    source_app: ''
-#    state: ''
+

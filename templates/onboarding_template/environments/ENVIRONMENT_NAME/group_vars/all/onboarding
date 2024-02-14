@@ -3,8 +3,6 @@
 # against cca_for_splunk framework requirements.
 cca_onboarding_onboarding_file_version: '2023.1.1'
 
-inventory_dir_array: "{{ inventory_dir.split('/') }}"
-environment_name: "{{ inventory_dir_array[-1] }}"
 
 absolute_file_store_path: '{{ inventory_dir }}/../../splunk'
 versioned_apps_sourcedir: 'apps/versioned'

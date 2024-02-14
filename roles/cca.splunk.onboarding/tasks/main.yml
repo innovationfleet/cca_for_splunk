@@ -7,9 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.2.1
+# Release: 2023.3.2
 
 # tasks file for cca.splunk.onboarding
+
+- name: Set variable for selected_apps source path
+  ansible.builtin.set_fact:
+    selected_apps_source_path: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}'
+
+- name: Set variable for versioned_apps source path
+  ansible.builtin.set_fact:
+    versioned_apps_source_path: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}'
 
 - name: Include task for shcluster app staging
   ansible.builtin.include_tasks: stage_shcluster_apps.yml
@@ -49,3 +57,11 @@
   ansible.builtin.include_tasks: deploy_deployment_apps.yml
   when:
     - deploy_scope | default('') == "deployment-apps"
+
+- name: Cleanup onboarding staging directory
+  # delegate_to: localhost
+  # connection: local
+  ansible.builtin.file:
+    path: "/tmp/{{ cca_runid }}"
+    state: absent
+  # changed_when: false

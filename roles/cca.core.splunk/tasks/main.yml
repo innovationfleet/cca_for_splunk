@@ -13,7 +13,8 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2023.3.2
+
 - name: Include task for checking cca_for_splunk init state
   include_tasks: check_init.yml
 
@@ -24,7 +25,7 @@
   include_tasks: local_users.yml
 
 - name: Include task for checking certificate status
-  include_tasks: ../../cca.splunk.ssl-certificates/tasks/validate_certificates.yml
+  include_tasks: ../../cca.splunk.ssl-certificates/tasks/validate_target_certificates.yml
 
 - name: Include task to calculate splunk enterprise version
   include_tasks: get_splunk_version.yml
@@ -66,7 +67,7 @@
     cmd: "timeout 120 {{ restart_command }}"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
-  retries: 5
+  retries: "{{ cca_splunkd_restart_retries | default(5) | int }}"
   delay: 10
   when:
     - result_splunk_secret_replace.changed == true
@@ -81,16 +82,16 @@
     cmd: "timeout 120 {{ start_command }}"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
-  retries: 5
+  retries: "{{ cca_splunkd_start_retries | default(5) | int }}"
   delay: 10
   changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
   when:
-    - not inventory_hostname in groups.searchhead_members
+    - not inventory_hostname in ( groups.searchhead_members | default([]) )
 
 - name: Wait for a rolling restart on search head cluster to complete
   ansible.builtin.import_tasks: ../../cca.splunk.role-searchhead/tasks/wait_for_shcluster.yml
   when:
-    - inventory_hostname in groups.searchhead_members
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
     - stat_var_run_splunk.stat.exists
 
 - name: Ensure splunk is running on searchhead members
@@ -98,8 +99,8 @@
     cmd: "timeout 240 {{ start_command }}"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
-  retries: 5
+  retries: "{{ cca_splunkd_start_retries | default(5) | int }}"
   delay: 10
   changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
   when:
-    - inventory_hostname in groups.searchhead_members
+    - inventory_hostname in ( groups.searchhead_members | default([]) )

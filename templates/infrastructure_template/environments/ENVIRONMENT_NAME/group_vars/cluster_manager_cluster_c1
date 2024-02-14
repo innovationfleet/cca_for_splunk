@@ -2,6 +2,7 @@
 # against cca_for_splunk framework requirements.
 cca_infrastructure_cluster_manager_cluster_c1_file_version: '2023.2.1'
 
+
 splunk_conf_group_settings:
 
  - name: Splunk server.conf

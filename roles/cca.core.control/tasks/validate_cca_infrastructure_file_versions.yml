@@ -9,7 +9,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2023.3.2
 
 - name: Assert file version in infrastructure repo files
   run_once: true
@@ -61,7 +61,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_cluster_manager_cluster_c1
   when:
-    - loop_inventory_hostname in groups.cluster_manager_cluster_c1
+    - loop_inventory_hostname in ( groups.cluster_manager_cluster_c1 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -90,7 +90,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_cluster_manager_cluster_c2
   when:
-    - loop_inventory_hostname in groups.cluster_manager_cluster_c2
+    - loop_inventory_hostname in ( groups.cluster_manager_cluster_c2 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -119,7 +119,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_cluster_peers_cluster_c1
   when:
-    - loop_inventory_hostname in groups.cluster_peers_cluster_c1
+    - loop_inventory_hostname in ( groups.cluster_peers_cluster_c1 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -148,7 +148,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_cluster_peers_cluster_c2
   when:
-    - loop_inventory_hostname in groups.cluster_peers_cluster_c2
+    - loop_inventory_hostname in ( groups.cluster_peers_cluster_c2 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -177,7 +177,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_data_collection_nodes
   when:
-    - loop_inventory_hostname in groups.data_collection_nodes
+    - loop_inventory_hostname in ( groups.data_collection_nodes | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -206,7 +206,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_deployment_servers
   when:
-    - loop_inventory_hostname in groups.deployment_servers
+    - loop_inventory_hostname in ( groups.deployment_servers | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -235,7 +235,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_forwarders
   when:
-    - loop_inventory_hostname in groups.forwarders
+    - loop_inventory_hostname in ( groups.forwarders | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -264,7 +264,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_hybrid_searchheads
   when:
-    - loop_inventory_hostname in groups.hybrid_searchheads
+    - loop_inventory_hostname in ( groups.hybrid_searchheads | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -293,7 +293,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_license_managers
   when:
-    - loop_inventory_hostname in groups.license_managers
+    - loop_inventory_hostname in ( groups.license_managers | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -322,7 +322,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_monitoring_consoles
   when:
-    - loop_inventory_hostname in groups.monitoring_consoles
+    - loop_inventory_hostname in ( groups.monitoring_consoles | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -351,7 +351,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_searchhead_deployer_shcluster_c1
   when:
-    - loop_inventory_hostname in groups.searchhead_deployer_shcluster_c1
+    - loop_inventory_hostname in ( groups.searchhead_deployer_shcluster_c1 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -380,7 +380,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_searchhead_deployer_shcluster_c2
   when:
-    - loop_inventory_hostname in groups.searchhead_deployer_shcluster_c2
+    - loop_inventory_hostname in ( groups.searchhead_deployer_shcluster_c2 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -409,7 +409,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_searchhead_members_shcluster_c1
   when:
-    - loop_inventory_hostname in groups.searchhead_members_shcluster_c1
+    - loop_inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -438,7 +438,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_searchhead_members_shcluster_c2
   when:
-    - loop_inventory_hostname in groups.searchhead_members_shcluster_c2
+    - loop_inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -467,7 +467,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_standalone_indexers
   when:
-    - loop_inventory_hostname in groups.standalone_indexers
+    - loop_inventory_hostname in ( groups.standalone_indexers | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert
@@ -496,7 +496,7 @@
   ignore_errors: true
   register: infrastructure_assert_result_standalone_searchheads
   when:
-    - loop_inventory_hostname in groups.standalone_searchheads
+    - loop_inventory_hostname in ( groups.standalone_searchheads | default([]) )
     - hostvars[loop_inventory_hostname][item.parameter_name] is defined
 
 - name: Set fact if assert failed, to be used in final assert

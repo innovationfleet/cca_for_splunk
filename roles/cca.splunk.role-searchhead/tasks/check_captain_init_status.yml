@@ -7,14 +7,15 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2023.3.2
+
 - name: Check the Search Head Cluster C1 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
     path: '{{ splunk_path }}/.shcluster_captain_bootstrapped'
   register: stat_shc_init_shcluster_c1
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c1 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c1
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
 
 - name: Check the Search Head Cluster C2 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -22,7 +23,7 @@
   register: stat_shc_init_shcluster_c2
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c2 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c2
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
 
 - name: Check the Search Head Cluster C3 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -30,7 +31,7 @@
   register: stat_shc_init_shcluster_c3
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c3 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c3
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
 
 - name: Check the Search Head Cluster C4 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -38,7 +39,7 @@
   register: stat_shc_init_shcluster_c4
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c4 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c4
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
 
 - name: Check the Search Head Cluster C5 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -46,7 +47,7 @@
   register: stat_shc_init_shcluster_c5
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c5 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c5
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
 
 - name: Check the Search Head Cluster C6 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -54,7 +55,7 @@
   register: stat_shc_init_shcluster_c6
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c6 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c6
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
 
 - name: Check the Search Head Cluster C7 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -62,7 +63,7 @@
   register: stat_shc_init_shcluster_c7
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c7 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c7
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
 
 - name: Check the Search Head Cluster C8 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -70,7 +71,7 @@
   register: stat_shc_init_shcluster_c8
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c8 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c8
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
 
 - name: Check the Search Head Cluster C9 bootstrap state, stored as state file on the deployer
   ansible.builtin.stat:
@@ -78,4 +79,4 @@
   register: stat_shc_init_shcluster_c9
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c9 }}"
-  when: inventory_hostname in groups.searchhead_members_shcluster_c9
+  when: inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
