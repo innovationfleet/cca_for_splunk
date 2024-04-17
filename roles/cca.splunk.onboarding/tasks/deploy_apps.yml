@@ -7,12 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2024.1.2
 
-- name: Deploy the apps from the apps directory to the splunk servers
+- name: Deploy the apps from the selected apps directory to the splunk servers
   ansible.posix.synchronize:
     src: '{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
-    dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
+    dest: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}/"
     copy_links: true
     recursive: true
     checksum: true
@@ -29,15 +29,15 @@
   when:
     - item.state == 'present'
     - item.dest_dir is not defined or
-      item.dest_dir == "etc"
+      item.dest_dir == 'deployment-apps'
     - (item.target is defined and
       item.target == inventory_hostname) or
       item.target is not defined
 
-- name: Deploy generic apps from the apps generic directory to the splunk servers
+- name: Deploy apps from the versioned apps directory to the splunk servers
   ansible.posix.synchronize:
     src: '{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
-    dest: '{{ splunk_path }}/etc/apps/{{ item.name }}/'
+    dest: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}/"
     copy_links: true
     recursive: true
     checksum: true
@@ -53,7 +53,8 @@
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
-    - item.dest_dir is not defined
+    - item.dest_dir is not defined or
+      item.dest_dir == 'deployment-apps'
     - item.target is defined and item.target == inventory_hostname or
       item.target is not defined
 
