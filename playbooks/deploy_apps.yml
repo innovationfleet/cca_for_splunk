@@ -1,7 +1,7 @@
 # Playbook to deploy etc/apps to Splunk instances
 #
 # REPO_TYPE=onboarding
-# MENU_DESC=Deploy etc/apps to Splunk instances
+# MENU_DESC=Deploy apps to Splunk Instances
 # EXTRA_VARS=hide_password(true)
 
 - name: Initialize playbook run on manager server - Deploy Apps
