@@ -1,0 +1,19 @@
+---
+# tasks file for cca.splunk.enterprise-install
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.1.1
+ 
+- name: Create state file when master-apps has been migrated
+  become: true
+  become_user: "{{ splunk_user }}"
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/.cca/master-apps_config_bundle_dir_migrated"
+    state: touch
+    mode: '600'

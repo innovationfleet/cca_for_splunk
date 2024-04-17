@@ -40,6 +40,9 @@ readonly versions=(
   'splunk|9.1.1|64e843ea36b1|Linux|x86_64'
   'splunk|9.1.2|b6b9c8185839|Linux|x86_64'
   'splunk|9.1.3|d95b3299fa65|Linux|x86_64'
+  'splunk|9.1.4|a414fc70250e|Linux|x86_64'
+  'splunk|9.2.0.1|d8ae995bf219|Linux|x86_64'
+  'splunk|9.2.1|78803f08aabb|Linux|x86_64'
 )
 
 default_download_dir="${CCA_INFRASTRUCTURE_REPO_DIR}/splunk/var/images"
