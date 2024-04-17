@@ -1,6 +1,6 @@
 # Playbook to handle stand alone Splunk indexers
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Standalone Indexers
 # EXTRA_VARS=hide_password(true)
 

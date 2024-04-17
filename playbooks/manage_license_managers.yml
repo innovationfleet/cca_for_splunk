@@ -1,6 +1,6 @@
 # Playbook to handle License Managers
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage License Managers
 # EXTRA_VARS=hide_password(true)
 

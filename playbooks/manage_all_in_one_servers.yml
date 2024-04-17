@@ -1,6 +1,6 @@
 # Playbook to handle All In One servers
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage All in One servers
 # EXTRA_VARS=hide_password(true) debug(false)
 

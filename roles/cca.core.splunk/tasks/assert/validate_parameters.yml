@@ -13,7 +13,7 @@
 - name: Assert that the following variables are defined
   ansible.builtin.assert:
     that:
-      - absolute_infra_repo_path is defined
+      - absolute_infrastructure_repo_path is defined
       - ansible_date_time.year is defined
       - ansible_ssh_host is defined
       - available_sites is defined

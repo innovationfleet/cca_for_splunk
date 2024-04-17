@@ -1,6 +1,6 @@
 # Playbook to handle Deployment Servers
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Deployment Servers
 # EXTRA_VARS=hide_password(true)
 

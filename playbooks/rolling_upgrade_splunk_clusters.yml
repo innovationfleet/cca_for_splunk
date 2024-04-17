@@ -3,7 +3,7 @@
 # If there is a need to upgrade more clusters, copy this file to your infrastructure
 # playbooks directory and add more clusters to it.
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Upgrade Splunk on all cluster dependent servers.
 # EXTRA_VARS=cca_splunk_enterprise_upgrade(false) shcluster_precheck(true) upgrade_check(true) shc_upgrade_method(rolling|[offline]) shc_upgrade_kvstore_engine(false)
 

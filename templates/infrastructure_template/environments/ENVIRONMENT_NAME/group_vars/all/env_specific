@@ -9,9 +9,9 @@ splunk_cli_user: '{{ cca_splunk_admin_user }}'
 splunk_cli_user_password: '{{ cca_splunk_admin_password }}'
 inventory_dir_array: "{{ inventory_dir.split('/') }}"
 environment_name: "{{ inventory_dir_array[-1] }}"
-absolute_infra_repo_path: '{{ inventory_dir }}/../..'
+absolute_infrastructure_repo_path: '{{ inventory_dir }}/../..'
 parallel_execution_control: false
-cca_infra_lock_wait_sec: 1800
+cca_infrastructure_lock_wait_sec: 1800
 
 # License Information, it's highly recommended to use a DNS alias as
 # reference to the host that serves as the license manager
@@ -52,7 +52,7 @@ cca_splunk_cert_enrollment_method: 'selfsigned'
 # The certificate should be in pem format, order the certificates in the file with. Starting
 # with the server certificate at the top, followed by any intermediate certificates and
 # end with the root certificate.
-cca_splunk_extension_certs_path: '{{ absolute_infra_repo_path }}/splunk/etc/auth/certs'
+cca_splunk_extension_certs_path: '{{ absolute_infrastructure_repo_path }}/splunk/etc/auth/certs'
 cca_splunk_extension_cert_rootca: 'UPDATE_ROOT_CA_EXPIRE_DATE_Issuing_CA_EXPIRE_DATE.pem'
 cca_splunk_extension_server_cert: 'splunk-server_UPDATE_EXPIRE_DATE.cer'
 cca_splunk_extension_server_key: 'splunk-server_UPDATE_EXPIRE_DATE.key'
@@ -65,6 +65,6 @@ cca_splunk_extension_web_key: 'splunk-web_UPDATE_EXPIRE_DATE.key'
 
 # Store the Splunk license file in the cca_splunk_extension_licenses_path. Add the matching
 # license file name in cca_splunk_extension_licenses, the file extension needs to be .lic
-cca_splunk_extension_licenses_path: '{{ absolute_infra_repo_path }}/splunk/etc/licenses/enterprise'
+cca_splunk_extension_licenses_path: '{{ absolute_infrastructure_repo_path }}/splunk/etc/licenses/enterprise'
 cca_splunk_extension_licenses:
   - 'UPDATE_LICENSE_FILE.lic'

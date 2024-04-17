@@ -1,6 +1,6 @@
 # Playbook to handle Forwarders
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Forwarders
 # EXTRA_VARS=hide_password(true)
 

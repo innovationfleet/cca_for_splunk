@@ -1,6 +1,6 @@
 # Playbook to configure linux servers
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Configure linux server to work with CCA and Splunk Enterprise
 # EXTRA_VARS=hide_password(true)
 
