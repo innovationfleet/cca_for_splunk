@@ -10,15 +10,24 @@
     script_cwd: "{{ ansible_env.PWD | replace('/playbooks','') }}"
     pwd_array: "{{ script_cwd.split('/') }}"
     cca_repo_base: "{{ pwd_array[:-1] | join('/') }}"
-    splunk_enterprise_version: "9.0.5"
+    splunk_enterprise_version: "{{ lookup('env', 'CCA_SPLUNK_ENTERPRISE_VERSION', default='9.1.4') }}"
+    # Don't pass cca_setup_type variable unless you know what you are doing, experimental
+    # feature for demo environments.
+    cca_setup_type: "{{ lookup('env', 'CCA_SETUP_WIZARD_TYPE', default='interactive') }}"
 
     cca_environment:
       infrastructure_repo_dir: '{{ user_home }}/data/main/cca_splunk_infrastructure'
       onboarding_repo_dir: '{{ user_home }}/data/main/cca_splunk_onboarding'
       repo_base_path: "{{ cca_repo_base }}"
       cca_repo_path: "{{ user_home }}/clones/cca_for_splunk"
-      default_environment_dir: 'cca_lab'
-      random_splunk_secret: "{{ lookup('community.general.random_string', base64=True, length=254) }}"
+      default_environment_dir: "{{ lookup('env', 'CCA_ENVIRONMENT_NAME',
+                                           default='cca_lab') }}"
+      default_admin_user: "{{ lookup('env', 'CCA_ADMIN_USER',
+                                      default='admin') }}"
+      default_admin_user_password: "{{ lookup('env', 'CCA_ADMIN_USER_PASSWORD',
+                                               default=(lookup('community.general.random_string', base64=True, length=16))) }}"
+      default_server_general_pass4symmkey: "{{ lookup('community.general.random_string', base64=True, length=48) }}"
+      default_random_splunk_secret: "{{ lookup('community.general.random_string', base64=True, length=300) | truncate(254, true, '') }}"
       cca_splunk_secrets:
         - cca_splunk_server_general: "pass4SymmKey"
         - cca_splunk_certs_server: "sslpassword"
@@ -59,7 +68,7 @@
       ansible.builtin.include_role:
         name: cca.common.setup-wizard
         tasks_from:
-          collect_values.yml
+          "{{ cca_setup_type }}/collect_values.yml"
 
     - name: Setup directories and copy template files
       ansible.builtin.include_role:
@@ -68,6 +77,7 @@
           setup_directories.yml
       when:
         - copy_cca_template_files.user_input | default('yes') == 'yes'
+        - cca_setup_type == 'interactive'
 
   tasks:
     - name: Wizard init
@@ -82,12 +92,14 @@
     - name: Instantiate cli user, password and password hash
       ansible.builtin.include_role:
         name: cca.common.setup-wizard
-        tasks_from: create_user_seed.yml
+        tasks_from:
+          "{{ cca_setup_type }}/create_user_seed.yml"
 
     - name: Instantiate general pass4SymmKeys and ssl passwords
       ansible.builtin.include_role:
         name: cca.common.setup-wizard
-        tasks_from: generate_secrets.yml
+        tasks_from:
+          "{{ cca_setup_type }}/generate_secrets.yml"
       loop_control:
         loop_var: secret_type
       with_items:
