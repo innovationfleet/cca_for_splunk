@@ -71,7 +71,7 @@
   loop_control:
     loop_var: 'group'
   when:
-    - groups[group] | length > 0
+    - (groups[group] | default([]) | length) > 0
     - target == "cluster_managers-cluster_peers"
 
 - name: Onboarding - Mandatory - Validate that we have correct file version and settings for cluster managers
@@ -89,7 +89,7 @@
   loop_control:
     loop_var: 'group'
   when:
-    - groups[group] | length > 0
+    - (groups[group] | default([]) | length) > 0
     - target == "deploy_manager-apps"
 
 - name: Include task to validate onboarding file versions

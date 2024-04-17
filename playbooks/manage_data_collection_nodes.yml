@@ -1,6 +1,6 @@
 # Playbook to handle data collection nodes
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Data Collection Nodes
 # EXTRA_VARS=hide_password(true)
 

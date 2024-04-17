@@ -22,7 +22,7 @@
 
 - name: Delete lock file to manage multi user execution
   ansible.builtin.file:
-    path: "/tmp/.cca_infra_lock-{{ environment_name }}"
+    path: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
     state: 'absent'
   when:
     - target is defined

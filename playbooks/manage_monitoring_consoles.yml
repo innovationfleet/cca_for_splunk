@@ -1,6 +1,6 @@
 # Playbook to handle DMC
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Monitoring Consoles (DMC)
 # EXTRA_VARS=hide_password(true) debug(false)
 

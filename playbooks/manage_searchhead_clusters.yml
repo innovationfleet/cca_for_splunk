@@ -2,7 +2,7 @@
 # This playbook is configured to handle 9 parallel search head
 # clusters.
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Search Head Deployers and Members
 # EXTRA_VARS=hide_password(true) force_splunkd_restart(false)
 

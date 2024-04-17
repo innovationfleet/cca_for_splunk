@@ -1,6 +1,6 @@
 # Playbook to handle validation
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Validate CCA Infrastructure Parameters and files
 # EXTRA_VARS=
 

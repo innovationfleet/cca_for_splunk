@@ -12,80 +12,51 @@
 #              splunk_settings_update must be defined and have results. This
 #              task shall not be called stand alone.
 #
-# Roger Lindquist (github.com/rlinq)
-# META_DATE
-# META_VERSION
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.1.2
+
+- name: Determine actions based on configuration changes
+  set_fact:
+    splunk_actions: "{{ cca_splunk_settings_update.results |
+                        analyze_splunk_changes(rolling_restart_pending=stat_rolling_restart_pending | default(false),
+                        splunkd_restart_pending=stat_splunkd_restart_pending | default(false),
+                        force_splunkd_restart=force_splunkd_restart | default(false),
+                        force_bundle_push=force_bundle_push | default(false)) }}"
 
 - name: Notify a standard splunkd restart if relevant changes are detected
   ansible.builtin.set_fact:
     splunkd_restart: true
-  loop: "{{ cca_splunk_settings_update.results }}"
   when:
-    - (
-        item.changed and
-        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-app|manager-apps).*?$')
-      ) or
-      stat_rolling_restart_pending | default(false) or
-      stat_splunkd_restart_pending | default(false) or
-      force_splunkd_restart | default(false)
-
+    - splunk_actions.splunkd_restart
   changed_when:
-    - (
-        item.changed == true and
-        item.path | regex_search('.*\/etc\/(?!deployment-apps|shcluster|master-apps|manager-apps).*?$')
-      )
-      or
-      stat_rolling_restart_pending | default(false) or
-      stat_splunkd_restart_pending | default(false) or
-      force_splunkd_restart | default(false)
+    - splunk_actions.splunkd_restart
   notify: notify splunkd restart
-  no_log: '{{ hide_password }}'
-
-
-# TODO
-#- name: Notify a standalone splunkd restart if special updates are detected
-#  ansible.builtin.set_fact:
-#    standalone_splunkd_restart: true
-#  with_items: "{{ cca_splunk_settings_update.results }}"
-#  when:
-#    - item.changed == true
-#    - item.path | regex_search('.*\/etc\/system\/local\/.*?$')
-#    - item.item[0].section | default('') | regex_search('(shclustering)')
-#  changed_when:
-#    - item.item[0].section | default('') | regex_search('(shclustering)')
-#  notify: notify standalone splunkd restart
-#  no_log: '{{ hide_password }}'
 
 - name: Notify a Deployment Server reload if deployment-apps content is updated
   ansible.builtin.set_fact:
      deploymentserver_reload: true
-  with_items: "{{ cca_splunk_settings_update.results }}"
   when:
-    - item.changed
-    - item.path | regex_search('(deployment-apps)')
+    - splunk_actions.deploymentserver_reload
   changed_when:
-    - item.changed
-    - item.path | regex_search('(deployment-apps)')
+    - splunk_actions.deploymentserver_reload
   notify: notify deploymentserver reload
-  no_log: '{{ hide_password }}'
 
 - name: Notify a Search Head Deployer push if shcluster content is updated
   ansible.builtin.set_fact:
      deployer_push: true
-  with_items: "{{ cca_splunk_settings_update.results }}"
   when:
-    - item.changed
-    - item.path | regex_search('(shcluster)')
+    - splunk_actions.deployer_push
   changed_when:
-    - item.changed
-    - item.path | regex_search('(shcluster)')
+    - splunk_actions.deployer_push
   notify: notify shcluster bundle push
-  no_log: '{{ hide_password }}'
 
 - name: Notify a Search Head Deployer push if a forced push option is true
   ansible.builtin.set_fact:
      deployer_push: true
   when:
+    - force_bundle_push | default(false)
+  changed_when:
     - force_bundle_push | default(false)
   notify: notify shcluster bundle push
   no_log: '{{ hide_password }}'
@@ -93,15 +64,8 @@
 - name: Notify a Cluster Manager push if bundle directory content is updated
   ansible.builtin.set_fact:
     cluster_manager_push: true
-  with_items: "{{ cca_splunk_settings_update.results }}"
   when:
-    - item.changed
-    - item.path | regex_search('(master-apps)') or
-      item.path | regex_search('(manager-apps)')
+    - splunk_actions.cluster_manager_push
   changed_when:
-    - item.changed
-    - item.path | regex_search('(master-apps)') or
-      item.path | regex_search('(manager-apps)')
-
+    - splunk_actions.cluster_manager_push
   notify: notify cluster bundle push
-  no_log: '{{ hide_password }}'

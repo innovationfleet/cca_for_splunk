@@ -6,7 +6,7 @@
 #
 # Prerequisite: Splunk is installed
 #
-# Author: META_AUTHOR
+# Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2023.1.1
 
@@ -175,11 +175,6 @@
     state: directory
     mode: '775'
 
-- name: Create state file when master-apps has been migrated
-  become: true
-  become_user: "{{ splunk_user }}"
-  become_method: sudo
-  ansible.builtin.file:
-    path: "{{ splunk_path }}/.cca/master-apps_config_bundle_dir_migrated"
-    state: touch
-    mode: '600'
+- name: Include task to set cluster-manager migrate state at initial install
+  ansible.builtin.include_tasks:
+    file: set_cluster_manager_migrate_state.yml

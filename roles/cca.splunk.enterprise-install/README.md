@@ -19,7 +19,7 @@ The variable `splunk_enterprise_version` controls what version of Splunk that sh
   * Description
 
 ### group_vars/all/env_specific
-* `absolute_infra_repo_path`
+* `absolute_infrastructure_repo_path`
   * Description
 * `splunk_cli_user`
   * Splunk cli user, can be different from Splunk admin user

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.1
+# Release: 2024.1.2
 
 # tasks file for cca.splunk.enterprise-install
 #
@@ -19,6 +19,13 @@
   when:
     - not stat_splunk_enterprise_bin.stat.exists or
       enterprise_upgrade | default(false)
+
+- name: Include task to set cluster-manager migrate state at initial install
+  include_tasks: set_cluster_manager_migrate_state.yml
+  when:
+    - not stat_splunk_enterprise_bin.stat.exists
+    - inventory_hostname in ( groups.cluster_managers | default([]) )
+    - splunk_enterprise_version is version('9.0.0', '>=')
 
 - name: Include task to ensure splunk version
   include_tasks: ensure_splunk_version.yml

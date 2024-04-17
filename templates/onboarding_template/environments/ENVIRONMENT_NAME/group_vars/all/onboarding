@@ -1,10 +1,10 @@
 # Set dynamic inventory and environment variable or data onboarding
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_onboarding_file_version: '2023.1.1'
+cca_onboarding_onboarding_file_version: '2024.1.2'
 
 
-absolute_file_store_path: '{{ inventory_dir }}/../../splunk'
+absolute_file_store_path: '{{ lookup("env", "CCA_ONBORDING_REPO_DIR", default=inventory_dir + "/../..") }}/splunk'
 versioned_apps_sourcedir: 'apps/versioned'
 selected_apps_sourcedir: 'apps/selectable'
 deployment_apps_sourcedir: 'deployment-apps/{{ environment_name }}'

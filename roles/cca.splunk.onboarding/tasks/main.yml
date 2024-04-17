@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2024.1.2
 
 # tasks file for cca.splunk.onboarding
 
@@ -59,9 +59,10 @@
     - deploy_scope | default('') == "deployment-apps"
 
 - name: Cleanup onboarding staging directory
-  # delegate_to: localhost
-  # connection: local
+  delegate_to: localhost
+  connection: local
+  become: false
   ansible.builtin.file:
     path: "/tmp/{{ cca_runid }}"
     state: absent
-  # changed_when: false
+  changed_when: false

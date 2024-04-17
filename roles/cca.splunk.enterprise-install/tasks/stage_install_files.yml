@@ -14,7 +14,7 @@
   delegate_to: localhost
   connection: local
   ansible.builtin.find:
-    paths: "{{ absolute_infra_repo_path }}/splunk/var/images/"
+    paths: "{{ absolute_infrastructure_repo_path }}/splunk/var/images/"
     patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
   register: find_cca_splunk_tgz
 
@@ -65,7 +65,7 @@
 
 - name: Stage Splunk tgz file at initial install or upgrade of Splunk Enterprise
   ansible.builtin.synchronize:
-    src: "{{ absolute_infra_repo_path }}/splunk/var/images/"
+    src: "{{ absolute_infrastructure_repo_path }}/splunk/var/images/"
     dest: "{{ cca_splunk_var_tmp }}/"
     recursive: true
     checksum: true

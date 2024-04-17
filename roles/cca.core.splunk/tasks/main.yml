@@ -36,17 +36,17 @@
 - name: Include task for splunk general settings
   include_tasks: set_splunk_general_settings.yml
   when:
-    - splunk_conf_general_settings is defined
+    - splunk_conf_general_settings_flattened is defined
 
 - name: Include task for splunk group settings
   include_tasks: set_splunk_group_settings.yml
   when:
-    - splunk_conf_group_settings is defined
+    - splunk_conf_group_settings_flattened is defined
 
 - name: Include task for splunk host settings
   include_tasks: set_splunk_host_settings.yml
   when:
-    - splunk_conf_host_settings is defined
+    - splunk_conf_host_settings_flattened is defined
 
 - name: Include task for adding Splunk license
   include_tasks: add_license.yml

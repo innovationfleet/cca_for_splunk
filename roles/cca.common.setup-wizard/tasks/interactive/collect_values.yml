@@ -1,4 +1,3 @@
-
 ---
 # tasks file for cca.common.setup-wizard
 #
@@ -27,7 +26,7 @@
 
 - name: Set splunk secret to an existing one or new
   ansible.builtin.set_fact:
-    tmp_splunk_secret: "{{ cca_environment.random_splunk_secret }}"
+    tmp_splunk_secret: "{{ cca_environment.default_random_splunk_secret }}"
 
 - name: Accept random splunk secret or provide your own
   ansible.builtin.pause:
@@ -62,7 +61,7 @@
     - { type: 'touch', path: '{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets' }
     - { type: 'directory', path: '{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all' }
 
-- name: Save the clear text secret as an ansible vault in infra repo
+- name: Save the clear text secret as an ansible vault in infrastructure repo
   ansible.builtin.lineinfile:
     path: "{{ vars.cca_splunk_secret_file }}"
     line: 'cca_splunk_secret: !vault "{{ vaulted_secret_value }}"'

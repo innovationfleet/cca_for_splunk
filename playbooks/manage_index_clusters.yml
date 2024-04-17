@@ -1,6 +1,6 @@
 # Playbook to handle Cluster Manager and Cluster peers
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Cluster Manager and Cluster Peers
 # EXTRA_VARS=hide_password(true) preflight_command_retries(90) skip_preflight_check(false) skip_bundle_push(false) force_splunkd_restart(false)
 

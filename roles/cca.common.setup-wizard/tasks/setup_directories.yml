@@ -5,78 +5,61 @@
 #
 # Prerequisite:
 #
-# Author: André Enemark
+# Author: André Enemark, Roger Lindquist
 #
-# Release: 2022.2.4
+# Release: 2024.1.2
 
- - name: Create directory if it don't exist
-   ansible.builtin.file:
-     path: "{{ item }}"
-     state: directory
-   loop:
-     - "{{ cca_environment.infrastructure_repo_dir }}"
-     - "{{ cca_environment.onboarding_repo_dir }}"
-     - "{{ cca_environment.onboarding_repo_dir }}/splunk/etc"
+- name: Ensure directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ cca_environment.infrastructure_repo_dir }}"
+    - "{{ cca_environment.onboarding_repo_dir }}"
+    - "{{ cca_environment.onboarding_repo_dir }}/splunk/etc"
 
- - name: Copy template files for infrastructure - may take some time
-   ansible.builtin.copy:
-     src: "{{ script_cwd }}/templates/infrastructure_template/"
-     dest: "{{ cca_environment.infrastructure_repo_dir }}"
+- name: Synchronize general files for infrastructure template
+  synchronize:
+    src: "{{ script_cwd }}/templates/infrastructure_template/"
+    dest: "{{ cca_environment.infrastructure_repo_dir }}"
+    rsync_path: "rsync"
+    delete: false
+    recursive: true
+    rsync_opts:
+      - '--exclude environments/ENVIRONMENT_NAME/'
+  connection: local
 
- - name: Copy template files for onboarding - may take some time
-   ansible.builtin.copy:
-     src: "{{ item.src }}"
-     dest: "{{ item.dest }}"
-   loop:
-     - src: "{{ script_cwd }}/templates/onboarding_template/cca_ctrl"
-       dest: "{{ cca_environment.onboarding_repo_dir }}"
-     - src: "{{ script_cwd }}/templates/onboarding_template/environments"
-       dest: "{{ cca_environment.onboarding_repo_dir }}"
-     - src: "{{ script_cwd }}/templates/onboarding_template/roles"
-       dest: "{{ cca_environment.onboarding_repo_dir }}"
-     - src: "{{ script_cwd }}/templates/onboarding_template/playbooks"
-       dest: "{{ cca_environment.onboarding_repo_dir }}"
-     - src: "{{ script_cwd }}/templates/onboarding_template/.gitattributes"
-       dest: "{{ cca_environment.onboarding_repo_dir }}"
-     - src: "{{ script_cwd }}/templates/onboarding_template/.gitignore"
-       dest: "{{ cca_environment.onboarding_repo_dir }}"
-     - src: "{{ script_cwd }}/templates/onboarding_template/.storage"
-       dest: "{{ cca_environment.onboarding_repo_dir }}/"
-     - src: "{{ script_cwd }}/templates/onboarding_template/splunk/etc/apps"
-       dest: "{{ cca_environment.onboarding_repo_dir }}/splunk/etc"
+- name: Synchronize ENVIRONMENT files for infrastructure template
+  synchronize:
+    src: "{{ script_cwd }}/templates/infrastructure_template/environments/ENVIRONMENT_NAME/"
+    dest: "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}"
+    rsync_path: "rsync"
+    delete: false
+    recursive: true
+  connection: local
 
- - name: Move ENVIRONMENT_NAME to new env directory for infra - may take some time
-   ansible.builtin.copy:
-     src: "{{ cca_environment.infrastructure_repo_dir }}/{{ item }}/ENVIRONMENT_NAME/"
-     dest: "{{ cca_environment.infrastructure_repo_dir }}/{{ item }}/{{ environment_dir }}"
-   loop:
-     - "environments"
+- name: Synchronize general files onboarding template
+  synchronize:
+    src: "{{ script_cwd }}/templates/onboarding_template/"
+    dest: "{{ cca_environment.onboarding_repo_dir }}"
+    rsync_path: "rsync"
+    delete: false
+    recursive: true
+    rsync_opts:
+      - '--exclude environments/ENVIRONMENT_NAME/'
+  connection: local
 
- - name: Cleanup unused ENVIRONMENT_NAME directory for infra - may take some time
-   ansible.builtin.file:
-     path: "{{ cca_environment.infrastructure_repo_dir }}/{{ item }}/ENVIRONMENT_NAME"
-     state: 'absent'
-   loop:
-      - "environments"
+- name: Synchronize ENVIRONMENT files for onboarding template
+  synchronize:
+    src: "{{ script_cwd }}/templates/onboarding_template/environments/ENVIRONMENT_NAME/"
+    dest: "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}"
+    rsync_path: "rsync"
+    delete: false
+    recursive: true
+  connection: local
 
- - name: Move ENVIRONMENT_NAME to new env directory for onboarding - may take some time
-   ansible.builtin.copy:
-     src: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/ENVIRONMENT_NAME/"
-     dest: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/{{ environment_dir }}"
-   loop:
-     - "environments"
-
- - name: Cleanup unused ENVIRONMENT_NAME directory for onboarding - may take some time
-   ansible.builtin.file:
-     path: "{{ cca_environment.onboarding_repo_dir }}/{{ item }}/ENVIRONMENT_NAME"
-     state: 'absent'
-   loop:
-     - "environments"
-
- - name: Set execute bit on cca_ctrl file
-   ansible.builtin.file:
-     path: "{{ item }}/cca_ctrl"
-     mode: '0700'
-   loop:
-     - "{{ cca_environment.onboarding_repo_dir }}"
-     - "{{ cca_environment.infrastructure_repo_dir }}"
+- name: Set execute bit on cca_ctrl file
+  ansible.builtin.file:
+    path: "{{ cca_environment.onboarding_repo_dir }}/cca_ctrl"
+    mode: '0700'
+  delegate_to: "{{ inventory_hostname }}"

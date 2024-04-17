@@ -1,6 +1,6 @@
 # Playbook to handle standalone Splunk Search Heads
 #
-# REPO_TYPE=infra
+# REPO_TYPE=infrastructure
 # MENU_DESC=Manage Standalone Search Heads
 # EXTRA_VARS=hide_password(true)
 

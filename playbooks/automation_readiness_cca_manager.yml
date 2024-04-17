@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "2024.1.1"
+        cca_release: "2024.1.2"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:
@@ -304,15 +304,15 @@
       shell:
         cmd: 'find {{ playbook_dir }}/../../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
       register:
-        cca_infra_companion_directory
-      failed_when: cca_infra_companion_directory.rc > 1
+        cca_infrastructure_companion_directory
+      failed_when: cca_infrastructure_companion_directory.rc > 1
       ignore_errors: true
 
-    - name: Assert that a infra directory exists
+    - name: Assert that a infrastructure directory exists
       connection: local
       assert:
         that:
-          - cca_infra_companion_directory.rc == 0
+          - cca_infrastructure_companion_directory.rc == 0
         fail_msg: >-
           A companion directory for Splunk Infrastructure is missing
         success_msg: >-
@@ -356,13 +356,13 @@
       when:
         not assert_result.failed
 
-    - name: When setup wizard is completed, we should have access to an Splunk Enterprise tgz file in infra repo
+    - name: When setup wizard is completed, we should have access to an Splunk Enterprise tgz file in infrastructure repo
       shell:
-        cmd: 'find {{ playbook_dir }}/../../../ -path "*{{ cca_infra_companion_directory.stdout.splitlines() | first | default("~/cca_splunk_infrastructure") }}*" -name "splunk-[8|9]*-Linux-x86_64.tgz" -type f'
+        cmd: 'find {{ playbook_dir }}/../../../ -path "*{{ cca_infrastructure_companion_directory.stdout.splitlines() | first | default("~/cca_splunk_infrastructure") }}*" -name "splunk-[8|9]*-Linux-x86_64.tgz" -type f'
       register: splunk_enterprise_tgz
       ignore_errors: true
 
-    - name: Assert that a Splunk enterprise file exists in infra repo
+    - name: Assert that a Splunk enterprise file exists in infrastructure repo
       connection: local
       assert:
         that:
@@ -377,14 +377,14 @@
       ignore_errors: true
       register: assert_result
       when:
-        - cca_infra_companion_directory.rc == 0
+        - cca_infrastructure_companion_directory.rc == 0
 
     - name: Increase score for successful task
       set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 202 }}"
       when:
         - not assert_result.failed | default(true)
-        - cca_infra_companion_directory.rc == 0
+        - cca_infrastructure_companion_directory.rc == 0
 
     - name: Test existence of commands on macOS
       command: "which {{ item }}"

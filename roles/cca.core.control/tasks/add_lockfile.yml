@@ -12,18 +12,18 @@
 - name: Calculate number of retries based on seconds to wait
   ansible.builtin.set_fact:
     cca_data_onboarding_lock_retries: "{{ cca_data_onboarding_lock_wait_sec | default(1800) / cca_data_onboarding_lock_retry_delay | default(15) | int }}"
-    cca_infra_lock_retries: "{{ cca_infra_lock_wait_sec | default(1800) / cca_infra_lock_retry_delay | default(15) | int }}"
+    cca_infrastructure_lock_retries: "{{ cca_infrastructure_lock_wait_sec | default(1800) / cca_infrastructure_lock_retry_delay | default(15) | int }}"
 
-- name: Check if a look file exists for cca infra
+- name: Check if a look file exists for cca infrastructure
   ansible.builtin.stat:
-    path: "/tmp/.cca_infra_lock-{{ environment_name }}"
-  register: stat_dot_infra_lock
+    path: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
+  register: stat_dot_infrastructure_lock
 
-- name: Get runid from infra lock file
+- name: Get runid from infrastructure lock file
   ansible.builtin.set_fact:
-    runid_in_lockfile: "{{ lookup('file', '/tmp/.cca_infra_lock-' + environment_name) }}"
+    runid_in_lockfile: "{{ lookup('file', '/tmp/.cca_infrastructure_lock-' + environment_name) }}"
   when:
-    - stat_dot_infra_lock.stat.exists
+    - stat_dot_infrastructure_lock.stat.exists
     - cca_runid is defined
 
 - name: Check if our runid is in the lock file
@@ -31,7 +31,7 @@
     my_runid: true
   when:
     - cca_runid is defined
-    - stat_dot_infra_lock.stat.exists | default(false) or
+    - stat_dot_infrastructure_lock.stat.exists | default(false) or
       stat_dot_data_onboarding_lock.stat.exists | default(false)
     - cca_runid == runid_in_lockfile
 
@@ -66,13 +66,13 @@
       target == "deploy_manager-apps" or
       target == "deploy_shcluster_apps"
 
-- name: Wait for data infrastructure lock file to be deleted by other process. If unexpected then delete /tmp/.cca_infra_lock-ENV_NAME
+- name: Wait for data infrastructure lock file to be deleted by other process. If unexpected then delete /tmp/.cca_infrastructure_lock-ENV_NAME
   ansible.builtin.stat:
-    path: "/tmp/.cca_infra_lock-{{ environment_name }}"
-  register: stat_dot_infra_lock
-  until: not stat_dot_infra_lock.stat.exists
-  retries: "{{ cca_infra_lock_retries | default(120) | int }}"
-  delay: "{{ cca_infra_lock_retry_delay | default(15) | int }}"
+    path: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
+  register: stat_dot_infrastructure_lock
+  until: not stat_dot_infrastructure_lock.stat.exists
+  retries: "{{ cca_infrastructure_lock_retries | default(120) | int }}"
+  delay: "{{ cca_infrastructure_lock_retry_delay | default(15) | int }}"
   when:
     - not my_runid | default(false)
     - parallel_execution_control | default(false)
@@ -88,7 +88,7 @@
 
 - name: Create lock file to manage multi user execution
   ansible.builtin.copy:
-    dest: "/tmp/.cca_infra_lock-{{ environment_name }}"
+    dest: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
     content: |
       {{ cca_runid | default('20380119') }}
     mode: '0644'
