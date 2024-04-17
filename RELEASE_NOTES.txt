@@ -31,6 +31,49 @@
 
     Release notes:
 
+    2024.1.2
+              - Important notice - Breaking change:
+
+                * In previous versions, the CCA infrastructure repository was identified using the shorthand 'infra'.
+                  As our needs have evolved, this naming convention no longer scales effectively. Starting with this
+                  release, we have renamed all shorthand references of 'infra' to 'infrastructure' to more accurately
+                  reflect its purpose. This change affects both the repository identifier and variable names within
+                  the system.
+
+                * Important for End Users:
+                  If you have a local copy of the infrastructure repository that was created before version 2024.1.2,
+                  you will need to update your repository settings. This ensures compatibility with the new naming
+                  conventions. Additionally, an issue with the incorrect repository name labeled 'CcaRepo' has been
+                  been corrected in this release. Some variables has changed from strict validation identified with
+                  UPDATE_* to use OPTIONAL_* instead, corrected for some non-critical variables in this release.
+                  Please make sure your settings are updated to align with the changes described below:
+
+                      ${CCA_INFRASTRUCTURE_DIR}/.storage/settings
+                        cca_infrastructure_storage_settings_file_version="2024.1.2"
+                        repo_type=infrastructure
+                        CcaRepo=cca_for_splunk
+
+                      ${CCA_INFRASTRUCTURE_DIR}/environments/ENVIRONMENT_NAME/group_vars/all/env_specific
+                        absolute_infrastructure_repo_path: '{{ inventory_dir }}/../..'
+                        cca_infrastructure_lock_wait_sec: 1800
+                        cca_splunk_license_manager_uri: 'https://OPTIONAL_LICENSE_MANAGER_FQDN:8089'
+                        cca_splunk_alert_action_smtp: 'OPTIONAL_SMTP_SERVER_FQDN'
+                        cca_splunk_health_alert_action_email_to: 'OPTIONAL_ALERT_EMAIL_ADDRESS'
+                        cca_splunk_extension_certs_path: '{{ absolute_infrastructure_repo_path }}/splunk/etc/auth/certs'
+                        cca_splunk_extension_licenses_path: '{{ absolute_infrastructure_repo_path }}/splunk/etc/licenses/enterprise'
+
+              - Setup wizard has been updated to be much faster while copying template files.
+              - Handling of splunk_conf_[general|group|host]_settings has been simplified and custom filter_plugins has
+                been developed to further strengthen the validation in the cca.core.splunk role.
+              - Bumped Splunk Enterprise version to 9.1.4, Splunk 9.1.x track is still recommended for production usage.
+              - Updated the cca.splunk.onboarding role to accommodate scenarios where a deployment server coexists with
+                other Splunk roles. To deploy deployment-apps to a server not listed in the [deployment_servers] inventory
+                group. Configure the additional option dest_dir: 'deployment-apps' in group_vars for your Ansible group.
+                Use the standard playbook deploy_apps.yml for this scenario.
+
+              Bug fixes:
+              - Fixed issue that initialize task would not run if inventory group was missing.
+
     2024.1.1
               - Important:
                   * If you are running on Linux Kernel 5.8 or later, execute the 'configure_linux_server.yml'

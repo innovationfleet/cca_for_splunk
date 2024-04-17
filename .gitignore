@@ -18,3 +18,5 @@
 # Misc ignored files
 ._*
 
+# Ignore python runtime files
+__pycache__
