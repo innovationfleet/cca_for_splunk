@@ -8,8 +8,9 @@
 # Prerequisite:
 #              splunk_conf_*_settings needs to be defined.
 #
-# Roger Lindquist (github.com/rlinq)
-# Release: 2023.1.1
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.1.2
 
 
 - name: Assert that default_tcpout valid group name when defined
@@ -24,117 +25,86 @@
   when:
     - default_tcpout is defined
 
-- name: Parse all sections for general settings and build a loop var
+- name: Ensure general settings are in the expected format
   ansible.builtin.set_fact:
-    general_sections_loop: >
-      {{ general_sections_loop | d([])
-        + [ {} | combine(item[0]) | combine(item[1]) ]
-      }}
-  with_subelements:
-    - "{{ splunk_conf_general_settings }}"
-    - sections
-  no_log: '{{ hide_password }}'
+    splunk_conf_general_settings_flattened: "{{ splunk_conf_general_settings | default([]) | splunk_conf_flatten }}"
+  when:
+    - splunk_conf_general_settings_flattened is not defined
+  no_log: "{{ hide_password }}"
 
-- name: Fail task if invalid general setting is found
+- name: Ensure group settings are in the expected format
   ansible.builtin.set_fact:
-    general_settings_validatation_failed: true
-  with_subelements:
-    - "{{ general_sections_loop }}"
-    - options
-  failed_when:
-    - ( item.0.filepath is regex( invalid_config_regex ) and
-        item.1.state | default ('present') != 'absent' )
-      or
-      ( item.0.section is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.option is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.value is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.option is regex('^(?!#).*')
-        and item.1.value != ''
-        and item.1.option == ''
-        and item.1.state | default ('present') != 'absent'
-        and enable_precheck | default(true) )
-  no_log: '{{ hide_password }}'
+    splunk_conf_group_settings_flattened: "{{ splunk_conf_group_settings | default([]) | splunk_conf_flatten }}"
+  when:
+    - splunk_conf_group_settings_flattened is not defined
+  no_log: "{{ hide_password }}"
 
-- name: Parse all sections for group settings and build a loop var
+- name: Ensure host settings are in the expected format
   ansible.builtin.set_fact:
-    group_sections_loop: >
-      {{ group_sections_loop | d([])
-        + [ {} | combine(item[0]) | combine(item[1]) ]
-      }}
-  with_subelements:
-    - "{{ splunk_conf_group_settings }}"
-    - sections
-  when: splunk_conf_group_settings is defined
-  no_log: '{{ hide_password }}'
+    splunk_conf_host_settings_flattened: "{{ splunk_conf_group_settings | default([]) | splunk_conf_flatten }}"
+  when:
+    - splunk_conf_host_settings_flattened is not defined
+  no_log: "{{ hide_password }}"
 
-- name: Fail task if invalid group setting is found
-  ansible.builtin.set_fact:
-    group_settings_validatation_failed: true
-  with_subelements:
-    - "{{ group_sections_loop }}"
-    - options
-  failed_when:
-    - ( item.0.filepath is regex( invalid_config_regex ) and
-        item.1.state | default ('present') != 'absent' )
-      or
-      ( item.0.section is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.option is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.value is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.option is regex('^(?!#).*')
-        and item.1.value != ''
-        and item.1.option == ''
-        and item.1.state | default ('present') != 'absent'
-        and enable_precheck | default(true) )
-  when: splunk_conf_group_settings is defined
-  no_log: '{{ hide_password }}'
+- name: Validate Splunk general configuration settings
+  ansible.builtin.assert:
+    that:
+      - "not item.path is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.section is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.option is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.value is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not (item.option is regex('^(?!#).*') and item.value != '' and item.option == '' and item.state | default('present') != 'absent') or not enable_precheck | default(true)"
+    msg: |
+      Validation failed for the following item:
+      Path: {{ item.path }}
+      Section: {{ item.section }}
+      Option: {{ item.option }}
+      Value: {{ item.value }}
+      This item does not meet the required criteria.
+  loop: "{{ splunk_conf_general_settings_flattened | default([]) }}"
+  when: splunk_conf_general_settings_flattened is defined and general_settings_validation_enabled | default(true)
+  loop_control:
+    label: "{{ item.section }} - {{ item.option }}"
+  no_log: "{{ hide_password | default(true) }}"
 
-- name: Parse all sections for host settings and build a loop var
-  ansible.builtin.set_fact:
-    host_sections_loop: >
-      {{ host_sections_loop | d([])
-        + [ {} | combine(item[0]) | combine(item[1]) ]
-      }}
-  with_subelements:
-    - "{{ splunk_conf_host_settings }}"
-    - sections
-  when: splunk_conf_host_settings is defined
-  no_log: '{{ hide_password }}'
+- name: Validate Splunk group configuration settings
+  ansible.builtin.assert:
+    that:
+      - "not item.path is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.section is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.option is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.value is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not (item.option is regex('^(?!#).*') and item.value != '' and item.option == '' and item.state | default('present') != 'absent') or not enable_precheck | default(true)"
+    msg: |
+      Validation failed for the following item:
+      Path: {{ item.path }}
+      Section: {{ item.section }}
+      Option: {{ item.option }}
+      Value: {{ item.value }}
+      This item does not meet the required criteria.
+  loop: "{{ splunk_conf_group_settings_flattened | default([]) }}"
+  when: splunk_conf_group_settings_flattened is defined and group_settings_validation_enabled | default(true)
+  loop_control:
+    label: "{{ item.section }} - {{ item.option }}"
+  no_log: "{{ hide_password | default(true) }}"
 
-- name: Fail task if invalid host setting is found
-  ansible.builtin.set_fact:
-    host_settings_validatation_failed: true
-  with_subelements:
-    - "{{ host_sections_loop }}"
-    - options
-  failed_when:
-    - ( item.0.filepath is regex( invalid_config_regex ) and
-        item.1.state | default ('present') != 'absent' )
-      or
-      ( item.0.section is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.option is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.value is regex( invalid_config_regex ) and
-       item.1.state | default ('present') != 'absent' )
-      or
-      ( item.1.option is regex('^(?!#).*')
-        and item.1.value != ''
-        and item.1.option == ''
-        and item.1.state | default ('present') != 'absent'
-        and enable_precheck | default(true) )
-  when: splunk_conf_host_settings is defined
-  no_log: '{{ hide_password }}'
+- name: Validate Splunk host configuration settings
+  ansible.builtin.assert:
+    that:
+      - "not item.path is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.section is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.option is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not item.value is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
+      - "not (item.option is regex('^(?!#).*') and item.value != '' and item.option == '' and item.state | default('present') != 'absent') or not enable_precheck | default(true)"
+    msg: |
+      Validation failed for the following item:
+      Path: {{ item.path }}
+      Section: {{ item.section }}
+      Option: {{ item.option }}
+      Value: {{ item.value }}
+      This item does not meet the required criteria.
+  loop: "{{ splunk_conf_host_settings_flattened | default([]) }}"
+  when: splunk_conf_host_settings_flattened is defined and host_settings_validation_enabled | default(true)
+  loop_control:
+    label: "{{ item.section }} - {{ item.option }}"
+  no_log: "{{ hide_password | default(true) }}"

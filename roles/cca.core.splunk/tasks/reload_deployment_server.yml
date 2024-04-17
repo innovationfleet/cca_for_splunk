@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2024.1.2
 
 - name: Include task to check pending actions
   ansible.builtin.include_tasks: check_pending_actions.yml
@@ -19,7 +19,7 @@
         splunk_login.yml
 
     - name: Reload deploy-server to notify clients of new apps
-      ansible.builtin.shell: "{{ splunk_path }}/bin/splunk reload deploy-server"
+      ansible.builtin.shell: "{{ splunk_path }}/bin/splunk reload deploy-server -timeout {{ reload_deploy_server_timeout | default(900) }}"
 
     - name: Cleanup state file for deployment apps push
       ansible.builtin.file:

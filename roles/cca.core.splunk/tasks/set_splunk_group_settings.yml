@@ -1,20 +1,20 @@
 ---
 # tasks file for cca.core.splunk
 #
-# Description: This tasks reads the splunk_conf_group_settings and
+# Description: This tasks reads the splunk_conf_group_settings_flattened and
 #              apply them on each splunk host that is targeted by the
 #              playbook.
 #
 # Prerequisite:
-#   splunk_conf_group_settings needs to be defined
+#   splunk_conf_group_settings_flattened needs to be defined
 #
-# Roger Lindquist (github.com/rlinq)
-# META_DATE
-# META_VERSION
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.1.2
 
 - name: Manage header line in splunk files, managed by ansible
   ansible.builtin.ini_file:
-    path: "{{ item.filepath }}/{{ item.filename }}"
+    path: "{{ item.path }}"
     section:
     option: '{{ file_managed_by_ansible }}'
     value: null
@@ -22,37 +22,22 @@
     allow_no_value: yes
     mode: '0644'
   loop:
-    "{{ splunk_conf_group_settings }}"
+    "{{ splunk_conf_group_settings_flattened }}"
   changed_when: false
   no_log: '{{ hide_password }}'
 
 - name: Updates Splunk conf based on group settings
   ansible.builtin.ini_file:
-    path: "{{ item.0.filepath }}/{{ item.0.filename}}"
-    section: "{{ item.0.section }}"
-    option: "{{ item.1.option | default(null)
-             if
-               item.1.state | default('present') != 'AbsentSection'
-             else
-               ''
-            }}"
-    value: "{{ item.1.value | default(null)
-             if
-               item.1.state | default('present') != 'AbsentSection'
-             else
-               ''
-            }}"
-    state: "{{ 'present'
-             if
-               item.1.state | default('present') == 'present'
-             else
-               'absent'
-            }}"
-    allow_no_value: "{{ 'yes' if ( not item.1.value ) else 'no' }}"
+    path: "{{ item.path }}"
+    section: "{{ item.section }}"
+    option: "{{ item.option | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
+    value: "{{ item.value | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
+    state: "{{ 'present' if item.state | default('present') == 'present' else 'absent' }}"
+    allow_no_value: "{{ 'yes' if (not item.value) else 'no' }}"
     mode: '0644'
-  with_subelements:
-    - "{{ group_sections_loop }}"
-    - options
+  loop: "{{ splunk_conf_group_settings_flattened }}"
+  loop_control:
+    label: "{{ item.section }} - {{ item.option }}"
   register: cca_splunk_settings_update
 
 - name: Include task to notify restart or need to push group settings
