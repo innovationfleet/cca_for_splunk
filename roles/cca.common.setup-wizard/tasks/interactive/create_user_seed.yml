@@ -56,7 +56,7 @@
       | split() | join('\r\n')
       | regex_replace('1.2;AES256;filter_default', '1.1;AES256') }}
 
-- name: Save cli username to vars file in infra and onboarding repo
+- name: Save cli username to vars file in infrastructure and onboarding repo
   ansible.builtin.lineinfile:
     path: "{{ item }}"
     line: "cca_splunk_admin_user: '{{ user_info.username }}'"
@@ -65,7 +65,7 @@
     - "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
     - "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
 
-- name: Save the clear text secret as an ansible vault in infra and onboarding repo
+- name: Save the clear text secret as an ansible vault in infrastructure and onboarding repo
   ansible.builtin.lineinfile:
     path: "{{ item }}"
     line: 'cca_splunk_admin_password: !vault "{{ vaulted_secret_value }}"'
