@@ -47,7 +47,7 @@
 - name: Configure Splunk related FW settings
   ansible.builtin.include_tasks: configure_firewall.yml
   when:
-    - control.linux_configuration.configure_firewall | default(true)
+    - control.linux_configuration.configure_firewall | default(true) or control.linux_configuration.disable_firewalld | default(false)
     - ansible_distribution != "Debian"
     - ansible_distribution != "Ubuntu"
 
