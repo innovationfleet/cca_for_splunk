@@ -109,6 +109,8 @@
   when:
     - not master_apps_untouched | default(false)
     - not master_apps_migration_state | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Copy files from master-apps to manager-apps
   become: true
@@ -123,6 +125,8 @@
   when:
     - not master_apps_untouched | default(false)
     - not master_apps_migration_state | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Delete files from master-apps after content copy
   become: true
@@ -177,4 +181,4 @@
 
 - name: Include task to set cluster-manager migrate state at initial install
   ansible.builtin.include_tasks:
-    file: set_cluster_manager_migrate_state.yml
+    file: ./../roles/cca.splunk.enterprise-install/tasks/set_cluster_manager_migrate_state.yml
