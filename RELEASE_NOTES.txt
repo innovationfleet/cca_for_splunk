@@ -31,6 +31,19 @@
 
     Release notes:
 
+    2024.2.1  - Playbook deploy_deployment_apps.yml supports selective reload of Serverclass. Use reload_serverclass
+                argument to control serverclass reload instead of full reload of deployment server.
+              - Reworked and improved reload/restart handler for Deployment Servers and tasks to synchronize
+                apps.
+              - Bumped Splunk Enterprise version to 9.1.5, Splunk 9.1.x track is still recommended for production usage.
+              - Added option to configure inputs certificate on forwarders to support intermediate forwarding.
+              - Refactored linux firewall tasks and variables to allow for better control.
+              - Add installation of chrony to re enable crontab support on newer distributions.
+              - Base setup of Monitoring Console.
+              - CCA Ansible Callback is available in preview, currently being worked on and feedback is
+                appreciated. See callback_plugins/CCA_SPLUNK_CALLBACK.md for details.
+              - Streamlined notify handlers to avoid multiple runs in the same playbook.
+
     2024.1.2
               - Important notice - Breaking change:
 
