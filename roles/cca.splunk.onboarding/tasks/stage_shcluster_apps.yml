@@ -11,7 +11,7 @@
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    shcluster_staging_dir: '/tmp/{{ cca_runid }}/{{ inventory_hostname }}/{{ shcluster_label }}'
+    shcluster_staging_dir: '/tmp/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}'
 
 - name: Cleanup manager before staging apps
   become: false

@@ -11,7 +11,7 @@
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    deployment_server_apps_staging_dir: '/tmp/{{ cca_runid }}/{{ inventory_hostname }}/{{ environment_name }}'
+    deployment_server_apps_staging_dir: '/tmp/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ environment_name }}'
 
 - name: Cleanup manager before staging apps
   become: false
@@ -32,6 +32,7 @@
     state: directory
     mode: '0700'
   changed_when: false
+  check_mode: false
 
 - name: Check existence of deployment apps directory for this environment
   become: false
@@ -40,6 +41,7 @@
     path: "{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}"
   register: stat_environment_specific_path
   delegate_to: localhost
+  check_mode: false
 
 - name: Assert that the required deployment_apps directory exists
   ansible.builtin.assert:
@@ -52,11 +54,10 @@
 - name: Stage manager with deployment apps from environment directory
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}/'
-    dest: '{{ deployment_server_apps_staging_dir }}/deployment_server/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}/"
+    "{{ deployment_server_apps_staging_dir }}/deployment_server/"
   delegate_to: localhost
   changed_when: false
   check_mode: false
@@ -64,11 +65,10 @@
 - name: Stage manager with deployment server selected apps
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ selected_deployment_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ absolute_file_store_path }}/etc/{{ selected_deployment_apps_sourcedir }}/{{ item.source_app }}/"
+    "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
     - selected_deployment_apps_sourcedir is defined
@@ -81,11 +81,10 @@
 - name: Stage manager with versioned apps
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
-    dest: '{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/"
+    "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
     - versioned_apps_sourcedir is defined
@@ -100,11 +99,10 @@
 - name: Stage manager with selected apps
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
-    dest: '{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/"
+    "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
     - selected_apps_source_path is defined
