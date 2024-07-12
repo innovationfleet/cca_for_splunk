@@ -76,7 +76,7 @@ else
 fi
 
 WhiptailHight=30
-BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2024.1.2"
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2024.2.1"
 CookieFile="${ScriptPath}/.cookie"
 LicenseFile=~/clones/cca_for_splunk/LICENSE
 InfoFile=~/clones/cca_for_splunk/RELEASE_NOTES.txt

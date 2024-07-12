@@ -135,6 +135,22 @@ splunk_conf_general_settings:
                     else
                       'absent' }}"
 
+  - name: Splunk splunk_monitoring_console_assets.conf
+    filename: splunk_monitoring_console_assets.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'settings'
+        options:
+        - option: 'mc_auto_config'
+          value: "enabled"
+          state: "{{ 'present'
+                    if
+                      is_monitoring_console | default(false)
+                    else
+                      'absent' }}"
+          comment: >-
+            Configures Monitoring Console in distrubuted mode
+
 
   - name: Splunk outputs.conf
     filename: outputs.conf

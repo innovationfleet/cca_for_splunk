@@ -1,5 +1,5 @@
 [default]
-cca_onboarding_storage_settings_file_version="2024.1.2"
+cca_onboarding_storage_settings_file_version="2024.2.1"
 repo_type=onboarding
 CcaRepo=cca_for_splunk
 EnforceMultiplexer=false
