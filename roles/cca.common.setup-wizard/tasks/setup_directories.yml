@@ -14,14 +14,14 @@
     path: "{{ item }}"
     state: directory
   loop:
-    - "{{ cca_environment.infrastructure_repo_dir }}"
-    - "{{ cca_environment.onboarding_repo_dir }}"
-    - "{{ cca_environment.onboarding_repo_dir }}/splunk/etc"
+    - "{{ cca_environment.infrastructure_repo_dir | default(infrastructure_repo_dir) }}"
+    - "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}"
+    - "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}/splunk/etc"
 
 - name: Synchronize general files for infrastructure template
   synchronize:
     src: "{{ script_cwd }}/templates/infrastructure_template/"
-    dest: "{{ cca_environment.infrastructure_repo_dir }}"
+    dest: "{{ cca_environment.infrastructure_repo_dir | default(infrastructure_repo_dir) }}"
     rsync_path: "rsync"
     delete: false
     recursive: true
@@ -32,7 +32,7 @@
 - name: Synchronize ENVIRONMENT files for infrastructure template
   synchronize:
     src: "{{ script_cwd }}/templates/infrastructure_template/environments/ENVIRONMENT_NAME/"
-    dest: "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}"
+    dest: "{{ cca_environment.infrastructure_repo_dir | default(infrastructure_repo_dir) }}/environments/{{ environment_dir }}"
     rsync_path: "rsync"
     delete: false
     recursive: true
@@ -41,7 +41,7 @@
 - name: Synchronize general files onboarding template
   synchronize:
     src: "{{ script_cwd }}/templates/onboarding_template/"
-    dest: "{{ cca_environment.onboarding_repo_dir }}"
+    dest: "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}"
     rsync_path: "rsync"
     delete: false
     recursive: true
@@ -52,7 +52,7 @@
 - name: Synchronize ENVIRONMENT files for onboarding template
   synchronize:
     src: "{{ script_cwd }}/templates/onboarding_template/environments/ENVIRONMENT_NAME/"
-    dest: "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}"
+    dest: "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}/environments/{{ environment_dir }}"
     rsync_path: "rsync"
     delete: false
     recursive: true
@@ -60,6 +60,6 @@
 
 - name: Set execute bit on cca_ctrl file
   ansible.builtin.file:
-    path: "{{ cca_environment.onboarding_repo_dir }}/cca_ctrl"
+    path: "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}/cca_ctrl"
     mode: '0700'
   delegate_to: "{{ inventory_hostname }}"

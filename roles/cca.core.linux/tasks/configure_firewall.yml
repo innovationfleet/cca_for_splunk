@@ -5,12 +5,21 @@
 #
 # Prerequisite:
 #
-# Author: Robin Blomdahl
+# Author: Robin Blomdahl, Roger Lindquist
 #
-# Release: 2023.1.1
+# Release: 2024.1.2
 
 - name: Include tasks that will install/upgrade firewalld
   include_tasks: firewalld/ensure_firewalld.yml
+  when:
+    - control.linux_configuration.enable_firewall
 
 - name: Configure firewalld for splunk
   include_tasks: firewalld/configure_firewalld.yml
+  when:
+    - control.linux_configuration.enable_firewall
+
+- name: Disable firewalld
+  include_tasks: firewalld/disable_firewalld.yml
+  when:
+    - control.linux_configuration.disable_firewalld | default(false)

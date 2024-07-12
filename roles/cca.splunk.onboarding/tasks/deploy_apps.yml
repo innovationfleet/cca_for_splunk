@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.2
+# Release: 2024.2.1
 
 - name: Deploy the apps from the selected apps directory to the splunk servers
   ansible.posix.synchronize:
@@ -24,7 +24,7 @@
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ selectable_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else selectable_apps_rsync_opts }}'
-  notify: notify standalone splunkd restart
+  notify: notify standalone deployment server splunkd restart
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
@@ -49,7 +49,7 @@
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ versioned_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else versioned_apps_rsync_opts }}'
-  notify: notify standalone splunkd restart
+  notify: notify standalone deployment server splunkd restart
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
@@ -62,7 +62,7 @@
   ansible.builtin.file:
     path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
     state: 'absent'
-  notify: notify standalone splunkd restart
+  notify: notify standalone deployment server splunkd restart
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'
@@ -72,7 +72,7 @@
   ansible.builtin.file:
     path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
     state: 'absent'
-  notify: notify standalone splunkd restart
+  notify: notify standalone deployment server splunkd restart
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'

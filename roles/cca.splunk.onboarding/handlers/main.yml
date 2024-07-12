@@ -21,42 +21,24 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2024.2.1
 
-- name: Splunkd restart handler on non cluster instances
-  ansible.builtin.file:
-    path: "{{ splunkd_restart_pending }}"
-    state: touch
-    mode: '664'
-  listen: notify splunkd restart
-  when:
-    - inventory_hostname not in ( groups.cluster_peers | default([]) )
-    - inventory_hostname not in ( groups.searchhead_members | default([]) )
-
-- name: Splunkd restart handler on SHC members
-  ansible.builtin.file:
-    path: "{{ rolling_restart_pending }}"
-    state: touch
-    mode: '664'
-  listen: notify splunkd restart
-  when: inventory_hostname in ( groups.searchhead_members | default([]) )
-
-- name: Splunkd standalone restart handler on any server
-  ansible.builtin.command:
-    cmd: '{{ splunk_path }}/bin/splunk restart'
-  listen: notify standalone splunkd restart
-  when:
-    - deploy_scope | default('') != 'deployment-apps'
 
 - name: Splunkd restart handler on Deployment Servers
+  run_once: true
   ansible.builtin.file:
     path: "{{ splunkd_restart_pending }}"
     state: touch
     mode: '664'
-  listen: notify standalone splunkd restart
+  listen: notify standalone deployment server splunkd restart
   when:
     - inventory_hostname in ( groups.deployment_servers | default([]) )
-    - deploy_scope | default('') == 'deployment-apps'
+
+- name: Splunk deployment-server reload handler on Deployment Server
+  ansible.builtin.file:
+    path: "{{ deployment_server_reload_pending }}"
+    state: touch
+  listen: notify deployment server reload
 
 - name: Splunk shcluster bundle push handler on clustered search head peers
   ansible.builtin.file:
@@ -73,10 +55,3 @@
     mode: '644'
   listen: notify cluster bundle push
   when: inventory_hostname in ( groups.cluster_managers | default([]) )
-
-- name: Splunk deployment-server reload handler on Deployment Server
-  ansible.builtin.file:
-    path: "{{ deployment_server_reload_pending }}"
-    state: touch
-    mode: '644'
-  listen: notify deployment server reload

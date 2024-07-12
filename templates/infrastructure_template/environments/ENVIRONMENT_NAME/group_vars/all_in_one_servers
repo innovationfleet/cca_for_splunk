@@ -45,14 +45,30 @@ splunk_conf_group_settings:
          value: ''
          comment: >-
 
+ - name: Splunk indexes.conf
+   filename: indexes.conf
+   filepath: '{{ splunk_path }}/etc/system/local'
+   sections:
+    - section: 'default'
+      options:
+       - option: 'homePath'
+         value: "$SPLUNK_DB/$_index_name/db"
+       - option: 'coldPath'
+         value: "$SPLUNK_DB/$_index_name/colddb"
+       - option: 'thawedPath'
+         value: "$SPLUNK_DB/thawed/$_index_name/thaweddb"
+         comment: >-
+          Set path of thawed directory to a common directory in the cold path
+          where it can be mounted on another filesystem if more space is needed.
+
  - name: Splunk inputs.conf
    filename: inputs.conf
    filepath: '{{ splunk_path }}/etc/system/local'
    sections:
-    - section: ''
+    - section: 'http'
       options:
-       - option: ''
-         value: ''
+       - option: 'disabled'
+         value: '0'
          comment: >-
 
  - name: Splunk outputs.conf

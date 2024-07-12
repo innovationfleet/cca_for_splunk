@@ -21,6 +21,7 @@ control:
     splunk_user: true
     fs_path: false
     configure_firewall: false
+    disable_firewall:  false
     server_hardening: true
     baseline_software: true
     splunk_limits: true
@@ -31,6 +32,7 @@ control:
     sudoers: true
     user_profile: true
     configure_ntp: false
+    configure_backup: false
 
 # ntp_servers takes a list of NTP server addresses
 ntp_servers: UPDATE_NTP_SERVERS_LIST

@@ -28,9 +28,9 @@
   ansible.builtin.set_fact:
     splunkd_restart: true
   when:
-    - splunk_actions.splunkd_restart
+    - splunk_actions.splunkd_restart_pending
   changed_when:
-    - splunk_actions.splunkd_restart
+    - splunk_actions.splunkd_restart_pending
   notify: notify splunkd restart
 
 - name: Notify a Deployment Server reload if deployment-apps content is updated
