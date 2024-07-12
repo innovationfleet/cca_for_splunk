@@ -7,7 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release:2023.3.2
+# Release:2024.2.1
+
+- name: Check if the instance is managed by Ansible
+  ansible.builtin.stat:
+    path: "{{ splunk_path }}/.ansible_managed"
+  register: stat_ansible_managed
 
 - name: Check if a splunkd restart is pending
   ansible.builtin.stat:
