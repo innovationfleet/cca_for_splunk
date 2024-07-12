@@ -81,6 +81,12 @@
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
     - setup:
         gather_subset: 'network'
 
@@ -147,6 +153,12 @@
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
     - setup:
         gather_subset: 'network'
 
@@ -176,6 +188,12 @@
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
     - setup:
         gather_subset: 'network'
 
@@ -218,6 +236,12 @@
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
     - setup:
         gather_subset: 'network'
 

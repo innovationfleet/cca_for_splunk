@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       set_fact:
-        cca_release: "2024.1.2"
+        cca_release: "2024.2.1"
 
     - name: START - Set target readiness score for CCA manager
       set_fact:

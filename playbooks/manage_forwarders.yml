@@ -20,7 +20,7 @@
 
 
 - name: Verify that connection to all servers are ok before we start
-  hosts: forwarders
+  hosts: ~.*forwarders
   become: true
   become_method: sudo
   become_user: "{{ splunk_user }}"
@@ -42,7 +42,7 @@
 
 
 - name: Configure the forwarders for availability group 1
-  hosts: forwarders:&ag1
+  hosts: ~.*forwarders:&ag1
   become: true
   become_method: sudo
   become_user: "{{ splunk_user }}"
@@ -81,6 +81,12 @@
         name: cca.splunk.ssl-certificates
         tasks_from:
           outputs_certificate.yml
+
+    - name: Include role to configure inputs certificates
+      ansible.builtin.include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          inputs_certificate.yml
 
     - name: Configure settings for Splunk UI
       ansible.builtin.include_role:
@@ -119,7 +125,7 @@
 
 
 - name: Configure the forwarders for availability group 2
-  hosts: forwarders:&ag2
+  hosts: ~.*forwarders:&ag2
   become: true
   become_method: sudo
   become_user: "{{ splunk_user }}"
@@ -158,6 +164,12 @@
         name: cca.splunk.ssl-certificates
         tasks_from:
           outputs_certificate.yml
+
+    - name: Include role to configure inputs certificates
+      ansible.builtin.include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          inputs_certificate.yml
 
     - name: Configure settings for Splunk UI
       ansible.builtin.include_role:
@@ -196,7 +208,7 @@
 
 
 - name: Configure the forwarders for availability group 3
-  hosts: forwarders:&ag3
+  hosts: ~.*forwarders:&ag3
   become: true
   become_method: sudo
   become_user: "{{ splunk_user }}"
@@ -235,6 +247,12 @@
         name: cca.splunk.ssl-certificates
         tasks_from:
           outputs_certificate.yml
+
+    - name: Include role to configure inputs certificates
+      ansible.builtin.include_role:
+        name: cca.splunk.ssl-certificates
+        tasks_from:
+          inputs_certificate.yml
 
     - name: Configure settings for Splunk UI
       ansible.builtin.include_role:

@@ -10,7 +10,8 @@
   strategy: linear
   any_errors_fatal: true
   pre_tasks:
-    - include_role:
+    - name: Initialize deploy apps on manager
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           initialize.yml
@@ -18,7 +19,8 @@
         target: "deploy_apps"
 
 # Deploy etc/apps to Splunk servers
-- hosts: forwarders:&ag1
+- name: Deploy etc/apps to Splunk servers AG1
+  hosts: ~.*forwarders:&ag1
   become: true
   become_method: sudo
   become_user: splunk
@@ -27,23 +29,36 @@
   vars:
     - deploy_scope: "apps"
   pre_tasks:
-    - setup:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_deployment_tasks.yml
 
   tasks:
-    - include_role:
+    - name: Onboarding role
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
-    - include_role:
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_deployment_tasks.yml
 
 # Deploy etc/app to Splunk servers
-- hosts: forwarders:&ag2
+- name: Deploy etc/app to Splunk servers AG2
+  hosts: ~.*forwarders:&ag2
   become: true
   become_method: sudo
   become_user: splunk
@@ -52,23 +67,36 @@
   vars:
     - deploy_scope: "apps"
   pre_tasks:
-    - setup:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_deployment_tasks.yml
 
   tasks:
-    - include_role:
+    - name: Onboarding role
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
-    - include_role:
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_deployment_tasks.yml
 
 # Deploy etc/app to Splunk servers
-- hosts: forwarders:&ag3
+- name: Deploy etc/app to Splunk servers AG3
+  hosts: ~.*forwarders:&ag3
   become: true
   become_method: sudo
   become_user: splunk
@@ -77,23 +105,36 @@
   vars:
     - deploy_scope: "apps"
   pre_tasks:
-    - setup:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_deployment_tasks.yml
 
   tasks:
-    - include_role:
+    - name: Onboarding role
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
-    - include_role:
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_deployment_tasks.yml
 
 # Deploy etc/app to Splunk servers
-- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:data_collection_nodes:searchhead_deployers:cluster_managers
+- name: Deploy etc/app to Splunk servers
+  hosts: non_clustered_splunk_servers:searchhead_deployers:cluster_managers:!deployment_servers:!forwarders
   become: true
   become_method: sudo
   become_user: splunk
@@ -102,29 +143,41 @@
   vars:
     - deploy_scope: "apps"
   pre_tasks:
-    - setup:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_deployment_tasks.yml
 
   tasks:
-    - include_role:
+    - name: Onboarding role
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
 
-  post_tasks:
-    - include_role:
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_deployment_tasks.yml
 
 # Finalize playbook run on manager server
-- hosts: manager
+- name: Finalize playbook run on manager server
+  hosts: manager
   connection: local
   strategy: linear
   pre_tasks:
-    - include_role:
+    - name: Finalize deploy apps on manager
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           finalize.yml
