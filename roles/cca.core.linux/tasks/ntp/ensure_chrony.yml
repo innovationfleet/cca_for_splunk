@@ -7,10 +7,11 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2023.2.2
+# Release: 2024.2.2
 
 - name: Enable and make sure Chrony is started
   ansible.builtin.systemd:
     name: "chronyd.service"
     enabled: true
     state: "started"
+  no_log: "{{ ansible_verbosity < 3 }}"

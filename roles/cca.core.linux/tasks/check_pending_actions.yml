@@ -7,9 +7,38 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2024.3.1
+
+- name: Get current manager hostname
+  delegate_to: localhost
+  connection: local
+  become: false
+  ansible.builtin.command:
+    cmd: hostname -s
+  register: manager_hostname_result
+
+- name: Set manager hostname fact
+  delegate_to: localhost
+  connection: local
+  become: false
+  ansible.builtin.set_fact:
+    manager_hostname: "{{ manager_hostname_result.stdout }}"
+
+- name: Set skip reboot flag if manager is colocated on a splunk_server
+  ansible.builtin.set_fact:
+    cca_skip_server_reboot: "{{ manager_hostname == ansible_hostname }}"
 
 - name: Check if a server reboot is pending
   ansible.builtin.stat:
     path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
   register: stat_server_reboot_pending
+
+- name: Check if a service restart is pending
+  ansible.builtin.stat:
+    path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
+  register: stat_splunk_service_restart_pending
+
+- name: If Splunkd was running we have a state file
+  ansible.builtin.stat:
+    path: "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
+  register: stat_splunkd_service_started

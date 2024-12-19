@@ -7,7 +7,9 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2024.2.2
+
+
 - name: Configure polkit rule in /etc/polkit.1/rules.d
   ansible.builtin.template:
     src: "etc/polkit-1/rules.d/10-Splunkd.rules_{{ cca_splunk_polkit_template_version }}.j2"
@@ -22,3 +24,4 @@
     name: polkit
   when:
     - polkit_template_status.changed
+  no_log: "{{ ansible_verbosity < 3 }}"

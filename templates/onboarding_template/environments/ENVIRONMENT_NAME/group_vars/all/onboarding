@@ -4,7 +4,7 @@
 cca_onboarding_onboarding_file_version: '2024.2.1'
 
 
-absolute_file_store_path: '{{ lookup("env", "CCA_ONBORDING_REPO_DIR", default=inventory_dir + "/../..") }}/splunk'
+absolute_file_store_path: '{{ lookup("env", "CCA_ONBOARDING_REPO_DIR", default=inventory_dir + "/../..") }}/splunk'
 versioned_apps_sourcedir: 'apps/versioned'
 selected_apps_sourcedir: 'apps/selectable'
 deployment_apps_sourcedir: 'deployment-apps/{{ environment_name }}'
@@ -22,7 +22,9 @@ deployment_apps_rsync_opts:
   - '--exclude=.git'
   - '--exclude=.gitkeep'
   - '--exclude=.gitignore'
-  - '--exclude=splunk_ingest_actions'
+  - "--exclude=_splunk_ds_info"
+  - "--exclude=_splunk_tmp"
+  - "--exclude=splunk_ingest_actions"
 
 shcluster_apps_rsync_opts:
   - '--perms'
@@ -31,6 +33,7 @@ shcluster_apps_rsync_opts:
   - '--exclude=.gitkeep'
   - '--exclude={{ app_name_shc_member_conf }}'
   - '--exclude=.gitignore'
+  - "--exclude=splunk_ingest_actions"
 
 manager_apps_rsync_opts:
   - '--perms'
@@ -40,6 +43,7 @@ manager_apps_rsync_opts:
   - '--exclude={{ app_name_index_peer_conf }}'
   - '--exclude=_cluster'
   - '--exclude=.gitignore'
+  - "--exclude=splunk_ingest_actions"
 
 selectable_apps_rsync_opts:
   - '--perms'
@@ -54,4 +58,11 @@ versioned_apps_rsync_opts:
   - "--exclude=metadata/local.meta"
   - "--exclude=*.pyc"
   - "--exclude=__pycache__"
+
+# Customer specific rsync options for bulk serverclass deployments
+deployment_servers_apps_rsync_opts:
+  - '--perms'
+  - "--include=cca_merged_serverclass_*"
+  - '--include=/cca_merged_serverclass_*/**'
+  - "--exclude=/*"
 

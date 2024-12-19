@@ -1,4 +1,3 @@
-
 import json
 import logging
 import requests
@@ -10,12 +9,14 @@ import uuid
 import aiohttp
 import multiprocessing
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone
 from dateutil import tz
 from collections import defaultdict
 from logging.handlers import RotatingFileHandler
 from contextlib import contextmanager
 from copy import copy
+from urllib3.exceptions import InsecureRequestWarning
+import warnings
 
 
 # Ansible
@@ -89,8 +90,8 @@ class CallbackModule(CallbackBase):
         'playbook_on_no_hosts_remaining',
     ]
 
-    splunk_url = os.environ.get("CCA_SPLUNK_HEC_URL")
-    splunk_token = os.environ.get("CCA_SPLUNK_HEC_TOKEN")
+    splunk_url = os.environ.get("CALLBACK_HEC_URL")
+    splunk_token = os.environ.get("CALLBACK_HEC_TOKEN")
     max_retries = 1
 
     def __init__(self):
@@ -100,8 +101,8 @@ class CallbackModule(CallbackBase):
         # Define the failed and changed event sets for easier readability
         self.failed_events = {'runner_on_failed', 'runner_on_async_failed', 'runner_item_on_failed', 'playbook_on_stats'}
         self.changed_events = {'runner_on_ok', 'runner_item_on_ok', 'playbook_on_stats'}
-        self.splunk_url = os.environ.get("CCA_SPLUNK_HEC_URL")
-        self.splunk_token = os.environ.get("CCA_SPLUNK_HEC_TOKEN")
+        self.splunk_url = os.environ.get("CALLBACK_HEC_URL")
+        self.splunk_token = os.environ.get("CALLBACK_HEC_TOKEN")
         self.session = str(uuid.uuid4())
         self.host = socket.gethostname()
         self.ip_address = socket.gethostbyname(socket.gethostname())
@@ -115,13 +116,14 @@ class CallbackModule(CallbackBase):
         self.playbook_start_time = datetime.now(self.local_timezone)
         # Logging configuration
         self.logger = logging.getLogger('cca_splunk_callback')
-        self.log_level = os.environ.get("CCA_SPLUNK_CALLBACK_LOG_LEVEL", "INFO").upper()
+
+        self.log_level = os.environ.get("CALLBACK_LOG_LEVEL", "INFO").upper()
         log_level = logging.getLevelName(self.log_level)
         self.logger.setLevel(log_level) # Adjust the logging level as needed
 
         # Path to the log file
         log_file_path = os.environ.get(
-            "CCA_SPLUNK_CALLBACK_LOG_PATH", "/opt/cca_manager/output/logs/cca_splunk_callback.log")
+            "CALLBACK_LOG_PATH", "/opt/cca_manager/output/logs/cca_splunk_callback.log")
         # Set up a rotating file handler
         max_log_size = 10 * 1024 * 1024  # 10 MB
         backup_count = 1  # Keep only one backup file
@@ -160,20 +162,30 @@ class CallbackModule(CallbackBase):
         :return: Response from Splunk or an error message.
         """
 
+        # Convert the environment variable to a boolean
+        self.verify = os.environ.get("CALLBACK_SSL_VERIFY", "True").lower() in ['true', '1', 'yes']
+
+        if not self.verify:
+            # Suppress the InsecureRequestWarning
+            warnings.simplefilter('ignore', InsecureRequestWarning)
+
+            # Log a custom warning message
+            self.logger.warning("Warning: SSL verification is disabled. This is not recommended in production environments.")
+
 
         headers = {
                 'Authorization': f'Splunk {self.splunk_token}',
                 'Content-Type': 'application/json',
             }
-        
+
         # Increment the event count each time an event is sent to Splunk
-        
+
         # Convert datetime fields to ISO format
         data = convert_datetimes_in_dict(data)
 
         try:
             json_data = json.dumps(data, cls=AnsibleJSONEncoderLocal)
-            response = requests.post(self.splunk_url, data=json_data, headers=headers, timeout=10)
+            response = requests.post(self.splunk_url, data=json_data, headers=headers, timeout=10, verify=self.verify)
 
             # Check if the response status code indicates success
             if response.status_code == 200:
@@ -188,7 +200,7 @@ class CallbackModule(CallbackBase):
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Exception while sending to Splunk: {e}")
             return f"Exception while sending to Splunk: {e}"
-        
+
     def process_host_stats(self, host, summary):
         """
         Sends host stats to Splunk.
@@ -243,7 +255,7 @@ class CallbackModule(CallbackBase):
                 res = data['res']
                 self.logger.debug(f"Processing res: {res}")
                 host_name = data.get('host', 'unknown')  # Access host as string directly
-                if 'stderr' in res:
+                if 'stderr' in res and event in ("runner_on_item_failed", "runner_on_failed"):
                     return f"{event} - {host_name} - error {parse_to_string(res['stderr'])}"
                 elif 'stdout' in res:
                     return f"{event} - {host_name} - stdout {parse_to_string(res['stdout'])}"
@@ -282,8 +294,8 @@ class CallbackModule(CallbackBase):
 
     @contextmanager
     def capture_event_data(self, event, **event_data):
-        if self.log_level == "INFO":
-            # Check if the event should be processed based on INFO log level criteria
+        if int(os.environ.get('CALLBACK_VERBOSITY', "1")) < 2:
+            # Check if the event should be processed based on CALLBACK VERBOSITY
             res = event_data.get('res')
             should_process_event_data = (
                 event in ('runner_on_failed', 'runner_on_async_failed', 'runner_item_on_failed', 'playbook_on_stats','playbook_on_host_stats', 'playbook_on_start') or
@@ -340,6 +352,8 @@ class CallbackModule(CallbackBase):
                     self._display.display(f"{response} for {event}")
                 if event=="playbook_on_stats":
                     self._display.display(f"{self.event_count} events sent to splunk for session {self.session}")
+                    if not self.verify:
+                        self._display.display(f"Warning: SSL verification is disabled. This is not recommended in production environments")
                 yield
             finally:
                 if task:
@@ -594,10 +608,10 @@ class CallbackModule(CallbackBase):
                 total_stats['total_failures'] += summary['failures']
                 total_stats['total_skipped'] += summary['skipped']
                 total_stats['total_rescued'] += summary['rescued']
-                
+
                 # Send stats for each host to Splunk
                 self.process_host_stats(host, summary)
-                
+
 
             event_data['ok']['total'] = total_stats['total_ok']
             event_data['changed']['total'] = total_stats['total_changed']
@@ -610,6 +624,7 @@ class CallbackModule(CallbackBase):
             event_data['duration'] = duration
             event_data['start_time'] = self.playbook_start_time.timestamp()
             event_data['end_time'] = datetime.now(self.local_timezone).timestamp()
+
 
             with self.capture_event_data('playbook_on_stats', **event_data):
                 super().v2_playbook_on_stats(stats)
@@ -624,6 +639,7 @@ class CallbackModule(CallbackBase):
             return host_start, end_time, (end_time - host_start).total_seconds()
         return None, None, None
 
+
     def set_playbook(self, playbook):
         self.playbook_uuid = str(uuid.uuid4())
         self.playbook_start_time = datetime.now(self.local_timezone)
@@ -633,12 +649,34 @@ class CallbackModule(CallbackBase):
         # Remove the file extension to get the playbook name
         playbook_name = os.path.splitext(base_name)[0]
         command =  ' '.join(sys.argv)
-            # Check if sys.argv[3] exists and process it
-            
+        options = {}
+        args = sys.argv
+        i = 0
+        while i < len(args):
+            arg = args[i]
+
+            # Handle key-value pairs separated by "="
+            if "=" in arg:
+                key, value = arg.split("=", 1)  # Split only on the first '='
+                key = key.lstrip('-')  # Remove leading '-' or '--' from key
+                options[key] = value
+
+            # Handle flags and space-separated key-value pairs
+            elif arg.startswith('-'):  # It's a key (either '-' or '--')
+                key = arg.lstrip('-')  # Remove leading '-' or '--'
+                # Check if the next item exists and is not another flag
+                if i + 1 < len(args) and not args[i + 1].startswith('-'):
+                    options[key] = args[i + 1]  # The next argument is the value
+                    i += 1  # Skip the value in the next iteration
+                else:
+                    options[key] = True  # It's a flag with no explicit value
+
+            i += 1
+
         # Set default env values
         environment = "unknown"
         repo_type = "main"
-        
+
         # Check if sys.argv[3] exists and process it
         if len(sys.argv) > 3:
             environment = sys.argv[3]
@@ -653,7 +691,7 @@ class CallbackModule(CallbackBase):
                         environment = environment_candidate
                 except IndexError:
                     pass  # Fallback to default values if there is an IndexError
-                
+
         # Add global context
         self.event_context.add_global(
             playbook=file_name,
@@ -661,7 +699,8 @@ class CallbackModule(CallbackBase):
             playbook_uuid=self.playbook_uuid,
             command=command,
             environment=environment,
-            repo_type=repo_type
+            repo_type=repo_type,
+            options=options,
         )
 
         self.clear_play()
@@ -756,8 +795,8 @@ class EventContext(object):
         self.display_lock = multiprocessing.RLock()
         self._global_ctx = {}
         self._local = threading.local()
-        self.splunk_url = os.environ.get("CCA_SPLUNK_HEC_URL")
-        self.splunk_token = os.environ.get("CCA_SPLUNK_HEC_TOKEN")
+        self.splunk_url = os.environ.get("CALLBACK_HEC_URL")
+        self.splunk_token = os.environ.get("CALLBACK_HEC_TOKEN")
         self.logger = logger or logging.getLogger(__name__)
 
     def add_local(self, **kwargs):

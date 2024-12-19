@@ -21,23 +21,22 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
+# Release: 2024.2.2.3
 
 
-- name: Splunkd restart handler on Deployment Servers
+- name: Splunkd restart handler on Splunk Servers
   run_once: true
   ansible.builtin.file:
     path: "{{ splunkd_restart_pending }}"
     state: touch
     mode: '664'
-  listen: notify standalone deployment server splunkd restart
-  when:
-    - inventory_hostname in ( groups.deployment_servers | default([]) )
+  listen: notify standalone splunkd restart
 
 - name: Splunk deployment-server reload handler on Deployment Server
   ansible.builtin.file:
     path: "{{ deployment_server_reload_pending }}"
     state: touch
+    mode: '664'
   listen: notify deployment server reload
 
 - name: Splunk shcluster bundle push handler on clustered search head peers
@@ -46,7 +45,7 @@
     state: touch
     mode: '644'
   listen: notify shcluster bundle push
-  when: inventory_hostname in ( groups.searchhead_deployers | default([]) )
+  when: inventory_hostname in (groups.searchhead_deployers | default([]))
 
 - name: Splunk cluster bundle push handler on Cluster Manager
   ansible.builtin.file:
@@ -54,4 +53,4 @@
     state: touch
     mode: '644'
   listen: notify cluster bundle push
-  when: inventory_hostname in ( groups.cluster_managers | default([]) )
+  when: inventory_hostname in (groups.cluster_managers | default([]))

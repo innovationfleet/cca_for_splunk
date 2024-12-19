@@ -15,7 +15,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.2.1
+# Release: 2024.2.2.1
 
 - name: Include task to get facts and vars
   ansible.builtin.include_tasks: get_facts.yml
@@ -44,12 +44,16 @@
 # own responsibility.
 
 
-- name: Configure Splunk related FW settings
+# Three configuration scenarios are handled for host level firewall setup, only firewalld
+# is supported atm.
+# 1. Keep as is - set both configure_firewall and disable_firewall to false
+# 2. Disable firewall - set disable_firewall to false
+# 3. Configure and enable firewall - set configure_firewall to true and disable_firewall to false
+- name: Control Splunk related FW settings
   ansible.builtin.include_tasks: configure_firewall.yml
   when:
-    - control.linux_configuration.configure_firewall | default(true) or control.linux_configuration.disable_firewalld | default(false)
-    - ansible_distribution != "Debian"
-    - ansible_distribution != "Ubuntu"
+    - control.linux_configuration.configure_firewall | default(false)
+      or control.linux_configuration.disable_firewall | default(false)
 
 - name: Configure base hardening for server
   ansible.builtin.include_tasks: configure_server_hardening.yml
@@ -81,14 +85,13 @@
   when:
     - control.linux_configuration.thp | default(true)
 
-- name: Configure SELinux as permissive
+- name: Configure SELinux state
   ansible.builtin.include_tasks: configure_selinux.yml
   when:
     - control.linux_configuration.selinux | default(true)
     - ansible_distribution != "Amazon"
     - ansible_distribution != "Debian"
     - ansible_distribution != "Ubuntu"
-# TODO Add default false on selinux in inventory linux config for Amazon and true for other os
 
 - name: Setup required sudo rights for managing Splunk as a non root user
   ansible.builtin.include_tasks: configure_sudoers.yml

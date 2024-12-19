@@ -1,5 +1,5 @@
 [default]
-cca_infrastructure_storage_settings_file_version="2024.2.1"
+cca_infrastructure_storage_settings_file_version="2024.3.1"
 repo_type=infrastructure
 CcaRepo=cca_for_splunk
 EnforceMultiplexer=false

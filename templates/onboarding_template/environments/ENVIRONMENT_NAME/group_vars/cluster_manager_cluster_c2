@@ -16,6 +16,9 @@ versioned_apps:
 #    source_app: ''
 #    state: ''
 
+# This section is ONLY used for advanced data onboarding method.
+# For more information, see CCA for Splunk operational handbook or contact Orange Cyberdefense.
+#
 # Apps destined for manager-apps on cluster manager
 selected_manager_apps:
 #  - name: ''

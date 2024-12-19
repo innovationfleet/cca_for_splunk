@@ -21,11 +21,11 @@
 - hosts: cluster_managers
   become: true
   become_method: sudo
-  become_user: splunk
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
-    - deploy_scope: "manager-apps"
+    deploy_scope: "manager-apps"
   pre_tasks:
     - setup:
         gather_subset: 'network'
@@ -44,13 +44,13 @@
       include_role:
         name: cca.splunk.onboarding
       vars:
-        - deploy_scope: "apps"
+        deploy_scope: "apps"
 
     - name: Include onboarding role for manager-apps to cluster manager
       include_role:
         name: cca.splunk.onboarding
       vars:
-        - deploy_scope: "manager-apps"
+        deploy_scope: "manager-apps"
 
   post_tasks:
     - include_role:

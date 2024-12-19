@@ -8,6 +8,7 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2023.2.1
+
 - name: Include tasks that will install/upgrade polkit
   include_tasks: "polkit/{{ package_manager }}/ensure_polkit.yml"
 

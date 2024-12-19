@@ -1,0 +1,20 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Start and enable splunk
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.3.1
+
+- name: Start and enable splunk
+  become: true
+  become_method: sudo
+  become_user: root
+  ansible.builtin.systemd:
+    name: '{{ systemd_enterprise_name }}'
+    state: started
+    enabled: true
+  no_log: "{{ ansible_verbosity < 3 }}"

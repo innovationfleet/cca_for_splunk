@@ -9,8 +9,15 @@
   hosts: splunk_servers:!localhost
   become: true
   become_method: sudo
+  gather_facts: false
   strategy: linear
   pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
     - name: Include role for cca.core.linux
       ansible.builtin.include_role:
         name: cca.core.linux
