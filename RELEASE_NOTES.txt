@@ -31,6 +31,107 @@
 
     Release notes:
 
+    2024.3.1
+              - Important:
+                 * Replace your own copy of infrastructure group_vars/all/general_settings from
+                   templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/all/general_settings
+                   It has an important fix for the following vulnerability, handles all supported versions
+                   automatically. It applies to all hosts except Cluster Peers and Search Head Members.
+                    Sensitive Information Disclosure through SPL commands
+                    Advisory ID: SVD-2024-1204 CVE ID: CVE-2024-53246
+                 * Update your group_vars for infrastructure cluster_manager_cluster_c* and
+                   searchhead_deployer_shcluster_c* with files from
+                   templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/
+                   They has the important fix for the following vulnerability, handles all supported versions
+                   automatically and targets Cluster Peers and Search Head Members explicitly.
+                    Sensitive Information Disclosure through SPL commands
+                    Advisory ID: SVD-2024-1204 CVE ID: CVE-2024-53246
+                 * All manage_* playbooks needs to be executed to update the settings on respective host.
+                 * Replace your own copy of onboarding group_vars/all/onboarding with the file in
+                   templates/onboarding_template/ENVIRONMENT_NAME/group_vars/ to handle the new default
+                   splunk_ingest_actions app that was introduced in Splunk Enterprise 9.3
+              - Bumped Splunk Enterprise version to 9.2.4, Splunk 9.2.x track is recommended for production usage.
+              - Syntax update in playbooks and tasks to fix deprecation warnings in future
+                ansible versions.
+              - Changed all become_user conditions to use "{{ splunk_user }}"
+              - CCA Supports co-locating the CCA manager on a Splunk Server. For playbooks that
+                issue a Server reboot, it will be suppressed if a manager is co-located. For that
+                server, a reboot must be dealt with manually.
+              - Updated diff files for post upgrade cleanup.
+              - Updated .gitignore with new Splunks internal files.
+
+              Bug Fixes:
+                - Corrected condition in sever_reboot_handler to allow full control over
+
+    2024.2.2.3 (Hot fixes for Premium Customers Only)
+              Bug Fixes:
+                - Corrected standalone restart handler for Onboarding logic of Deploy Apps.
+
+    2024.2.2.2 (Hot fixes for Premium Customers Only)
+              - Added wait for host connection in configure_linux_servers.yml playbook.
+
+              Bug Fixes:
+                - Corrected state variable name for running kernel cgroup version. Could lead to
+                  boot loop.
+                - Cleanup reboot state files if /tmp is on ordinary filesystem.
+
+    2024.2.2.1 (Hot fixes for Premium Customers Only)
+              - Important:
+                 *  Selinux state has changed to disabled in CCA templates in the infrastructure repository, compare
+                    ${CCA_REPO_DIR}/templates/infrastructure_template/environments/ \
+                    ENVIRONMENT_NAME/group_vars/all/linux
+                    with your local ENVIRONMENT_NAME linux file and add 'cca_selinux_state' to your local file.
+
+              - Updating CCA to use ansible DNF module instead of yum module for the following OS versions.
+                * RHEL 8 and 9
+                * Rocky Linux 8 and 9
+
+    2024.2.2
+              - Important:
+                 *  Selinux state has changed in CCA templates in the infrastructure repository, compare
+                    ${CCA_REPO_DIR}/templates/infrastructure_template/environments/ENVIRONMENT_NAME/group_vars/all/linux
+                    with your local ENVIRONMENT_NAME linux file and add 'cca_selinux_state' to your local file.
+              - Updating CCA to use ansible DNF module instead of yum module for the following OS versions.
+                * RHEL 8 and 9
+                * Rocky Linux 8 and 9
+              - Simplified firewall configuration variables in linux vars file, added documentation
+                to main.yml in cca.core.linux
+              - Added retries on cluster bundle push from Deployer.
+              - Updated TimeoutStopSec in systemd service for Splunkd to a value that resolves
+                issues with rolling upgrade of Search Head Cluster where captaincy election was
+                interrupted. Rerun configure_linux_servers.yml playbook towards all servers to update
+                the setting.
+              - Updated exclude paths for onboarding rsync_options with Splunks new DS apps folders.
+                Copy
+                templates/onboarding_template/environments/ENVIRONMENT_NAME/group_vars/all/onboarding
+                to your own environment folder in the onboarding repo.
+              - Enabled checkmode in configure_linux_servers.yml playbook.
+              - New handlers for service restart due to configuration change.
+              - Renamed variables in Splunkd.service file to handle deprecated linux terms.
+              - Added wait for host connection in configure_linux_servers.yml playbook.
+
+              Bug fixes:
+                - Corrected calculation for retry and delay to correctly handle integers.
+                - Corrected issue with server reboot stability and cgroups service.
+                - Corrected standalone restart handler for Onboarding logic of Deploy Apps.
+                - Corrected state variable name for running kernel cgroup version. Could lead to
+                  boot loop.
+                - Cleanup reboot state files if /tmp is on ordinary filesystem.
+
+
+    2024.2.1  - Playbook deploy_deployment_apps.yml supports selective reload of Serverclass. Use reload_serverclass
+                argument to control serverclass reload instead of full reload of deployment server.
+              - Reworked and improved reload/restart handler for Deployment Servers and tasks to synchronize
+                apps.
+              - Bumped Splunk Enterprise version to 9.1.5, Splunk 9.1.x track is still recommended for production usage.
+              - Added option to configure inputs certificate on forwarders to support intermediate forwarding.
+              - Refactored linux firewall tasks and variables to allow for better control.
+              - Add installation of chrony to re enable crontab support on newer distributions.
+              - Base setup of Monitoring Console.
+              - CCA Ansible Callback is available in preview, currently being worked on and feedback is
+                appreciated. See callback_plugins/CCA_SPLUNK_CALLBACK.md for details.
+              - Streamlined notify handlers to avoid multiple runs in the same playbook.
+
     2024.1.2
               - Important notice - Breaking change:
 
@@ -311,7 +412,7 @@
                     Incorrect values needs to be set to absent to be removed by CCA.
                   * Changed regex_search to 'value' in output to reduce Ansible warnings.
                   * Corrected condition when to wait for a new cluster bundle to be ready.
-                  * Corrected path in cca_manger setup wizard.
+                  * Corrected path in cca_manager setup wizard.
 
 
         2022.3.2

@@ -27,7 +27,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 # META_DATE
-#  Release: 2023.3.2
+#  Release: 2024.2.1
 
 - name: Splunkd restart handler on non cluster instances
   ansible.builtin.file:
@@ -66,21 +66,6 @@
     - '{{ start_command }}'
   when:
     - force_splunkd_restart | default(false)
-
-- name: Splunkd standalone restart handler on any server
-  ansible.builtin.command:
-    cmd: '{{ restart_command }}'
-  register: splunk_status_result
-  until: splunk_status_result.rc == 0
-  retries: "{{ cca_splunkd_restart_retries | default(5) | int }}"
-  delay: 10
-  listen: notify standalone splunkd restart
-
-- name: Splunk deployment-server reload handler on Deployment Server
-  ansible.builtin.file:
-    path: "{{ deployment_server_reload_pending }}"
-    state: touch
-  listen: notify deployment server reload
 
 - name: Splunk shcluster bundle push handler on clustered search head peers
   ansible.builtin.file:

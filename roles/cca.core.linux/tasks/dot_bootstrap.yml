@@ -14,4 +14,5 @@
     path: "{{ splunk_path }}/.bootstrap"
     state: touch
     owner: "{{ splunk_user }}"
+    mode: '0644'
   changed_when: false

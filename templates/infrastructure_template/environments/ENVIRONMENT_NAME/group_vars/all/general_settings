@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_general_settings_file_version: '2023.1.1'
+cca_infrastructure_general_settings_file_version: '2024.2.1'
 
 # General settings for Splunk.
 # Group and host settings should be configured in
@@ -134,6 +134,51 @@ splunk_conf_general_settings:
                         configure_inputs_ssl | default(false)
                     else
                       'absent' }}"
+
+  - name: Splunk limits.conf
+    filename: limits.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+     - section: 'storage_passwords_masking'
+       options:
+        - option: 'view_cleartext_spl_rest'
+          value: 'false'
+          state: "{{ 'present'
+                    if
+                      inventory_hostname not in (groups['cluster_peers'] | default([]) + groups['searchhead_members'] | default([]))
+                    and (
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.3.2', '>=')
+                      or
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.2.4', '>=')
+                        and
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.3.0', '<=')
+                      or
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.1.7', '>=')
+                        and
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.2.0', '<=')
+                       )
+                    else
+                      'absent' }}"
+          comment: >-
+            Fix for Sensitive Information Disclosure through SPL commands
+            Advisory ID: SVD-2024-1204 CVE ID: CVE-2024-53246
+
+
+  - name: Splunk splunk_monitoring_console_assets.conf
+    filename: splunk_monitoring_console_assets.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'settings'
+        options:
+        - option: 'mc_auto_config'
+          value: "enabled"
+          state: "{{ 'present'
+                    if
+                      is_monitoring_console | default(false)
+                    else
+                      'absent' }}"
+          comment: >-
+            Configures Monitoring Console in distributed mode
 
 
   - name: Splunk outputs.conf

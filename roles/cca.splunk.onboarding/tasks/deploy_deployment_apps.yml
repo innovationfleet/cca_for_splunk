@@ -7,38 +7,23 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2024.2.1
 
-- name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
-  become: false
-  ansible.posix.synchronize:
-    src: '{{ deployment_server_apps_staging_dir }}/deployment_server/'
-    dest: '{{ splunk_path }}/etc/deployment-apps/'
-    copy_links: true
-    recursive: true
-    checksum: true
-    times: false
-    delete: true
-    owner: false
-    group: false
-    archive: false
-    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
-    rsync_opts: '{{ deployment_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else deployment_apps_rsync_opts }}'
-  register: deployment_apps_update_status
-  check_mode: true
+- name: Extract deleted apps from rsync output during dry run
+  ansible.builtin.set_fact:
+    deleted_deployment_apps: "{{ deployment_apps_update_status.stdout_lines | default('') | list | extract_deleted_apps }}"
   no_log: "{{ hide_password }}"
-  changed_when: false
 
-- name: Assert that no unexpected directories wil be deleted on the deployment server
+- name: Assert that no unexpected directories will be deleted on the deployment server
   ansible.builtin.assert:
-    that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
-    success_msg: 'No critical app directories will be deleted on the deployment server'
+    that:
+      - deleted_deployment_apps | length == 0
     fail_msg: >-
       An app directory deletion is detected on the deployment Servers. This is not allowed by
-      default. If you expect these directories to be deleted, set accept_deployment_app_removal
+      default. Following apps will be removed: {{ deleted_deployment_apps | join(', ') }}.
+      If you expect these directories to be deleted, set accept_deployment_app_removal
       to true in the extra_vars CCA dialogue.
-  with_items: "{{ deployment_apps_update_status.stdout_lines | default('') | list }}"
+    success_msg: 'No critical app directories will be deleted on the deployment server'
   when:
     - not accept_deployment_app_removal | default(false)
 
@@ -59,9 +44,12 @@
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ deployment_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else deployment_apps_rsync_opts }}'
   register: deploy_deployment_apps_status
-  changed_when:
-    - not '.d...p..... ./' in deploy_deployment_apps_status.stdout_lines | default([]) or
-      deploy_deployment_apps_status.stdout_lines | default([]) | length > 1
+  changed_when: >
+    deploy_deployment_apps_status.stdout_lines | length > 0 and
+    (
+      not '.d...p..... ./' in  deploy_deployment_apps_status.stdout_lines | default([]) or
+      deploy_deployment_apps_status.stdout_lines | default([]) | length > 0
+    )
   notify: notify deployment server reload
 
 - name: Cleanup manager server after staging apps are completed

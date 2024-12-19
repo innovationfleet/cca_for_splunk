@@ -21,7 +21,7 @@
     - firewall_zone_name is defined
 
 - name: Flush handlers to run handler immediately
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
   when:
     - firewall_zone_name is defined
 

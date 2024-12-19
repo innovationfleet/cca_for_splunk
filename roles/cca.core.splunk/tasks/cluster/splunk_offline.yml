@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.2
+# Release: 2024.2.2
 
 - name: Include task to check Splunk status
   ansible.builtin.include_tasks:
@@ -23,4 +23,6 @@
   changed_when: false
   when:
     - enterprise_upgrade | default(false) or
-      os_update | default(false)
+      kernel_update_needed | default(false) or
+      stat_server_reboot_pending.exists | default(false) or
+      stat_splunk_service_restart_pending.exists | default(false)

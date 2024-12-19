@@ -1,0 +1,18 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist
+#
+# Release: 2024.2.2
+
+- name: Ensure firewalld is stopped and disabled
+  ansible.builtin.systemd:
+    name: firewalld
+    state: stopped
+    enabled: false
+  no_log: "{{ ansible_verbosity < 3 }}"
+

@@ -53,6 +53,11 @@
   when:
     - deploy_scope | default('') == "deployment-apps"
 
+- name: Include task for DRY RUN serverclass apps deployment to splunk deployment servers
+  ansible.builtin.include_tasks: dry_run_deployment_apps.yml
+  when:
+    - deploy_scope | default('') == "deployment-apps"
+
 - name: Include task for serverclass apps deployment to splunk deployment servers
   ansible.builtin.include_tasks: deploy_deployment_apps.yml
   when:
@@ -63,6 +68,8 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "/tmp/{{ cca_runid }}"
+    path: "/tmp/{{ cca_runid }}/{{ environment_name }}"
     state: absent
   changed_when: false
+  when:
+    - hide_password | default(true)

@@ -20,7 +20,7 @@
     path: /etc/default/grub
     state: present
     regexp: '^GRUB_CMDLINE_LINUX="({{ grub_cmdline_linux_result.stdout }}|{{ grub_cmdline_linux_result.stdout }} transparent_hugepage=never)"$'
-    backrefs: yes
+    backrefs: true
     line: 'GRUB_CMDLINE_LINUX="{{ grub_cmdline_linux_result.stdout }} transparent_hugepage=never"'
   register: grub_file_status
   notify: notify server reboot
@@ -40,7 +40,7 @@
     - name: Take backup of existing grub.cfg, with timestamp
       ansible.builtin.copy:
         src: '/boot/grub/grub.cfg'
-        dest: "/root/grub_backup-{{ansible_date_time.date}}.cfg"
+        dest: "/root/grub_backup-{{ ansible_date_time.date }}.cfg"
         remote_src: true
 
     - name: Rebuild grub conf
@@ -57,7 +57,7 @@
     - name: Take backup of existing grub.cfg, with timestamp
       ansible.builtin.copy:
         src: '/boot/grub2/grub.cfg'
-        dest: "/root/grub_backup-{{ansible_date_time.date}}.cfg"
+        dest: "/root/grub_backup-{{ ansible_date_time.date }}.cfg"
         remote_src: true
 
     - name: Rebuild grub conf

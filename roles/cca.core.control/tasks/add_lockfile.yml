@@ -65,6 +65,8 @@
       target == "deploy_deployment-apps" or
       target == "deploy_manager-apps" or
       target == "deploy_shcluster_apps"
+  tags:
+    - skip_ansible_lint
 
 - name: Wait for data infrastructure lock file to be deleted by other process. If unexpected then delete /tmp/.cca_infrastructure_lock-ENV_NAME
   ansible.builtin.stat:
@@ -104,3 +106,5 @@
       target == "hybrid_searchheads" or
       target == "license_managers" or
       target == "searchhead_deployers-searchhead_members"
+  tags:
+    - skip_ansible_lint

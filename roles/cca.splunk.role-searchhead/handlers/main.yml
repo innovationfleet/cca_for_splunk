@@ -69,18 +69,6 @@
   when:
     - force_splunkd_restart | default(false)
 
-- name: Splunkd standalone restart handler on any server
-  ansible.builtin.command:
-    cmd: '{{ splunk_path }}/bin/splunk restart'
-  listen: notify standalone splunkd restart
-
-- name: Splunk deployment-server reload handler on Deployment Server
-  ansible.builtin.file:
-    path: "{{ deployment_server_reload_pending }}"
-    state: touch
-    mode: '664'
-  listen: notify deployment server reload
-
 - name: Splunk shcluster bundle push handler on clustered search head peers
   ansible.builtin.file:
     path: "{{ shcluster_bundle_push_pending }}"

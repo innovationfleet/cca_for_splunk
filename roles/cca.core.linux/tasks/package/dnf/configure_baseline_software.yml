@@ -7,18 +7,20 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.2.1
+# Release: 2024.2.2
 
 - name: Ensure cron functionality is kept while systemd.timer is present
   ansible.builtin.dnf:
     name: "cronie"
     state: present
+  no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Enable and start cron service
   ansible.builtin.systemd:
     name: 'crond.service'
     enabled: true
     state: started
+  no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Install wanted baseline software on server
   ansible.builtin.dnf:

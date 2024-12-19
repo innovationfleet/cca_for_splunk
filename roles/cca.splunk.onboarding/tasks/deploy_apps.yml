@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.2
+# Release: 2024.3.1
 
 - name: Deploy the apps from the selected apps directory to the splunk servers
   ansible.posix.synchronize:
@@ -29,7 +29,7 @@
   when:
     - item.state == 'present'
     - item.dest_dir is not defined or
-      item.dest_dir == 'deployment-apps'
+      item.dest_dir == 'deployment-apps' or item.dest_dir == 'apps'
     - (item.target is defined and
       item.target == inventory_hostname) or
       item.target is not defined
@@ -54,7 +54,7 @@
   when:
     - item.state == 'present'
     - item.dest_dir is not defined or
-      item.dest_dir == 'deployment-apps'
+      item.dest_dir == 'deployment-apps' or item.dest_dir == 'apps'
     - item.target is defined and item.target == inventory_hostname or
       item.target is not defined
 
@@ -66,7 +66,7 @@
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'
-    - item.dest_dir is not defined
+    - item.dest_dir is not defined or item.dest_dir == 'apps'
 
 - name: Delete apps from server if they are set to absent
   ansible.builtin.file:
@@ -76,7 +76,7 @@
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'
-    - item.dest_dir is not defined
+    - item.dest_dir is not defined or item.dest_dir == 'apps'
 
 - name: Include and run tasks from custom onboarding roles
   ansible.builtin.include_role:

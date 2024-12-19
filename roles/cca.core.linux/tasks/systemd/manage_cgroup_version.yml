@@ -7,7 +7,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2024.2.2.2
 
 - name: Get cgroup version support
   ansible.builtin.command:
@@ -18,9 +18,9 @@
   failed_when:
     - cgroup_version_result.rc > 1
 
-- name: Set kernel supported cgroup version
+- name: Set running kernel cgroup version
   ansible.builtin.set_fact:
-    kernel_supported_cgroup_version: "{{ 'cgroupv1' if cgroup_version_result.stdout | int == 0 else 'cgroupv2' }}"
+    running_kernel_cgroup_version: "{{ 'cgroupv1' if cgroup_version_result.stdout | int == 0 else 'cgroupv2' }}"
 
 - name: Get current configured systemd cgroup version
   ansible.builtin.command:
@@ -43,13 +43,14 @@
         path: /etc/default/grub
         regexp: "^(GRUB_CMDLINE_LINUX=\".*)\"$"
         line: '\1 systemd.unified_cgroup_hierarchy=0"'
+      register: debian_grubby_kernel_update_status
 
     - name: Update Grub
       ansible.builtin.command:
         cmd: |
           update-grub
   when:
-    - cca_splunk_systemd_cgroup_support == 'cgroupv1'
+    - running_kernel_cgroup_version != 'cgroupv1'
     - current_systemd_cgroup_version != 'cgroupv1'
     - ansible_distribution == 'Debian' or
       ansible_distribution == 'Ubuntu'
@@ -60,7 +61,7 @@
     cmd: |
       grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
   when:
-    - cca_splunk_systemd_cgroup_support == 'cgroupv1'
+    - running_kernel_cgroup_version != 'cgroupv1'
     - current_systemd_cgroup_version != 'cgroupv1'
     - ansible_distribution != 'Debian'
     - ansible_distribution != 'Ubuntu'
@@ -81,17 +82,9 @@
     dest: "/etc/systemd/system/cca_cgroup_version_daemon.service"
     mode: '0644'
 
-- name: Configure systemd for the new service
-  ansible.builtin.systemd:
-    name: "cca_cgroup_version_daemon.service"
-    enabled: true
-    daemon_reload: true
-
 - name: Trigger restart if pending from cgroups update
   meta: flush_handlers
 
 - name: Include role for reboot handler
   ansible.builtin.include_tasks:
     file: server_reboot_handler.yml
-  when:
-   - grubby_kernel_update_status.changed | default(false)

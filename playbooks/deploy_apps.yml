@@ -10,7 +10,8 @@
   strategy: linear
   any_errors_fatal: true
   pre_tasks:
-    - include_role:
+    - name: Initialize deploy apps on manager
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           initialize.yml
@@ -18,113 +19,225 @@
         target: "deploy_apps"
 
 # Deploy etc/apps to Splunk servers
-- hosts: forwarders:&ag1
+- name: Deploy etc/apps to Splunk servers AG1
+  hosts: ~.*forwarders:&ag1
   become: true
   become_method: sudo
-  become_user: splunk
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
-    - deploy_scope: "apps"
+    deploy_scope: "apps"
   pre_tasks:
-    - setup:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_deployment_tasks.yml
 
   tasks:
-    - include_role:
-        name: cca.splunk.onboarding
-    - include_role:
-        name: cca.core.control
-        tasks_from:
-          post_deployment_tasks.yml
-
-# Deploy etc/app to Splunk servers
-- hosts: forwarders:&ag2
-  become: true
-  become_method: sudo
-  become_user: splunk
-  gather_facts: false
-  any_errors_fatal: true
-  vars:
-    - deploy_scope: "apps"
-  pre_tasks:
-    - setup:
-        gather_subset: 'network'
-    - include_role:
-        name: cca.core.control
-        tasks_from:
-          pre_deployment_tasks.yml
-
-  tasks:
-    - include_role:
-        name: cca.splunk.onboarding
-    - include_role:
-        name: cca.core.control
-        tasks_from:
-          post_deployment_tasks.yml
-
-# Deploy etc/app to Splunk servers
-- hosts: forwarders:&ag3
-  become: true
-  become_method: sudo
-  become_user: splunk
-  gather_facts: false
-  any_errors_fatal: true
-  vars:
-    - deploy_scope: "apps"
-  pre_tasks:
-    - setup:
-        gather_subset: 'network'
-    - include_role:
-        name: cca.core.control
-        tasks_from:
-          pre_deployment_tasks.yml
-
-  tasks:
-    - include_role:
-        name: cca.splunk.onboarding
-    - include_role:
-        name: cca.core.control
-        tasks_from:
-          post_deployment_tasks.yml
-
-# Deploy etc/app to Splunk servers
-- hosts: monitoring_consoles:all_in_one_servers:license_managers:hybrid_searchheads:standalone_searchheads:standalone_indexers:data_collection_nodes:searchhead_deployers:cluster_managers
-  become: true
-  become_method: sudo
-  become_user: splunk
-  gather_facts: false
-  any_errors_fatal: true
-  vars:
-    - deploy_scope: "apps"
-  pre_tasks:
-    - setup:
-        gather_subset: 'network'
-    - include_role:
-        name: cca.core.control
-        tasks_from:
-          pre_deployment_tasks.yml
-
-  tasks:
-    - include_role:
+    - name: Onboarding role
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
 
   post_tasks:
-    - include_role:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Deploy etc/app to Splunk servers
+- name: Deploy etc/app to Splunk servers AG2
+  hosts: ~.*forwarders:&ag2
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  vars:
+    deploy_scope: "apps"
+  pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
+        gather_subset: 'network'
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - name: Onboarding role
+      ansible.builtin.include_role:
+        name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Deploy etc/app to Splunk servers
+- name: Deploy etc/app to Splunk servers AG3
+  hosts: ~.*forwarders:&ag3
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  vars:
+    deploy_scope: "apps"
+  pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
+        gather_subset: 'network'
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - name: Onboarding role
+      ansible.builtin.include_role:
+        name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
+        name: cca.core.control
+        tasks_from:
+          post_deployment_tasks.yml
+
+# Deploy etc/app to Splunk servers
+- name: Deploy etc/app to Splunk servers
+  hosts: non_clustered_splunk_servers:searchhead_deployers:cluster_managers:!deployment_servers:!forwarders
+  become: true
+  become_method: sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  any_errors_fatal: true
+  vars:
+    deploy_scope: "apps"
+  pre_tasks:
+    - name: Include tasks to wait for connection to host
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          wait_for_connection.yml
+
+    - name: Gather network facts
+      ansible.builtin.setup:
+        gather_subset: 'network'
+
+    - name: Pre deployment tasks
+      ansible.builtin.include_role:
+        name: cca.core.control
+        tasks_from:
+          pre_deployment_tasks.yml
+
+  tasks:
+    - name: Onboarding role
+      ansible.builtin.include_role:
+        name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
+    - name: Post deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_deployment_tasks.yml
 
 # Finalize playbook run on manager server
-- hosts: manager
+- name: Finalize playbook run on manager server
+  hosts: manager
   connection: local
   strategy: linear
   pre_tasks:
-    - include_role:
+    - name: Finalize deploy apps on manager
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           finalize.yml

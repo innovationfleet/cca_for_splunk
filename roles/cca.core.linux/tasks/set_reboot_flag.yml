@@ -1,0 +1,17 @@
+---
+# tasks file for cca.core.linux
+#
+# Description: Set reboot flag so that rolling server reboot can be orchestrated
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (gtihub.com/rlinq)
+#
+# Release: 2024.2.2
+
+
+- name: Set forced sever reboot flag
+  ansible.builtin.file:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+    state: touch
+  check_mode: false

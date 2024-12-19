@@ -41,8 +41,17 @@ readonly versions=(
   'splunk|9.1.2|b6b9c8185839|Linux|x86_64'
   'splunk|9.1.3|d95b3299fa65|Linux|x86_64'
   'splunk|9.1.4|a414fc70250e|Linux|x86_64'
+  'splunk|9.1.5|29befd543def|Linux|x86_64'
+  'splunk|9.1.6|a28f08fac354|Linux|x86_64'
+  'splunk|9.1.7|e17104057ef0|Linux|x86_64'
   'splunk|9.2.0.1|d8ae995bf219|Linux|x86_64'
   'splunk|9.2.1|78803f08aabb|Linux|x86_64'
+  'splunk|9.2.2|d76edf6f0a15|Linux|x86_64'
+  'splunk|9.2.3|282efff6aa8b|Linux|x86_64'
+  'splunk|9.2.4|c103a21bb11d|Linux|x86_64'
+  'splunk|9.3.0|51ccf43db5bd|Linux|x86_64'
+  'splunk|9.3.1|0b8d769cb912|Linux|x86_64'
+  'splunk|9.3.2|d8bb32809498|Linux|x86_64'
 )
 
 default_download_dir="${CCA_INFRASTRUCTURE_REPO_DIR}/splunk/var/images"

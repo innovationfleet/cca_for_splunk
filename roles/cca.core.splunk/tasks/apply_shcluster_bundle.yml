@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2024.2.2
 # TODO: BUG - Add check to validate if there is a working captain among the SHC peers.
 # Possible skip bundle push if an brutal upgrade is performed.
 
@@ -28,6 +28,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c1'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -49,6 +53,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c2'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -69,6 +77,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c3'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -90,6 +102,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c4'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -111,6 +127,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c5'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -132,27 +152,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c6'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
-
-    - name: Cleanup state file for bundle push
-      ansible.builtin.file:
-        path: "{{ shcluster_bundle_push_pending }}"
-        state: absent
-  when:
-    - inventory_hostname in ( groups.searchhead_deployer_shcluster_c6 | default([]) )
-    - stat_shcluster_bundle_push_pending.stat.exists
-
-#
-# Apply bundle on Search Head Cluster C6
-#
-- name: Apply shcluster cluster-bundle on shcluster c6
-  block:
-    - name: Include tasks to login to splunk cli
-      ansible.builtin.include_tasks:
-        splunk_login.yml
-
-    - name: Apply shcluster-bundle on deployer
-      ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c6'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
-      changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -174,6 +177,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c7'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -195,6 +202,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c8'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:
@@ -216,6 +227,10 @@
     - name: Apply shcluster-bundle on deployer
       ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply shcluster-bundle -target https://{{ groups['searchhead_members_shcluster_c9'][0] }}:8089 --answer-yes {{ custom_opts_apply_shcluster_bundle | default('') }}"
       changed_when: false
+      retries: "{{ cca_splunk_apply_shcluster_bundle_retries | default(10) }}"
+      delay: "{{ cca_splunk_apply_shcluster_bundle_delay | default(60) }}"
+      register: apply
+      until: apply.rc == 0
 
     - name: Cleanup state file for bundle push
       ansible.builtin.file:

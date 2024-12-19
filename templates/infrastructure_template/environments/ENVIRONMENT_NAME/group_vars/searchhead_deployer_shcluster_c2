@@ -149,6 +149,27 @@ splunk_conf_group_settings:
        - option: 'indexed_realtime_use_by_default'
          value: 'true'
 
+    - section: 'storage_passwords_masking'
+      options:
+       - option: 'view_cleartext_spl_rest'
+         value: 'false'
+         state: "{{ 'present'
+                   if
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.3.2', '>=')
+                     or
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.2.4', '>=')
+                       and
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.3.0', '<=')
+                     or
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.1.7', '>=')
+                       and
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.2.0', '<=')
+                   else
+                     'absent' }}"
+         comment: >-
+           Fix for Sensitive Information Disclosure through SPL commands
+           Advisory ID: SVD-2024-1204 CVE ID: CVE-2024-53246
+
     - section: ''
       options:
        - option: ''
