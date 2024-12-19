@@ -7,7 +7,7 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2023.3.2
+# Release: 2024.2.2
 
 - name: Gather the package facts
   ansible.builtin.package_facts:
@@ -16,7 +16,7 @@
 - name: Block for old config syntax
   block:
     - name: Information lower than 0.105
-      debug: 
+      debug:
         msg: "Version lower than 0.106, implementing old syntax for config"
 
     - name: Configure polkit rule in /etc/polkit.1/rules.d
@@ -30,7 +30,7 @@
 - name: Block for new config syntax
   block:
     - name: Information greater than 0.105
-      debug: 
+      debug:
         msg: "Version greater than 0.106, implementing new syntax for config"
 
     - name: Configure polkit rule in /etc/polkit.1/rules.d
@@ -48,3 +48,4 @@
     name: polkit
   when:
     - polkit_template_status.changed
+  no_log: "{{ ansible_verbosity < 3 }}"

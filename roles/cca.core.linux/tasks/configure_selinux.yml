@@ -7,10 +7,11 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
+# Release: 2024.2.2.1
 
 
-- name: Put SELinux in desired mode, permissive logs actions that would be blocked.
+- name: Put SELinux in desired mode
   selinux:
     policy: targeted
-    state: "{{ cca_selinux_state | default('permissive') }}"
+    state: "{{ cca_selinux_state | default('disabled') }}"
+  notify: notify server reboot

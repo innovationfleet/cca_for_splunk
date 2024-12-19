@@ -22,7 +22,7 @@
     group: '{{ splunk_user_gid | int }}'
     shell: /bin/bash
     state: present
-    password_lock: yes
+    password_lock: true
     uid: '{{ splunk_user_uid | int }}'
 
 - name: Set password to never expire, despite no password is used

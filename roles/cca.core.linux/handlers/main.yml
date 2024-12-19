@@ -5,7 +5,9 @@
   ansible.builtin.file:
     path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
     state: touch
+    mode: 0400
   listen: notify server reboot
+  check_mode: false
 
 - name: Restart the internal firewalld
   ansible.builtin.systemd:
@@ -13,3 +15,22 @@
     state: restarted
     enabled: true
   listen: restart firewalld
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Check if handler file exists (splunk service restart)
+  ansible.builtin.stat:
+    path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
+  register: splunk_restart_pending_stat
+  listen: notify restart splunkd service
+  check_mode: false
+  changed_when: false
+
+- name: Touch the file only if it does not already exist
+  ansible.builtin.file:
+    path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
+    state: touch
+    mode: 0400
+  when: not splunk_restart_pending_stat.stat.exists
+  listen: notify restart splunkd service
+  check_mode: false
+  changed_when: false

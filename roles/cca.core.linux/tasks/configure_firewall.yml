@@ -7,19 +7,31 @@
 #
 # Author: Robin Blomdahl, Roger Lindquist
 #
-# Release: 2024.1.2
+# Release: 2024.2.2
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Determine which firewall service is active
+  ansible.builtin.set_fact:
+    firewall_service: "{% if ansible_facts.services['firewalld.service'] is defined %}firewalld{% elif ansible_facts.services['ufw.service'] is defined %}ufw{% else %}none{% endif %}"
 
 - name: Include tasks that will install/upgrade firewalld
-  include_tasks: firewalld/ensure_firewalld.yml
+  ansible.builtin.include_tasks: firewalld/ensure_firewalld.yml
   when:
-    - control.linux_configuration.enable_firewall
+    - control.linux_configuration.configure_firewall | default(false)
+    - not control.linux_configuration.disable_firewall | default(false)
+    - firewall_service == "firewalld"
 
 - name: Configure firewalld for splunk
-  include_tasks: firewalld/configure_firewalld.yml
+  ansible.builtin.include_tasks: firewalld/configure_firewalld.yml
   when:
-    - control.linux_configuration.enable_firewall
+    - control.linux_configuration.configure_firewall | default(false)
+    - not control.linux_configuration.disable_firewall | default(false)
+    - firewall_service == "firewalld"
 
 - name: Disable firewalld
-  include_tasks: firewalld/disable_firewalld.yml
+  ansible.builtin.include_tasks: firewalld/disable_firewalld.yml
   when:
-    - control.linux_configuration.disable_firewalld | default(false)
+    - control.linux_configuration.disable_firewall | default(false)
+    - firewall_service == "firewalld"

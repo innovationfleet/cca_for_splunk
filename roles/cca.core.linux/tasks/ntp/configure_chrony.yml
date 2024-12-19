@@ -7,7 +7,7 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2023.2.2
+# Release: 2024.2.2
 
 - name: Copying template for chrony.conf and setting permissions, will restart Chrony if any changes
   ansible.builtin.template:
@@ -25,3 +25,4 @@
     name: chronyd.service
   when:
     - chrony_template_status.changed
+  no_log: "{{ ansible_verbosity < 3 }}"
