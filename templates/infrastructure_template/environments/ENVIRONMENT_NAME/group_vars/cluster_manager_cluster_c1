@@ -50,16 +50,21 @@ splunk_conf_group_settings:
        - option: 'site_replication_factor'
          value: "{{ site_replication_factor }}"
        - option: 'replication_factor'
-         value: "{{ groups['cluster_peers_cluster_c1'] | length }}"
-         state: "{{ 'present'
-                    if
-                       groups['cluster_peers_cluster_c1'] | length < 3
-                    else
-                  'absent' }}"
+         value: "{{ '2' if 'total:2' in site_replication_factor
+                    else (groups['cluster_peers_cluster_c1'] | length
+                     if groups['cluster_peers_cluster_c1'] | length < 3
+                     else replication_factor | default('2'))
+                }}"
+         state: "{{ 'present' if 'total:2' in site_replication_factor
+                    else ('present' if groups['cluster_peers_cluster_c1'] | length < 3
+                      else ('absent' if replication_factor | default('') | length == 0
+                      else 'present')) }}"
          comment: >-
-           Dynamic calculation of site replication factor. The option replication_factor
-           should not need to be used in a multisite cluster. Possible a bug in splunk
-           and this dynamic calculation solves the issue on small cluster architectures.
+           Dynamic calculation of the site replication factor. In a properly
+           configured multisite cluster, the 'replication_factor' option should
+           typically not be required. However, due to a possible bug in Splunk,
+           this dynamic calculation provides a workaround to ensure proper
+           replication, particularly in smaller cluster architectures.
        - option: 'site_search_factor'
          value: "{{ site_search_factor }}"
        - option: 'available_sites'
@@ -206,6 +211,28 @@ splunk_conf_group_settings:
          value: "{{ cca_splunk_clb_cpu_profiling | default('true') }}"
          comment: >-
           Enabling cpu profiling
+            - section: 'storage_passwords_masking'
+
+    - section: 'storage_passwords_masking'
+      options:
+       - option: 'view_cleartext_spl_rest'
+         value: 'false'
+         state: "{{ 'present'
+                   if
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.3.2', '>=')
+                     or
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.2.4', '>=')
+                       and
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.3.0', '<=')
+                     or
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.1.7', '>=')
+                       and
+                       current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.2.0', '<=')
+                   else
+                     'absent' }}"
+         comment: >-
+           Fix for Sensitive Information Disclosure through SPL commands
+           Advisory ID: SVD-2024-1204 CVE ID: CVE-2024-53246
 
 
  - name: Splunk props.conf
