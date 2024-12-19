@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
+# Release: 2024.3.1
 
 - name: Deploy the apps from the selected apps directory to the splunk servers
   ansible.posix.synchronize:
@@ -24,12 +24,12 @@
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ selectable_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else selectable_apps_rsync_opts }}'
-  notify: notify standalone deployment server splunkd restart
+  notify: notify standalone splunkd restart
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
     - item.dest_dir is not defined or
-      item.dest_dir == 'deployment-apps'
+      item.dest_dir == 'deployment-apps' or item.dest_dir == 'apps'
     - (item.target is defined and
       item.target == inventory_hostname) or
       item.target is not defined
@@ -49,12 +49,12 @@
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     rsync_opts: '{{ versioned_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else versioned_apps_rsync_opts }}'
-  notify: notify standalone deployment server splunkd restart
+  notify: notify standalone splunkd restart
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
     - item.dest_dir is not defined or
-      item.dest_dir == 'deployment-apps'
+      item.dest_dir == 'deployment-apps' or item.dest_dir == 'apps'
     - item.target is defined and item.target == inventory_hostname or
       item.target is not defined
 
@@ -62,21 +62,21 @@
   ansible.builtin.file:
     path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
     state: 'absent'
-  notify: notify standalone deployment server splunkd restart
+  notify: notify standalone splunkd restart
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'
-    - item.dest_dir is not defined
+    - item.dest_dir is not defined or item.dest_dir == 'apps'
 
 - name: Delete apps from server if they are set to absent
   ansible.builtin.file:
     path: '{{ splunk_path }}/etc/apps/{{ item.name }}'
     state: 'absent'
-  notify: notify standalone deployment server splunkd restart
+  notify: notify standalone splunkd restart
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'absent'
-    - item.dest_dir is not defined
+    - item.dest_dir is not defined or item.dest_dir == 'apps'
 
 - name: Include and run tasks from custom onboarding roles
   ansible.builtin.include_role:
