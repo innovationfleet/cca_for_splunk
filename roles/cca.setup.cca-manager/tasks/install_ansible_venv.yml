@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2024.3.1
 
 - name: Build CCA Ansible install script to install in venv
   ansible.builtin.copy:
@@ -22,7 +22,7 @@
       ansible-galaxy collection install community.general
       ansible-galaxy collection install community.crypto
       ansible-galaxy collection install ansible.posix
-      pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3 splunk-appinspect aiohttp asyncio tenacity
+      pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3 splunk-appinspect aiohttp asyncio tenacity datetime
     mode: 0755
   tags:
     - skip_ansible_lint
