@@ -23,11 +23,11 @@
   hosts: ~.*forwarders:&ag1
   become: true
   become_method: sudo
-  become_user: splunk
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
-    - deploy_scope: "apps"
+    deploy_scope: "apps"
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
@@ -49,6 +49,21 @@
     - name: Onboarding role
       ansible.builtin.include_role:
         name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
 
     - name: Post deployment tasks
       ansible.builtin.include_role:
@@ -61,11 +76,11 @@
   hosts: ~.*forwarders:&ag2
   become: true
   become_method: sudo
-  become_user: splunk
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
-    - deploy_scope: "apps"
+    deploy_scope: "apps"
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
@@ -87,6 +102,21 @@
     - name: Onboarding role
       ansible.builtin.include_role:
         name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
 
     - name: Post deployment tasks
       ansible.builtin.include_role:
@@ -99,11 +129,11 @@
   hosts: ~.*forwarders:&ag3
   become: true
   become_method: sudo
-  become_user: splunk
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
-    - deploy_scope: "apps"
+    deploy_scope: "apps"
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
@@ -125,6 +155,21 @@
     - name: Onboarding role
       ansible.builtin.include_role:
         name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
 
     - name: Post deployment tasks
       ansible.builtin.include_role:
@@ -137,11 +182,11 @@
   hosts: non_clustered_splunk_servers:searchhead_deployers:cluster_managers:!deployment_servers:!forwarders
   become: true
   become_method: sudo
-  become_user: splunk
+  become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
-    - deploy_scope: "apps"
+    deploy_scope: "apps"
   pre_tasks:
     - name: Include tasks to wait for connection to host
       ansible.builtin.include_role:
@@ -163,6 +208,21 @@
     - name: Onboarding role
       ansible.builtin.include_role:
         name: cca.splunk.onboarding
+
+  post_tasks:
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
 
     - name: Post deployment tasks
       ansible.builtin.include_role:
