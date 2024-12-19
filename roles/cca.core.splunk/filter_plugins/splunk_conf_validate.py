@@ -1,4 +1,5 @@
-# filter_plugins/splunk_conf_validate.py
+# CCA Splunk conf validate
+#  filter_plugins/splunk_conf_validate.py
 
 from ansible.errors import AnsibleFilterError
 import re

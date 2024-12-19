@@ -1,3 +1,4 @@
+# CCA Splunk conf flatten
 
 from ansible.errors import AnsibleFilterError
 
