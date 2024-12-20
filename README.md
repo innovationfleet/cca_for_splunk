@@ -25,8 +25,6 @@ The templates that we provide for configuring Splunk roles are used in our own M
 
 Playbooks are DRY (Don't Repeat Yourself), with almost no tasks - instead they are using common code in roles. So an update of a task has just to be done in one place, keeping code updates much cleaner and easier to overview.
 
-You can find a more in-depth Project Presentation as well as a Q&A section in the [Wiki](https://github.com/innovationfleet/cca_for_splunk/wiki).
-
 ![alt text](https://www.orangecyberdefense.com/fileadmin/_processed_/d/8/csm_Splunk_vs_2_45d2f9bce5.png)
 
 For a deep-dive in the technology behind CCA for Splunk please have a look at this documentation.
