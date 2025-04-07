@@ -7,17 +7,23 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
+
+
 - name: Check Splunk binary
   ansible.builtin.stat:
     path: "{{ splunk_path }}/bin/splunk"
   register: stat_splunk_enterprise_binary
 
+- name: Store Splunk Install status
+  ansible.builtin.set_fact:
+    splunk_enterprise_is_installed: "{{ stat_splunk_enterprise_binary.stat.exists | default(false) }}"
+
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
     splunk_login.yml
   when:
-    - stat_splunk_enterprise_binary.stat.exists
+    - splunk_enterprise_is_installed
 
 - name: Check that Splunk Enterprise is running
   ansible.builtin.command:
@@ -25,7 +31,7 @@
   register: splunk_status_result
   changed_when: false
   when:
-    - stat_splunk_enterprise_binary.stat.exists
+    - splunk_enterprise_is_installed
   check_mode: false
 
 - name: Set fact if expected splunk status is met
@@ -33,12 +39,20 @@
     splunk_ok_status_flag: true
   when:
     - splunk_status_result.stdout | default('') | regex_search(('splunkd is running'))
-    - stat_splunk_enterprise_binary.stat.exists
+    - splunk_enterprise_is_installed
 
 - name: Assert that splunk exists and that it's running
   ansible.builtin.assert:
     that:
-      - stat_splunk_enterprise_binary.stat.exists
       - splunk_status_result.stdout | regex_search(('splunkd is running'))
     fail_msg: >-
       Splunk status is not OK, this host will be skipped
+  when:
+      - splunk_enterprise_is_installed
+
+- name: Include task to get certificate status
+  ansible.builtin.include_tasks:
+    get_certificate_status.yml
+  when:
+    - cca_splunk_enterprise_upgrade | default(false)
+    - inventory_hostname not in (groups.cluster_peers | default([]))

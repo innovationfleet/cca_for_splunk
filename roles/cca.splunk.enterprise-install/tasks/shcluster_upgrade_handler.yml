@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
 
 - name: Perform a rolling upgrade of Splunk Search Head Cluster
   include_tasks: shcluster/shcluster_rolling_upgrade.yml
@@ -16,3 +16,31 @@
 - name: Perform a single upgrade of Splunk Search Head Cluster
   include_tasks: shcluster/shcluster_member_by_member_upgrade.yml
   when: shc_upgrade_method | default('') == 'member_by_member'
+
+# First check if the KVStore upgrade status command is available (to avoid the "not a valid argument" error)
+- name: Check if standalone-kvupgrade-status command is available
+  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk help show | grep standalone-kvupgrade-status"
+  register: kv_command_check
+  ignore_errors: true
+  changed_when: false
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+  no_log: "{{ hide_password | default(false) }}"
+
+- name: Wait for KVStore upgrade to complete
+  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
+  register: kv_status
+  until: kv_status.stdout is search('Upgrade Status:\s+0')
+  retries: "{{ cca_splunk_kvstore_upgrade_retries | default(30) | int }}"
+  delay: "{{ cca_splunk_kvstore_upgrade_delay | default(60) | int }}"
+  changed_when: false
+  failed_when:
+    - kv_status.stdout is not search('Upgrade Status:\s+0')
+    - "'is not a valid argument' not in kv_status.stderr"
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - kv_command_check is defined
+    - kv_command_check.rc | default(0) == 0
+    - kv_command_check.stdout | default('') != ""

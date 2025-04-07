@@ -1,0 +1,51 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.1.1
+
+- name: Include task to get general settings
+  ansible.builtin.include_tasks:
+    precheck_settings.yml
+
+- name: Extract serverCert and sslRootCAPath from server.conf
+  ansible.builtin.set_fact:
+    splunk_ssl_server_cert: >-
+      {{ (splunk_conf_general_settings_flattened |
+           selectattr('path', 'search', 'server.conf') |
+           selectattr('section', 'equalto', 'sslConfig') |
+           selectattr('option', 'equalto', 'serverCert') |
+           map(attribute='value') | list | first) | default('') }}
+    splunk_ssl_root_ca_path: >-
+      {{ (splunk_conf_general_settings_flattened |
+           selectattr('path', 'search', 'server.conf') |
+           selectattr('section', 'equalto', 'sslConfig') |
+           selectattr('option', 'equalto', 'sslRootCAPath') |
+           map(attribute='value') | list | first) | default(omit) }}
+
+- name: Replace $SPLUNK_HOME in cert paths
+  ansible.builtin.set_fact:
+    openssl_server_cert_path: "{{ splunk_ssl_server_cert | regex_replace('\\$SPLUNK_HOME', splunk_path) }}"
+    openssl_ca_chain_path: "{{ splunk_ssl_root_ca_path | regex_replace('\\$SPLUNK_HOME', splunk_path) if splunk_ssl_root_ca_path is defined else '' }}"
+
+- name: Run strict OpenSSL X.509 validation
+  check_mode: false
+  ansible.builtin.command: >
+    openssl verify -verbose -x509_strict
+    {% if splunk_ssl_root_ca_path is defined %}
+    -CAfile {{ openssl_ca_chain_path }}
+    {% endif %}
+    {{ openssl_server_cert_path }}
+  register: openssl_verify_result
+  failed_when: false
+  changed_when: false
+  check_mode: false
+
+- name: Set fact for certificate validation status
+  ansible.builtin.set_fact:
+    splunk_cert_strict_x509_validation: "{{ openssl_verify_result.rc == 0 }}"

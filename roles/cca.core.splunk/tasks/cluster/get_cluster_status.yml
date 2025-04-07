@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
@@ -19,6 +19,10 @@
   register: cluster_peer_splunk_version
   changed_when: false
   check_mode: false
+
+- name: Store splunk current_splunk_enterprise_version
+  ansible.builtin.set_fact:
+    current_splunk_enterprise_version: "{{ cluster_peer_splunk_version.stdout_lines[0] | trim }}"
 
 - name: Collect full Index Cluster status
   ansible.builtin.command:
@@ -44,3 +48,9 @@
     index_cluster_rolling_upgrade_started: true
   when:
     - verbose_cluster_status.stdout | regex_search('(Searchable rolling upgrade is in progress)')
+
+- name: Include task to get certificate status
+  ansible.builtin.include_tasks:
+    get_certificate_status.yml
+  when:
+    - inventory_hostname not in (groups.cluster_peers | default([]))

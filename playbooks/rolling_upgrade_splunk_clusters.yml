@@ -10,7 +10,7 @@
 
 # https://patorjk.com/software/taag/#p=display&c=bash&f=Standard&t=SearchHeads
 # Index Cluster upgrade
-# https://docs.splunk.com/Documentation/Splunk/9.0.4/Indexer/Searchablerollingupgrade
+# https://docs.splunk.com/Documentation/Splunk/latest/DistSearch/UpgradeaSHC
 # Disable deferred scheduled searches - Should be possible to configure on the Search heads prior to the upgrade
 
 
@@ -70,7 +70,7 @@
 #   |_|   |_|  \___|\____|_| |_|\___|\___|_|\_\___/
 #
 # Perform status check on SearchHead clusters and Index clusters to validate that running status and Splunk
-# versions are consistent before the upgrade starts. Set playbook variable skip_upgrade_check to true if
+# versions are consistent before the upgrade starts. Set playbook variable force_splunk_enterprise_upgrade to true if
 # the playbook has failed with the clusters in a degraded state and the upgrade needs to continue regardless
 # of the precheck status.
 
@@ -127,16 +127,16 @@
         tasks_from:
           get_splunk_status.yml
       when:
-        - not inventory_hostname in ( groups.cluster_peers | default([]) ) or
-          not inventory_hostname in ( groups.searchhead_members | default([]) )
+        - inventory_hostname not in  ( groups.cluster_peers | default([]) ) or
+          inventory_hostname not in  ( groups.searchhead_members | default([]) )
 
     - include_role:
         name: cca.core.splunk
         tasks_from:
           precheck_upgrade_status.yml
       when:
-        - not inventory_hostname in ( groups.cluster_peers | default([]) ) or
-          not inventory_hostname in ( groups.searchhead_members | default([]) )
+        - inventory_hostname not in  ( groups.cluster_peers | default([]) ) or
+          inventory_hostname not in  ( groups.searchhead_members | default([]) )
 
 
 # Upgrade the manager node
@@ -320,10 +320,9 @@
           post_upgrade_tasks.yml
 
 
-# https://docs.splunk.com/Documentation/Splunk/9.0.4/DistSearch/UpgradeaSHC
 # For SHC, perform the upgrade as per the documentation
 # Rolling upgrade
-# https://docs.splunk.com/Documentation/Splunk/9.0.4/DistSearch/SHCrollingupgrade
+# https://docs.splunk.com/Documentation/Splunk/latest/Indexer/Searchablerollingupgrade
 # TODO: Support for member-by-member upgrades
 
 
@@ -437,7 +436,7 @@
 #                            |_|    |___/
 #
 # Run tasks on SHC to ensure that Kvstore engine and versions has been updgraded
-# https://docs.splunk.com/Documentation/Splunk/9.0.4/Admin/MigrateKVstore
+# https://docs.splunk.com/Documentation/Splunk/9.3.3/Admin/MigrateKVstore
 
 - name: Run post upgrade tasks on SHC
   hosts: searchhead_members_shcluster_c1
@@ -455,6 +454,7 @@
           wait_for_shcluster.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
     - name: Include task to get current splunk version
       ansible.builtin.include_role:
@@ -463,6 +463,7 @@
           splunk_version.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
     - name: Check kvstore migration readiness
       ansible.builtin.include_role:
@@ -472,6 +473,7 @@
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
     - name: Check kvstore engine upgrade readiness
       ansible.builtin.include_role:
@@ -481,6 +483,7 @@
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
 - name: Run post upgrade tasks on SHC
   hosts: searchhead_members_shcluster_c1
@@ -499,6 +502,7 @@
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
   tasks:
     - name: Include post tasks
@@ -509,6 +513,7 @@
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
 
     - name: Initiate kvstore engine version upgrade
@@ -519,6 +524,7 @@
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
+        - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
 
 #    _____ _             _ _

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
 
 - name: Upgrade precheck, validate that all statuses are as expected
   ansible.builtin.assert:
@@ -37,3 +37,49 @@
   when:
     - shcluster_precheck | default(true)
   check_mode: false
+
+- name: Get MongoDB (KVStore) version
+  ansible.builtin.command: "{{ splunk_path }}/bin/splunk cmd mongod --version"
+  register: mongod_version
+  changed_when: false
+  when: (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '<')
+
+- name: Assert MongoDB version matches expected KVStore engine version for Splunk >= 9.4.0
+  ansible.builtin.assert:
+    that:
+      - "'db version v' ~ cca_splunk_kvstore_engine_version in mongod_version.stdout"
+    fail_msg: >
+      MongoDB version used for KVStore '{{ mongod_version.stdout | default('UNKNOWN') }}' does not match expected
+      KVStore engine version '{{ cca_splunk_kvstore_engine_version }}' for Splunk {{ splunk_enterprise_version }}.
+      Please ensure the KVStore engine has been upgraded properly before proceeding with Splunk upgrade to {{ splunk_enterprise_version }}.
+      Rerun the rolling upgrade playbook with the --extra-vars='{"shc_upgrade_kvstore_engine":true}' option.
+    success_msg: >
+      MongoDB version in use matches expected KVStore engine version '{{ cca_splunk_kvstore_engine_version }}'.
+  when:
+    - (splunk_enterprise_version | string) is version('9.4.0', '>=')
+    - not force_splunk_enterprise_upgrade | default(false)
+    - (current_splunk_enterprise_version | default(splunk_enterprise_version) | string) is version('9.4.0', '<')
+
+- name: Ensure kvstore_upgrade directory exists
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/var/run/splunk/kvstore_upgrade"
+    state: directory
+    mode: '0755'
+
+- name: Create marker file for detected KVStore engine version
+  ansible.builtin.file:
+    path: "{{ splunk_path }}/var/run/splunk/kvstore_upgrade/versionFile{{ cca_splunk_kvstore_engine_version | regex_replace('\\.', '') }}"
+    state: touch
+  when:
+    - (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '<')
+    - "'db version v' ~ cca_splunk_kvstore_engine_version in mongod_version.stdout"
+
+- name: Assert that the Splunk certificate passed strict X.509 validation
+  ansible.builtin.assert:
+    that:
+      - splunk_cert_strict_x509_validation | bool
+    fail_msg: >
+      The Splunk certificate did not pass strict X.509 validation.
+      Please verify that the certificate is signed by a trusted CA and matches the expected hostname and chain.
+    success_msg: >
+      Splunk certificate successfully passed strict X.509 validation.

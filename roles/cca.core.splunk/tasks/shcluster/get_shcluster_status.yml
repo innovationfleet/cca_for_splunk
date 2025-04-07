@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2025.1.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
@@ -22,6 +22,10 @@
   register: shcluster_splunk_version
   changed_when: false
   check_mode: false
+
+- name: Store splunk current_splunk_enterprise_version
+  ansible.builtin.set_fact:
+    current_splunk_enterprise_version: "{{ shcluster_splunk_version.stdout }}"
 
 - name: Get info of kvstore engine
   ansible.builtin.shell:
@@ -116,3 +120,7 @@
   when:
     - current_shcluster_captain == inventory_hostname
   changed_when: false
+
+- name: Include task to get certificate status
+  ansible.builtin.include_tasks:
+    get_certificate_status.yml

@@ -7,15 +7,43 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
+
+
+- name: Check if standalone-kvupgrade-status command is available
+  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk help show | grep standalone-kvupgrade-status"
+  register: kv_command_check
+  ignore_errors: true
+  changed_when: false
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+  no_log: "{{ hide_password | default(false) }}"
+
+- name: Wait for KVStore upgrade to complete
+  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
+  register: kv_status
+  until: kv_status.stdout is search('Upgrade Status:\s+0')
+  retries: "{{ cca_splunk_kvstore_upgrade_retries | default(30) | int }}"
+  delay: "{{ cca_splunk_kvstore_upgrade_delay | default(60) | int }}"
+  changed_when: false
+  failed_when: 
+    - kv_status.stdout is not search('Upgrade Status:\s+0')
+    - "'is not a valid argument' not in kv_status.stderr"
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - kv_command_check is defined
+    - kv_command_check.rc | default(0) == 0 
+    - kv_command_check.stdout | default('') != "" 
 
 - name: Finalize rolling upgrade on a SHC member
   ansible.builtin.command:
     cmd: "{{ splunk_path }}/bin/splunk upgrade-finalize shcluster-members"
   register: splunk_upgrade_finalize_status
   until: splunk_upgrade_finalize_status.stdout | regex_search('Upgrade of search head cluster members finalized')
-  retries: "{{ cca_splunk_finalize_upgrade_retries | default(3) | int }}"
-  delay: 10
+  retries: "{{ cca_splunk_finalize_upgrade_retries | default(30) | int }}"
+  delay: 30
   run_once: true
   when:
     - enterprise_upgrade | default(false)

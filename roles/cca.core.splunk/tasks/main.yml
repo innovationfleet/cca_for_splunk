@@ -86,7 +86,7 @@
   delay: 10
   changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
   when:
-    - not inventory_hostname in ( groups.searchhead_members | default([]) )
+    - inventory_hostname not in  ( groups.searchhead_members | default([]) )
 
 - name: Wait for a rolling restart on search head cluster to complete
   ansible.builtin.import_tasks: ../../cca.splunk.role-searchhead/tasks/wait_for_shcluster.yml

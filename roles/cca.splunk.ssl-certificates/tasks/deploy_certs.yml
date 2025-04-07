@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.1
+# Release: 2025.1.1
 
 - name: Check if we have the cert file on the server
   ansible.builtin.stat:
@@ -111,18 +111,8 @@
         certificate_data:
           - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
           - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
-          - '{{ cca_splunk_extension_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
       when:
-        - cca_splunk_cert_enrollment_method == "manual"
-
-    - name: Set fact for cert file names and concatenation order
-      ansible.builtin.set_fact:
-        certificate_data:
-          - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
-          - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
-          - '{{ cca_splunk_extension_cert_rootca_fullpath }}'
-      when:
-        - cca_splunk_cert_enrollment_method == "api"
+        - cca_splunk_cert_enrollment_method == "manual" or cca_splunk_cert_enrollment_method == "api"
 
     - name: "Perform a final {{ cert_type }} cert build"
       ansible.builtin.template:
