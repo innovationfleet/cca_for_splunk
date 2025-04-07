@@ -31,6 +31,55 @@
 
     Release notes:
 
+    2025.1.1
+              - Important:
+                 * This version of CCA deprecates OS versions incompatible with Ansible 2.17+. To proceed
+                   with deprecated OS versions, set `"cca_accept_deprecated_os": true` when running the
+                   configure_linux_servers playbook.
+              - Bumped Splunk Enterprise version to 9.3.3, Splunk 9.3.x track is recommended for production usage.
+              - Introduced template support for web security headers. Copy settings from the infrastructure
+                group_vars/all/general_settings templates applicable to all non-search head members. For
+                search head members, use group_vars/searchhead_deployer_shcluster_cX. Review the settings
+                and enable by setting `enable_web_security_headers=true` or
+                `enable_web_security_headers_searchhead_members=true` in the appropriate inventory group.
+              - Updated CCA to support Splunk versions 9.1.8, 9.2.5, 9.3.3, 9.4.0, and 9.4.1. These versions
+                address the high CVE: https://advisory.splunk.com/advisories/SVD-2025-0301
+              - Updated support for the new `.tgz` file naming format for Splunk Enterprise installation files.
+              - Updated Splunk Enterprise download validation to use SHA512 checksums.
+
+              - Important 9.4 Upgrade Information:
+                 * Ensure you meet the required prerequisites for the KVStore upgrade in Splunk 9.4+.
+                   Verify that your cca_splunk_extension_cert_rootca includes your Root CA and all
+                   Intermediate CAs, and is deployed before upgrading to Splunk Enterprise 9.4.
+                 * The setting `sslRootCAPath` has been added to the certificate configuration in
+                   server.conf. Update your infrastructure group_vars/all/general_settings using the
+                   reference from templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/all/general_settings.
+                 * Use the manage_* playbooks in check_mode to validate your certificates. Alternatively,
+                   copy the cert-inspect.sh script from templates/infrastructure_template/splunk/etc/auth/certs
+                   to your infrastructure directory and validate your certificates before deployment.
+              - Full support for cgroups version 2. The upgrade is performed automatically when running
+                the rolling_update_linux_servers.yml or configure_linux_servers.yml playbooks after
+                upgrading to Splunk 9.4+.
+              - Added automatic handling of KVStore upgrades introduced in 9.4. The playbook will now
+                wait until the KVStore upgrade is completed. This process takes time as kvstore is upgraded
+                by splunk 3 times in the background. Do not set shc_upgrade_kvstore_engine to true for 9.4
+                upgrades.
+              - Added KVStore version check before upgrading to Splunk Enterprise 9.4+. This corrects a
+                bug in Splunk when a initial version was installed with engine version 4.2.
+              - Added strict X.509 certificate validation as part of the upgrade pre-check to avoid
+                post-upgrade issues.
+              - Added new internal deployment server indexes to cluster_manager_cluster_cX. Replace your
+                existing infrastructure group_vars/cluster_manager_cluster_c1 with the version from
+                templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/cluster_manager_cluster_c1.
+              - Improved the stability of the Splunk `offline` command on index peers. If a timeout occurs,
+                the system now performs a `splunk stop` as fallback.
+
+              Bug Fixes:
+                - Corrected splunk_conf_host_settings that was incorrectly referring splunk_conf_group_settings.
+                - Corrected syntax reference of file stat results in conditionals.
+                - Corrected incorrect case on state variables.
+
+
     2024.3.1
               - Important:
                  * Replace your own copy of infrastructure group_vars/all/general_settings from
