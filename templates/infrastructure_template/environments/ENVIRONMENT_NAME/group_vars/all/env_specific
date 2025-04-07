@@ -49,9 +49,11 @@ domain_name: 'OPTIONAL_DOMAIN.NAME'
 cca_splunk_cert_enrollment_method: 'selfsigned'
 
 
-# The certificate should be in pem format, order the certificates in the file with. Starting
-# with the server certificate at the top, followed by any intermediate certificates and
-# end with the root certificate.
+# The file cca_splunk_extension_cert_rootca here must contain the full certificate chain,
+# starting with the Root CA certificate, followed by any intermediate certificates in the
+# correct order (from root to leaf). The order is critical: Splunk and OpenSSL require the trust chain
+# to be built top-down, starting with the Root CA. Incorrect ordering may lead to SSL verification
+# failures or Splunk not starting correctly.
 cca_splunk_extension_certs_path: '{{ absolute_infrastructure_repo_path }}/splunk/etc/auth/certs'
 cca_splunk_extension_cert_rootca: 'UPDATE_ROOT_CA_EXPIRE_DATE_Issuing_CA_EXPIRE_DATE.pem'
 cca_splunk_extension_server_cert: 'splunk-server_UPDATE_EXPIRE_DATE.cer'
