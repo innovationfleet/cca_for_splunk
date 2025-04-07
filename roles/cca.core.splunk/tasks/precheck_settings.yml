@@ -10,8 +10,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.2
-
+# Release: 2025.1.1
 
 - name: Assert that default_tcpout valid group name when defined
   ansible.builtin.assert:
@@ -41,7 +40,7 @@
 
 - name: Ensure host settings are in the expected format
   ansible.builtin.set_fact:
-    splunk_conf_host_settings_flattened: "{{ splunk_conf_group_settings | default([]) | splunk_conf_flatten }}"
+    splunk_conf_host_settings_flattened: "{{ splunk_conf_host_settings | default([]) | splunk_conf_flatten }}"
   when:
     - splunk_conf_host_settings_flattened is not defined
   no_log: "{{ hide_password }}"

@@ -7,16 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.3.1
+# Release: 2025.1.1
+
+
+- name: Gather facts about configured services
+  ansible.builtin.service_facts:
+  no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Include role to check if there is a pending reboot
   ansible.builtin.include_tasks: check_pending_actions.yml
   when:
     - not cca_skip_server_reboot | default(false)
-
-- name: Gather facts about configured services
-  ansible.builtin.service_facts:
-  no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Control services during server reboot and reboot server if required
   block:
@@ -63,7 +64,7 @@
     - name: Include tasks to handle cgroup versions, secondary reboot if needed
       include_tasks: systemd/manage_cgroup_version.yml
       when:
-        not cgroups_configured | default(false)
+        - not cgroups_configured | default(false)
 
     - name: Set fact that cgroups has been configured
       ansible.builtin.set_fact:
@@ -89,6 +90,10 @@
     - stat_server_reboot_pending.stat.exists | default(false)
     - not cca_skip_server_reboot | default(false)
 
+- name: Gather facts about configured services
+  ansible.builtin.service_facts:
+  no_log: "{{ ansible_verbosity < 3 }}"
+
 - name: Start cgroup_daemon service and enable it
   ansible.builtin.systemd:
     name: cca_cgroup_version_daemon.service
@@ -98,15 +103,17 @@
     - ansible_facts.services['cca_cgroup_version_daemon.service'] is defined
   no_log: "{{ ansible_verbosity < 3 }}"
 
+
 - name: Restart Splunkd service if it was started and require restart
   ansible.builtin.systemd:
     name: "{{ systemd_enterprise_name }}"
     state: restarted
     enabled: true
   when:
-    - stat_splunk_service_restart_pending.stat.exists | default(false)
-    - stat_splunkd_service_started.stat.exists | default(false)
+    - stat_splunk_service_restart_pending.stat.exists | default(false) or
+      stat_splunkd_service_started.stat.exists | default(false)
     - ansible_facts.services[systemd_enterprise_name] is defined
+    - splunk_enterprise_is_installed | default(false)
 
 - name: Cleanup state files
   ansible.builtin.file:
@@ -115,5 +122,5 @@
   loop:
     - "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     - "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
-  changed_when: false
   check_mode: false
+

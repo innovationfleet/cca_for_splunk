@@ -7,7 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
+
 
 - name: Finalize rolling upgrade on the cluster manager
   ansible.builtin.command:

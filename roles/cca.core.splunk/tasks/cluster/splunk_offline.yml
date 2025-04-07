@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.2
+# Release: 2025.1.1
 
 - name: Include task to check Splunk status
   ansible.builtin.include_tasks:
@@ -21,8 +21,20 @@
   ansible.builtin.command:
     cmd: "timeout 900 {{ splunk_path }}/bin/splunk offline"
   changed_when: false
+  register: splunk_offline_result
   when:
     - enterprise_upgrade | default(false) or
       kernel_update_needed | default(false) or
-      stat_server_reboot_pending.exists | default(false) or
-      stat_splunk_service_restart_pending.exists | default(false)
+      stat_server_reboot_pending.stat.exists | default(false) or
+      stat_splunk_service_restart_pending.stat.exists | default(false)
+
+- name: Fallback - stop Splunk if offline failed (e.g., due to timeout)
+  ansible.builtin.command:
+    cmd: "timeout 600 {{ splunk_path }}/bin/splunk stop"
+  when:
+    - (enterprise_upgrade | default(false) or
+       kernel_update_needed | default(false) or
+       stat_server_reboot_pending.stat.exists | default(false) or
+       stat_splunk_service_restart_pending.stat.exists | default(false))
+    - splunk_offline_result is defined
+    - splunk_offline_result.rc != 0

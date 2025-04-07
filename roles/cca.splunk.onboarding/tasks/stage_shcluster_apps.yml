@@ -38,11 +38,10 @@
 - name: Stage manager with shcluster apps from shcluster directory
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ shcluster_apps_sourcedir }}/'
-    dest: '{{ shcluster_staging_dir }}/apps/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ absolute_file_store_path }}/etc/{{ shcluster_apps_sourcedir }}/"
+    "{{ shcluster_staging_dir }}/apps/"
   delegate_to: localhost
   when:
     - shcluster_label is defined
@@ -52,11 +51,10 @@
 - name: Stage manager with shcluster selected apps
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ absolute_file_store_path }}/etc/{{ selected_shcluster_apps_sourcedir }}/{{ item.source_app }}/'
-    dest: '{{ shcluster_staging_dir }}/apps/{{ item.name }}/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ absolute_file_store_path }}/etc/{{ selected_shcluster_apps_sourcedir }}/{{ item.source_app }}/"
+    "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:
     - selected_shcluster_apps_sourcedir is defined
@@ -69,11 +67,10 @@
 - name: Stage manager with versioned apps destined for search head cluster
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
-    dest: '{{ shcluster_staging_dir }}/apps/{{ item.name }}/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ (item.source_path | default(versioned_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
+    "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:
     - versioned_apps_sourcedir is defined
@@ -88,11 +85,10 @@
 - name: Stage manager with selected apps destined for search head cluster
   become: false
   connection: local
-  ansible.builtin.copy:
-    src: '{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
-    dest: '{{ shcluster_staging_dir }}/apps/{{ item.name }}/'
-    remote_src: true
-    mode: 'preserve'
+  ansible.builtin.command: >
+    rsync --delay-updates -F --compress --archive
+    "{{ (item.source_path | default(selected_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
+    "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:
     - selected_apps_source_path is defined

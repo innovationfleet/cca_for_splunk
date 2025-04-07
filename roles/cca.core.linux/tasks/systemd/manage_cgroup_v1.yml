@@ -1,0 +1,60 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.1.1
+
+- name: Block for debian based hosts
+  block:
+    - name: Configure legacy cgroup version until Splunk supports cgroupv2
+      ansible.builtin.lineinfile:
+        backrefs: true
+        path: /etc/default/grub
+        regexp: "^(GRUB_CMDLINE_LINUX=\".*)\"$"
+        line: '\1 systemd.unified_cgroup_hierarchy=0"'
+      register: debian_grubby_kernel_update_status
+
+    - name: Update Grub
+      ansible.builtin.command:
+        cmd: |
+          update-grub
+  when:
+    - ansible_distribution == 'Debian' or
+      ansible_distribution == 'Ubuntu'
+  notify: notify server reboot
+
+- name: Configure legacy cgroup version until Splunk supports cgroupv2
+  ansible.builtin.command:
+    cmd: |
+      grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
+  when:
+    - ansible_distribution != 'Debian'
+    - ansible_distribution != 'Ubuntu'
+  register: grubby_kernel_update_status
+  notify: notify server reboot
+
+- name: Copy cgroup handler script
+  ansible.builtin.copy:
+    src: "usr/local/bin/cca_cgroup_version_handler.sh"
+    dest: "/usr/local/bin/cca_cgroup_version_handler.sh"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    mode: '0750'
+
+- name: Configure cgroup-daemon service in /etc/systemd/system/cca_cgroup_version_daemon.service
+  ansible.builtin.template:
+    src: "etc/systemd/system/cca_cgroup_version_daemon.service.j2"
+    dest: "/etc/systemd/system/cca_cgroup_version_daemon.service"
+    mode: '0644'
+
+- name: Trigger restart if pending from cgroups update
+  meta: flush_handlers
+
+- name: Include role for reboot handler
+  ansible.builtin.include_tasks:
+    file: server_reboot_handler.yml

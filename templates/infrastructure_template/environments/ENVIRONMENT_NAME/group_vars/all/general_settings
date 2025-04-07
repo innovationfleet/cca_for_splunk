@@ -214,7 +214,7 @@ splunk_conf_general_settings:
                      cca_splunk_outputs_ssl | default(false) and
                      configure_outputs_ssl | default(false) | bool
                    else
-                     'Absent'}}"
+                     'absent'}}"
 
          - option: 'clientCert'
            value: "{{ cca_splunk_certs_home_path }}/{{ cca_splunk_certs_outputs_cert }}"
@@ -224,7 +224,7 @@ splunk_conf_general_settings:
                      cca_splunk_outputs_ssl | default(false) and
                      configure_outputs_ssl | default(false) | bool
                    else
-                    'Absent'}}"
+                    'absent'}}"
 
 
   - name: Splunk server.conf
@@ -249,11 +249,21 @@ splunk_conf_general_settings:
                        else
                           cca_splunk_certs_server_default_sslpassword_hash
                     }}'
-          - option: 'sslRootCAPath'
-            value: '{{ cca_splunk_server_sslConfig_sslRootCAPath }}'
-            state: 'absent'
           - option: 'serverCert'
             value: "{{ cca_splunk_certs_home_path + '/' +  cca_splunk_certs_server_cert }}"
+          - option: 'sslRootCAPath'
+            value: "{{ cca_splunk_certs_home_path ~ '/' ~ cca_splunk_extension_cert_rootca }}"
+            state: "{{ 'present'
+                    if
+                       cca_splunk_cert_enrollment_method != 'selfsigned'
+                    else
+                       'absent' }}"
+            comment: >-
+              The file specified here must contain the full certificate chain, starting with the Root CA
+              certificate, followed by any intermediate certificates in the correct order (from root to leaf).
+              The order is critical: Splunk and OpenSSL require the trust chain to be built top-down,
+              starting with the Root CA. Incorrect ordering may lead to SSL verification failures or
+              Splunk not starting correctly.
 
       - section: 'config_change_tracker'
         options:
@@ -355,3 +365,69 @@ splunk_conf_general_settings:
                       cca_splunk_cert_enrollment_method != 'selfsigned'
                     else
                       'absent' }}"
+          - option: 'replyHeader.Referrer-Policy'
+            value: "strict-origin-when-cross-origin"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Controls how much referrer information is included with requests.
+              "strict-origin-when-cross-origin" helps limit leakage of sensitive URL data.
+          - option: 'replyHeader.Access-Control-Allow-Origin'
+            value: "https://{{ fqdn | default(inventory_hostname) }}"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Specifies which origin is allowed for cross-origin resource sharing (CORS).
+              Update fqdn in your inventory with your specific allowed domain to limit resource access securely.
+          - option: 'replyHeader.Cross-Origin-Opener-Policy'
+            value: "same-origin"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Prevents your site from opening cross-origin popups without explicit intent.
+              "same-origin" enhances protection against cross-origin attacks.
+          - option: 'replyHeader.Cross-Origin-Embedder-Policy'
+            value: "require-corp"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Restricts embedding cross-origin resources without explicit approval.
+              Ensure embedded resources explicitly allow embedding via CORP header to avoid loading issues.
+          - option: 'replyHeader.Cross-Origin-Resource-Policy'
+            value: "same-site"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Limits resources to be loaded only from the same site.
+              Carefully verify your external resources as this can block legitimate cross-site resource loading.
+          - option: 'replyHeader.X-Permitted-Cross-Domain-Policies'
+            value: "none"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Prevents Adobe Flash and Acrobat from loading cross-domain policy files.
+              "none" strongly restricts cross-domain interactions and improves security.
+          - option: 'replyHeader.Content-Security-Policy'
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none';"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Defines a strict Content Security Policy (CSP) restricting resource types and origins.
+              Adjust this policy carefully as overly restrictive settings can break website functionalities.
+          - option: 'sendStrictTransportSecurityHeader'
+            value: "true"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Enables HTTP Strict Transport Security (HSTS), enforcing browser communication over HTTPS only.
+              Ensure valid and trusted SSL certificates are configured properly before enabling.
+          - option: 'includeSubDomains'
+            value: "true"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Extends HSTS policy to include all subdomains.
+              Ensure all subdomains can support HTTPS before activating to avoid downtime or certificate errors.
+          - option: 'preload'
+            value: "true"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Indicates intent to have domain preloaded into browser HSTS lists.
+              Be cautious: removing domains from preload lists later can be difficult and time-consuming.
+          - option: 'x_frame_options_sameorigin'
+            value: "false"
+            state: "{{ 'present' if enable_web_security_headers | default(false) else 'absent' }}"
+            comment: >-
+              Controls whether your site may be embedded in iframes from same origin.
+              Setting to "false" could allow embedding from different origins; review carefully based on your embedding needs.

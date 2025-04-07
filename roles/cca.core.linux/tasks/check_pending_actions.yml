@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.3.1
+# Release: 2025.1.1
 
 - name: Get current manager hostname
   delegate_to: localhost
@@ -28,11 +28,6 @@
   ansible.builtin.set_fact:
     cca_skip_server_reboot: "{{ manager_hostname == ansible_hostname }}"
 
-- name: Check if a server reboot is pending
-  ansible.builtin.stat:
-    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
-  register: stat_server_reboot_pending
-
 - name: Check if a service restart is pending
   ansible.builtin.stat:
     path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
@@ -42,3 +37,11 @@
   ansible.builtin.stat:
     path: "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
   register: stat_splunkd_service_started
+
+# Important to keep this task in the end as it will exit an outer loop in reboot_handeler.yml
+# and all tasks after this will be skipped
+- name: Check if a server reboot is pending
+  ansible.builtin.stat:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+  register: stat_server_reboot_pending
+

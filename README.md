@@ -1,6 +1,6 @@
 ![alt text](/media/CCAforSplunk_orange.png)
 <br>
-<img align="right" src="https://badgen.net/badge/Latest%20Premium%20Version/2024.3.1/green?icon=github"><img align="right" src="https://badgen.net/badge/Latest%20Release/2024.3.1/green?icon=github"><img align="right" src="https://badgen.net/badge/License/MIT/blue">
+<img align="right" src="https://badgen.net/badge/Latest%20Premium%20Version/2025.1.1/green?icon=github"><img align="right" src="https://badgen.net/badge/Latest%20Release/2025.1.1/green?icon=github"><img align="right" src="https://badgen.net/badge/License/MIT/blue">
 <br>
 ### A full lifecycle management interface for Splunk
 
@@ -24,6 +24,8 @@ That is precisely what we've done for years, and now it's time to share how you 
 The templates that we provide for configuring Splunk roles are used in our own Multisite Cluster implementations. After you have configured your project, the control is in your hands when it comes to deciding your settings. Adding or modifying parameters has no impact on the framework and are localized under your control.
 
 Playbooks are DRY (Don't Repeat Yourself), with almost no tasks - instead they are using common code in roles. So an update of a task has just to be done in one place, keeping code updates much cleaner and easier to overview.
+
+You can find a more in-depth Project Presentation as well as a Q&A section in the [Wiki](https://github.com/innovationfleet/cca_for_splunk/wiki).
 
 ![alt text](https://www.orangecyberdefense.com/fileadmin/_processed_/d/8/csm_Splunk_vs_2_45d2f9bce5.png)
 

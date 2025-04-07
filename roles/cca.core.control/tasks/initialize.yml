@@ -100,6 +100,12 @@
 - name: Include task to add lockfile
   ansible.builtin.include_tasks: add_lockfile.yml
 
+- name: Create a ansible temp directory
+  ansible.builtin.file:
+    path: "{{ cca_splunk_var_tmp | default('/var/tmp/' ~ inventory_hostname) }}"
+    state: directory
+    mode: '0755'
+
 - name: Include licensed CCA init tasks
   ansible.builtin.include_role:
     name: "{{ cca_control_initialize.role }}"

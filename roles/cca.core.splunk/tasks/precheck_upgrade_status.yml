@@ -17,3 +17,16 @@
   when:
     - not skip_upgrade_check | default(false)
   check_mode: false
+
+- name: Assert that the Splunk certificate passed strict X.509 validation
+  ansible.builtin.assert:
+    that:
+      - splunk_cert_strict_x509_validation | bool
+    fail_msg: >
+      The Splunk certificate did not pass strict X.509 validation.
+      Please verify that the certificate is signed by a trusted CA and matches the expected hostname and chain.
+    success_msg: >
+      Splunk certificate successfully passed strict X.509 validation.
+  when:
+    - inventory_hostname not in (groups.cluster_peers | default([]))
+    - cca_splunk_enterprise_upgrade | default(false)
