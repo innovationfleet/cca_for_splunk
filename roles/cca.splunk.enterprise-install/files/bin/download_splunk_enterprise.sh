@@ -44,14 +44,19 @@ readonly versions=(
   'splunk|9.1.5|29befd543def|Linux|x86_64'
   'splunk|9.1.6|a28f08fac354|Linux|x86_64'
   'splunk|9.1.7|e17104057ef0|Linux|x86_64'
+  'splunk|9.1.8|d45427bb0c27|Linux|x86_64'
   'splunk|9.2.0.1|d8ae995bf219|Linux|x86_64'
   'splunk|9.2.1|78803f08aabb|Linux|x86_64'
   'splunk|9.2.2|d76edf6f0a15|Linux|x86_64'
   'splunk|9.2.3|282efff6aa8b|Linux|x86_64'
   'splunk|9.2.4|c103a21bb11d|Linux|x86_64'
+  'splunk|9.2.5|7bfc9a4ed6ba|Linux|x86_64'
   'splunk|9.3.0|51ccf43db5bd|Linux|x86_64'
   'splunk|9.3.1|0b8d769cb912|Linux|x86_64'
   'splunk|9.3.2|d8bb32809498|Linux|x86_64'
+  'splunk|9.3.3|75595d8f83ef|Linux|x86_64'
+  'splunk|9.4.0|6b4ebe426ca6|linux|amd64'
+  'splunk|9.4.1|e3bdab203ac8|linux|amd64'
 )
 
 default_download_dir="${CCA_INFRASTRUCTURE_REPO_DIR}/splunk/var/images"
@@ -95,22 +100,22 @@ while true; do
       url="https://d7wz6hmoaavd0.cloudfront.net/products/splunk/releases/${version}/linux/${product}-${version}-${build}-${platform}-${arch}.tgz"
       wget -P "$download_dir" "$url"
 
-      # Download the MD5 file
-      md5_url="${url}.md5"
-      wget -P "$download_dir" "$md5_url"
+      # Download the SHA512 file
+      sha512_url="${url}.sha512"
+      wget -P "$download_dir" "$sha512_url"
 
-      # Extract MD5 hash from the downloaded MD5 file
-      md5_hash=$(grep -oE '[a-f0-9]{32}' "${download_dir}/${product}-${version}-${build}-${platform}-${arch}.tgz.md5")
+      # Extract SHA512 hash from the downloaded SHA512 file
+      sha512_hash=$(grep -oE '[a-f0-9]{128}' "${download_dir}/${product}-${version}-${build}-${platform}-${arch}.tgz.sha512")
 
-      # Check if md5sum command is available
-      if command -v md5sum > /dev/null; then
-        Md5Sum=$(md5sum "${download_dir}/${product}-${version}-${build}-${platform}-${arch}.tgz" | awk '{print $1}')
-      elif command -v md5 > /dev/null; then  # For macOS
-        Md5Sum=$(md5 -q "${download_dir}/${product}-${version}-${build}-${platform}-${arch}.tgz")
+      # Check if sha512sum command is available
+      if command -v sha512sum > /dev/null; then
+        Sha512Sum=$(sha512sum "${download_dir}/${product}-${version}-${build}-${platform}-${arch}.tgz" | awk '{print $1}')
+      elif command -v sha512 > /dev/null; then  # For macOS
+        Sha512Sum=$(sha512 -q "${download_dir}/${product}-${version}-${build}-${platform}-${arch}.tgz")
       else
-        read -p "No MD5 tool found. Do you want to skip MD5 check? (y/n): " skip_md5_check
-        if [ "$skip_md5_check" == "y" ]; then
-          echo "Skipping MD5 check."
+        read -p "No SHA512 tool found. Do you want to skip SHA512 check? (y/n): " skip_sha512_check
+        if [ "$skip_sha512_check" == "y" ]; then
+          echo "Skipping SHA512 check."
           break
         else
           echo "Exiting the script."
@@ -118,7 +123,7 @@ while true; do
         fi
       fi
 
-      if [[ "a${Md5Sum}" == "a${md5_hash}" ]]; then
+      if [[ "a${Sha512Sum}" == "a${sha512_hash}" ]]; then
         echo "File integrity check is OK"
       else
         echo "Failed to validate downloaded file. Please try again."

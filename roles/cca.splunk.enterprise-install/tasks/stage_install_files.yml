@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2025.1.1
 
 - name: Find Splunk install file in repo directory
   become: false
@@ -29,7 +29,7 @@
     path: "{{ item.path }}"
     state: absent
   loop: "{{ find_cca_splunk_tmp_tgz.files }}"
-  when: "'splunk-{{ splunk_enterprise_version }}' not in item.path"
+  when: "'splunk-' ~ splunk_enterprise_version not in item.path"
 
 - name: Assert that we have a matching splunk tgz file
   become: false
@@ -73,6 +73,6 @@
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_opts:
-      - "--include=splunk-{{ splunk_enterprise_version }}-*-Linux-x86_64.tgz"
+      - "--include=splunk-{{ splunk_enterprise_version }}-*-*inux-*64.tgz"
       - "--exclude=*"
   check_mode: false
