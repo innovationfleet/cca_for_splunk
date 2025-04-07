@@ -7,11 +7,15 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.3.1
+# Release: 2025.1.1
 
 - name: Deploy the apps from the selected apps directory to the splunk servers
   ansible.posix.synchronize:
-    src: '{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
+    src:  >-
+        {{
+          (item.source_path | default(selected_apps_source_path)) ~
+          ('/' ~ item.source_app if item.source_app is defined else '')
+        }}
     dest: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}/"
     copy_links: true
     recursive: true
@@ -36,7 +40,11 @@
 
 - name: Deploy apps from the versioned apps directory to the splunk servers
   ansible.posix.synchronize:
-    src: '{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/'
+    src: >-
+        {{
+          (item.source_path | default(versioned_apps_source_path)) ~
+          ('/' ~ item.source_app if item.source_app is defined else '')
+        }}
     dest: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}/"
     copy_links: true
     recursive: true

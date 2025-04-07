@@ -101,7 +101,7 @@
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ selected_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/"
+    "{{ (item.source_path | default(selected_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
