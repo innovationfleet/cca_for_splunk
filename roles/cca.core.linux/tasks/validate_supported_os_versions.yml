@@ -118,3 +118,20 @@
           ansible_distribution = {{ ansible_distribution }}
           ansible_distribution_major_version = {{ ansible_distribution_major_version }}
           ansible_architecture = {{ ansible_architecture }}"
+
+- name: Flag OS as deprecated if EL < 9
+  ansible.builtin.set_fact:
+    cca_os_deprecated: true
+  when:
+    - ansible_distribution in ["RedHat", "CentOS", "Rocky", "OracleLinux"]
+    - ansible_distribution_major_version is version('9', '<')
+
+- name: Fail if deprecated OS is detected but not explicitly accepted
+  ansible.builtin.assert:
+    that:
+      - cca_accept_deprecated_os | default(false) | bool
+    fail_msg: >-
+      This host is running a deprecated OS version (EL{{ ansible_distribution_major_version }}) for {{ ansible_distribution }}.
+      Future releases of this framework may introduce breaking changes or remove support.
+      If you understand and accept the risks, set 'cca_accept_deprecated_os: true' in your inventory or extra-vars to continue.
+  when: cca_os_deprecated is defined

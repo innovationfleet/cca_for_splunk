@@ -7,8 +7,14 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.1.1
 
+
+- name: Get current Splunk Enterprise version
+  include_tasks: ../../cca.core.splunk/tasks/get_splunk_status.yml
+
+- name: Get current Splunk Enterprise version
+  include_tasks: ../../cca.core.splunk/tasks/get_splunk_version.yml
 
 - name: Include systemd setup
   include_tasks: systemd/main.yml

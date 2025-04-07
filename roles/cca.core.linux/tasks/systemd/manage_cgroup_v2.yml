@@ -1,0 +1,87 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.1.1
+
+- name: Stop cgroup_daemon service and disable it
+  ansible.builtin.systemd:
+    name: cca_cgroup_version_daemon.service
+    state: stopped
+    enabled: false
+  when:
+    - ansible_facts.services['cca_cgroup_version_daemon.service'] is defined
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Remove cgroup-daemon service from /etc/systemd/system/cca_cgroup_version_daemon.service
+  ansible.builtin.file:
+    path: "/etc/systemd/system/cca_cgroup_version_daemon.service"
+    state: absent
+
+- name: Revert cgroup setting in /etc/default/grub (Debian-based systems)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=".*)(\s*systemd.unified_cgroup_hierarchy=0)(.*)"$'
+    line: '\1\3"'
+    backrefs: true
+  register: debian_grub_revert_status
+  notify: notify server reboot
+  when:
+    - ansible_distribution in ['Debian', 'Ubuntu']
+    - running_kernel_cgroup_version == 'cgroupv1'
+    - supported_kernel_cgroup_version == 'cgroupv2'
+
+- name: Update grub after reverting cgroup setting (Debian-based systems)
+  ansible.builtin.command: update-grub
+  when:
+    - ansible_distribution in ['Debian', 'Ubuntu']
+    - debian_grub_revert_status.changed
+
+- name: Revert cgroup setting with grubby (non-Debian systems)
+  ansible.builtin.command: >
+    grubby --update-kernel=ALL --remove-args="systemd.unified_cgroup_hierarchy=0"
+  register: grubby_kernel_revert_status
+  notify: notify server reboot
+  when:
+    - ansible_distribution not in ['Debian', 'Ubuntu']
+    - running_kernel_cgroup_version == 'cgroupv1'
+    - supported_kernel_cgroup_version == 'cgroupv2'
+
+- name: Configure splunk service in /etc/systemd/system/{{ systemd_enterprise_name }}
+  ansible.builtin.template:
+    src: "etc/systemd/system/{{ systemd_enterprise_name }}_{{ supported_kernel_cgroup_version }}.j2"
+    dest: "/etc/systemd/system/{{ systemd_enterprise_name }}"
+    mode: '0644'
+  notify: notify restart splunkd service
+
+- name: Ensure the destination directory exists
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ systemd_enterprise_name }}.d"
+    state: directory
+    mode: '0755'
+
+- name: Configure splunk service limits in /etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf
+  ansible.builtin.template:
+    src: "etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf_{{ supported_kernel_cgroup_version }}.j2"
+    dest: "/etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf"
+    mode: '0644'
+  notify: notify restart splunkd service
+
+- name: Configure systemd for the new Splunkd service
+  ansible.builtin.systemd:
+    name: "{{ systemd_enterprise_name }}"
+    enabled: true
+    daemon_reload: true
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Trigger restart if pending from cgroups update
+  ansible.builtin.meta: flush_handlers
+
+- name: Include role for reboot handler
+  ansible.builtin.include_tasks:
+    file: server_reboot_handler.yml
