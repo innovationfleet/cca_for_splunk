@@ -32,6 +32,7 @@
   changed_when: false
   when:
     - splunk_enterprise_is_installed
+    - not skip_splunk_status_check | default(false)
   check_mode: false
 
 - name: Set fact if expected splunk status is met
@@ -48,7 +49,8 @@
     fail_msg: >-
       Splunk status is not OK, this host will be skipped
   when:
-      - splunk_enterprise_is_installed
+    - splunk_enterprise_is_installed
+    - not skip_splunk_status_check | default(false)
 
 - name: Include task to get certificate status
   ansible.builtin.include_tasks:

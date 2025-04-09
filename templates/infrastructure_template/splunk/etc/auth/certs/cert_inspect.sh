@@ -1,4 +1,4 @@
-#!/usr/local/env bash
+#!/usr/bin/env bash
 
 # cert_inspect.sh - PEM certificate utility for inspection and validation
 #
@@ -36,7 +36,7 @@ function validate_server_cert() {
 
   echo "🔍 Checking server certificate content..."
   local cert_count
-  cert_count=$(grep -c '-----BEGIN CERTIFICATE-----' "$server_cert")
+  cert_count=$(grep -c -- '-----BEGIN CERTIFICATE-----' "$server_cert")
 
   if (( cert_count > 1 )); then
     echo "⚠️  WARNING: Server certificate '$server_cert' contains multiple certificates ($cert_count)."

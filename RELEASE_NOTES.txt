@@ -58,8 +58,7 @@
                    copy the cert-inspect.sh script from templates/infrastructure_template/splunk/etc/auth/certs
                    to your infrastructure directory and validate your certificates before deployment.
               - Full support for cgroups version 2. The upgrade is performed automatically when running
-                the rolling_update_linux_servers.yml or configure_linux_servers.yml playbooks after
-                upgrading to Splunk 9.4+.
+                the configure_linux_servers.yml playbooks after upgrading to Splunk 9.4+.
               - Added automatic handling of KVStore upgrades introduced in 9.4. The playbook will now
                 wait until the KVStore upgrade is completed. This process takes time as kvstore is upgraded
                 by splunk 3 times in the background. Do not set shc_upgrade_kvstore_engine to true for 9.4
@@ -73,6 +72,7 @@
                 templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/cluster_manager_cluster_c1.
               - Improved the stability of the Splunk `offline` command on index peers. If a timeout occurs,
                 the system now performs a `splunk stop` as fallback.
+              - Improved Splunk Version handling during server reboot and cgroups configuration updates.
 
               Bug Fixes:
                 - Corrected splunk_conf_host_settings that was incorrectly referring splunk_conf_group_settings.

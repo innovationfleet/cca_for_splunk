@@ -11,8 +11,3 @@
 
 - name: Include tasks to handle cgroup versions
   include_tasks: systemd/manage_cgroup_version.yml
-
-- name: Include tasks for systemd setup
-  include_tasks: systemd/splunkd_service.yml
-  when:
-    - not upgrade_cgroup_version | default(false)

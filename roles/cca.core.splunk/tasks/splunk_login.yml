@@ -28,6 +28,8 @@
   delay: 10
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Splunk login
   ansible.builtin.command:
@@ -40,6 +42,8 @@
   failed_when: false
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Assert to find out if the login was successful
   ansible.builtin.assert:
@@ -53,3 +57,5 @@
       Return code ={{ splunk_login_result.rc }} )
     success_msg: >-
       Login successful
+  when:
+    - not skip_splunk_status_check | default(false)

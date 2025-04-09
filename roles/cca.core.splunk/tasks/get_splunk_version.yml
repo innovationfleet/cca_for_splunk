@@ -7,14 +7,14 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.2.1
+# Release: 2025.1.1
 
 - name: Check if splunk is running by examine pid file
   ansible.builtin.stat:
     path: "{{ splunk_path }}/var/run/splunk/splunkd.pid"
   register: stat_splunk_pid
 
-- name: Check current installed splunk version
+- name: Check current installed splunk version from running instance
   ansible.builtin.shell:
     cmd: >-
      timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | grep -E "Splunk [0-9\.]+ \(build" | awk '{ print $2 }'
@@ -24,6 +24,49 @@
   changed_when: false
   check_mode: false
 
-- name: Set fact for current Splunk version or target splunk version if splunk is not running
+- name: Check for stored version file
+  ansible.builtin.stat:
+    path: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') }}"
+  register: splunk_version_file_stat
+  when:
+    - not stat_splunk_pid.stat.exists
+
+- name: Read stored Splunk version
+  ansible.builtin.slurp:
+    src: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') }}"
+  register: splunk_version_file_content
+  when:
+    - not stat_splunk_pid.stat.exists
+    - splunk_version_file_stat.stat.exists
+
+- name: Set fact for current Splunk version with fallback chain
   ansible.builtin.set_fact:
-    current_splunk_enterprise_version: "{{ splunk_enterprise_version_result.stdout | default(splunk_enterprise_version) }}"
+    current_splunk_enterprise_version: >-
+      {% if stat_splunk_pid.stat.exists and splunk_enterprise_version_result.stdout is defined and splunk_enterprise_version_result.stdout | trim != '' %}
+        {{ splunk_enterprise_version_result.stdout | trim }}
+      {% elif splunk_version_file_stat.stat.exists and splunk_version_file_content.content is defined and splunk_version_file_content.content | b64decode | trim != '' %}
+        {{ splunk_version_file_content.content | b64decode | trim }}
+      {% else %}
+        {{ splunk_enterprise_version | default('0.0.0') }}
+      {% endif %}
+
+- name: Create directory for splunk version file if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') | dirname }}"
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user_group_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Store Splunk version
+  ansible.builtin.copy:
+    content: "{{ current_splunk_enterprise_version }}"
+    dest: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') }}"
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user_group_name }}"
+    mode: '0644'
+
+- name: Ensure current_splunk_enterprise_version is a valid version string
+  ansible.builtin.set_fact:
+    current_splunk_enterprise_version: "{{ current_splunk_enterprise_version | regex_replace('^[^0-9]*([0-9]+\\.[0-9]+\\.[0-9]+).*$', '\\1') }}"
+  when: current_splunk_enterprise_version is defined

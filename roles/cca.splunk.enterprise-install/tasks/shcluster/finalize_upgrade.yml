@@ -9,33 +9,15 @@
 #
 # Release: 2025.1.1
 
-
-- name: Check if standalone-kvupgrade-status command is available
-  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk help show | grep standalone-kvupgrade-status"
-  register: kv_command_check
-  ignore_errors: true
-  changed_when: false
+- name: Include task to check kvstore upgrade status
+  include_tasks: kvstore_upgrade_status.yml
   when:
     - enterprise_upgrade | default(false)
-    - not ansible_check_mode
-  no_log: "{{ hide_password | default(false) }}"
 
-- name: Wait for KVStore upgrade to complete
-  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
-  register: kv_status
-  until: kv_status.stdout is search('Upgrade Status:\s+0')
-  retries: "{{ cca_splunk_kvstore_upgrade_retries | default(30) | int }}"
-  delay: "{{ cca_splunk_kvstore_upgrade_delay | default(60) | int }}"
-  changed_when: false
-  failed_when: 
-    - kv_status.stdout is not search('Upgrade Status:\s+0')
-    - "'is not a valid argument' not in kv_status.stderr"
+- name: Include tasks to login to splunk cli
+  ansible.builtin.include_tasks: ../../cca.core.splunk/tasks/splunk_login.yml
   when:
     - enterprise_upgrade | default(false)
-    - not ansible_check_mode
-    - kv_command_check is defined
-    - kv_command_check.rc | default(0) == 0 
-    - kv_command_check.stdout | default('') != "" 
 
 - name: Finalize rolling upgrade on a SHC member
   ansible.builtin.command:
@@ -48,3 +30,12 @@
   when:
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
+
+- name: Include tasks to logout on splunk cli
+  ansible.builtin.include_tasks: ../../cca.core.splunk/tasks/splunk_logout.yml
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - kv_command_check is defined
+    - kv_command_check.rc | default(0) == 0 
+    - kv_command_check.stdout | default('') != ""

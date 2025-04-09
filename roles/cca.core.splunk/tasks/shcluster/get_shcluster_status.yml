@@ -27,6 +27,22 @@
   ansible.builtin.set_fact:
     current_splunk_enterprise_version: "{{ shcluster_splunk_version.stdout }}"
 
+- name: Create directory for splunk version file if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') | dirname }}"
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user_group_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Store Splunk version
+  ansible.builtin.copy:
+    content: "{{ current_splunk_enterprise_version }}"
+    dest: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') }}"
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user_group_name }}"
+    mode: '0644'
+
 - name: Get info of kvstore engine
   ansible.builtin.shell:
     cmd: |
