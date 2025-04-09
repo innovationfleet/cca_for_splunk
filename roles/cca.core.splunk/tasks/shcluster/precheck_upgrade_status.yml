@@ -43,6 +43,7 @@
   register: mongod_version
   changed_when: false
   when: (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '<')
+  check_mode: false
 
 - name: Assert MongoDB version matches expected KVStore engine version for Splunk >= 9.4.0
   ansible.builtin.assert:

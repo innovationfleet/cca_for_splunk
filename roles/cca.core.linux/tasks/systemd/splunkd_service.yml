@@ -12,9 +12,10 @@
 
 - name: Configure splunk service in /etc/systemd/system/{{ systemd_enterprise_name }}
   ansible.builtin.template:
-    src: "etc/systemd/system/{{ systemd_enterprise_name }}_{{ running_kernel_cgroup_version }}.j2"
+    src: "etc/systemd/system/{{ systemd_enterprise_name }}_{{ configure_cgroup_version }}.j2"
     dest: "/etc/systemd/system/{{ systemd_enterprise_name }}"
     mode: '0644'
+  register: systemd_service_result
   notify: notify restart splunkd service
 
 - name: Ensure the destination directory exists
@@ -25,9 +26,10 @@
 
 - name: Configure splunk service limits in /etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf
   ansible.builtin.template:
-    src: "etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf_{{ running_kernel_cgroup_version }}.j2"
+    src: "etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf_{{ configure_cgroup_version }}.j2"
     dest: "/etc/systemd/system/{{ systemd_enterprise_name }}.d/limits.conf"
     mode: '0644'
+  register: systemd_limits_result
   notify: notify restart splunkd service
 
 - name: Configure systemd for the new Splunkd service
@@ -37,4 +39,6 @@
     daemon_reload: true
   no_log: "{{ ansible_verbosity < 3 }}"
   when:
-    - not server_reboot_status.rebooted | default(false)
+    - not server_reboot_status.rebooted | default(false) or
+      systemd_service_result.changed or
+      systemd_limits_result.changed

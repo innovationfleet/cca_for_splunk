@@ -26,6 +26,7 @@
   when:
     - ansible_distribution == 'Debian' or
       ansible_distribution == 'Ubuntu'
+    - running_kernel_cgroup_version | default('') != 'cgroupv1'
   notify: notify server reboot
 
 - name: Configure legacy cgroup version until Splunk supports cgroupv2
@@ -35,6 +36,7 @@
   when:
     - ansible_distribution != 'Debian'
     - ansible_distribution != 'Ubuntu'
+    - running_kernel_cgroup_version | default('') != 'cgroupv1'
   register: grubby_kernel_update_status
   notify: notify server reboot
 
@@ -52,9 +54,10 @@
     dest: "/etc/systemd/system/cca_cgroup_version_daemon.service"
     mode: '0644'
 
+- name: Include role to configure splunk service
+  ansible.builtin.include_tasks: systemd/splunkd_service.yml
+  vars:
+    configure_cgroup_version: cgroupv1
+
 - name: Trigger restart if pending from cgroups update
   meta: flush_handlers
-
-- name: Include role for reboot handler
-  ansible.builtin.include_tasks:
-    file: server_reboot_handler.yml

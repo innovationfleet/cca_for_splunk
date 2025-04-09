@@ -2,6 +2,8 @@
 # handlers file for cca.core.linux
 #
 - name: Server reboot notification handler
+  become: true
+  become_method: sudo
   ansible.builtin.file:
     path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
     state: touch
@@ -18,6 +20,7 @@
   no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Check if handler file exists (splunk service restart)
+  become: true
   ansible.builtin.stat:
     path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
   register: splunk_restart_pending_stat
@@ -26,6 +29,7 @@
   changed_when: false
 
 - name: Touch the file only if it does not already exist
+  become: true
   ansible.builtin.file:
     path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     state: touch

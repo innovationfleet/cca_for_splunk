@@ -9,9 +9,14 @@
 #
 # Release: 2025.1.1
 
+- name: Gather facts about configured services
+  ansible.builtin.service_facts:
 
-- name: Get current Splunk Enterprise version
+- name: Get current Splunk Enterprise status
   include_tasks: ../../cca.core.splunk/tasks/get_splunk_status.yml
+  when:
+    - ansible_facts.services[systemd_enterprise_name] is defined
+    - ansible_facts.services[systemd_enterprise_name].state == "running"
 
 - name: Get current Splunk Enterprise version
   include_tasks: ../../cca.core.splunk/tasks/get_splunk_version.yml

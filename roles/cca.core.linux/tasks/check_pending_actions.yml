@@ -16,6 +16,7 @@
   ansible.builtin.command:
     cmd: hostname -s
   register: manager_hostname_result
+  changed_when: false
 
 - name: Set manager hostname fact
   delegate_to: localhost

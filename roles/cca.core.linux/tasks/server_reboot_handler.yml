@@ -14,10 +14,10 @@
   ansible.builtin.service_facts:
   no_log: "{{ ansible_verbosity < 3 }}"
 
-- name: Include role to check if there is a pending reboot
-  ansible.builtin.include_tasks: check_pending_actions.yml
+- name: Include tasks to handle cgroup versions, secondary reboot if needed
+  include_tasks: systemd/manage_cgroup_version.yml
   when:
-    - not cca_skip_server_reboot | default(false)
+    - not cgroups_configured | default(false)
 
 - name: Control services during server reboot and reboot server if required
   block:
@@ -61,30 +61,9 @@
         - server_reboot_status.rebooted
       check_mode: false
 
-    - name: Include tasks to handle cgroup versions, secondary reboot if needed
-      include_tasks: systemd/manage_cgroup_version.yml
-      when:
-        - not cgroups_configured | default(false)
-
     - name: Set fact that cgroups has been configured
       ansible.builtin.set_fact:
         cgroups_configured: true
-
-    - name: Delete statefile based on reboot status
-      ansible.builtin.file:
-        path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
-        state: 'absent'
-      when:
-        - server_reboot_status.rebooted
-      check_mode: false
-
-    - name: Delete statefile based on reboot status
-      ansible.builtin.file:
-        path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
-        state: 'absent'
-      when:
-        - server_reboot_status.rebooted
-      check_mode: false
 
   when:
     - stat_server_reboot_pending.stat.exists | default(false)
@@ -93,16 +72,6 @@
 - name: Gather facts about configured services
   ansible.builtin.service_facts:
   no_log: "{{ ansible_verbosity < 3 }}"
-
-- name: Start cgroup_daemon service and enable it
-  ansible.builtin.systemd:
-    name: cca_cgroup_version_daemon.service
-    state: started
-    enabled: true
-  when:
-    - ansible_facts.services['cca_cgroup_version_daemon.service'] is defined
-  no_log: "{{ ansible_verbosity < 3 }}"
-
 
 - name: Restart Splunkd service if it was started and require restart
   ansible.builtin.systemd:
