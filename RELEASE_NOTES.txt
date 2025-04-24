@@ -31,6 +31,10 @@
 
     Release notes:
 
+    2025.1.1.1
+              Bug fixes:
+                * Corrected destination path for app deployment after migration to ansible ynchronize module.
+
     2025.1.1
               - Important:
                  * This version of CCA deprecates OS versions incompatible with Ansible 2.17+. To proceed
