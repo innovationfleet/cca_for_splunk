@@ -73,7 +73,7 @@
 
 - name: Wait until shcluster status is ok
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120)}} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -103,7 +103,7 @@
 
 - name: Wait until rolling restart is completed
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'rolling_restart_flag : 0' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"

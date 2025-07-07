@@ -69,7 +69,7 @@
 
 - name: Collect full Search Head Cluster status
   ansible.builtin.command:
-    cmd: "timeout 180 {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
+    cmd: "timeout {{ splunk_timeout_shcluster_status | default('180') }} {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
   register: verbose_shcluster_status
   retries: "{{ cca_splunkd_cli_shcluster_status_retries | default(10) | int }}"
   delay: 10
