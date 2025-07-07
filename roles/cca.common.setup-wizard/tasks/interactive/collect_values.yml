@@ -15,14 +15,17 @@
     prompt: "Enter a environment name without space characters ({{ cca_environment.default_environment_dir }})"
   register: wizard_environment
 
-- ansible.builtin.set_fact:
+- name: Set fact for environment_dir
+  ansible.builtin.set_fact:
     environment_dir: "{{ cca_environment.default_environment_dir if wizard_environment.user_input | length == 0 else wizard_environment.user_input }}"
 
-- ansible.builtin.set_fact:
-   cca_splunk_secret_path: "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all"
+- name: Set fact for cca_splunk_secret_path
+  ansible.builtin.set_fact:
+    cca_splunk_secret_path: "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all"
 
-- ansible.builtin.set_fact:
-   cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
+- name: Set fact for cca_splunk_secret_file
+  ansible.builtin.set_fact:
+    cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
 
 - name: Set splunk secret to an existing one or new
   ansible.builtin.set_fact:
@@ -41,7 +44,8 @@
   when:
     - wizard_splunk_secret.user_input != ''
 
-- ansible.builtin.set_fact:
+- name: Set fact for splunk_secret
+  ansible.builtin.set_fact:
     splunk_secret: "{{ tmp_splunk_secret if wizard_splunk_secret.user_input | length == 0 else wizard_splunk_secret.user_input }}"
 
 - name: Vault the splunk secret
@@ -71,6 +75,8 @@
   ansible.builtin.shell:
     cmd: "echo -n {{ splunk_secret }} | sha256sum | awk '{ print $1 }'"
   register: splunk_secret_checksum
+  tags:
+    - skip_ansible_lint
 
 - name: Store checksum of the splunk.secret file
   ansible.builtin.lineinfile:

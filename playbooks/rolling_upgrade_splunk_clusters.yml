@@ -5,7 +5,10 @@
 #
 # REPO_TYPE=infrastructure
 # MENU_DESC=Upgrade Splunk on all cluster dependent servers.
-# EXTRA_VARS=cca_splunk_enterprise_upgrade(false) shcluster_precheck(true) upgrade_check(true) shc_upgrade_method(rolling|[offline]) shc_upgrade_kvstore_engine(false)
+# EXTRA_VARS=cca_splunk_enterprise_upgrade(false) \
+# shcluster_precheck(true) upgrade_check(true) \
+# shc_upgrade_method(rolling|[offline]) \
+# shc_upgrade_kvstore_engine(false)
 
 
 # https://patorjk.com/software/taag/#p=display&c=bash&f=Standard&t=SearchHeads
@@ -45,7 +48,7 @@
 - name: Verify that connection to all servers are ok before we start
   hosts: searchhead_members:searchhead_deployers:cluster_managers:cluster_peers:data_collection_nodes:monitoring_consoles
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
@@ -74,9 +77,10 @@
 # the playbook has failed with the clusters in a degraded state and the upgrade needs to continue regardless
 # of the precheck status.
 
-- hosts: searchhead_members:searchhead_deployers:cluster_managers:cluster_peers:data_collection_nodes:monitoring_consoles
+- name: Upgrade Precheck
+  hosts: searchhead_members:searchhead_deployers:cluster_managers:cluster_peers:data_collection_nodes:monitoring_consoles
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
@@ -87,10 +91,12 @@
         tasks_from:
           wait_for_connection.yml
 
-    - setup:
+    - name: Setup network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
 
-    - include_role:
+    - name: Include role to get search head cluster status
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           shcluster/get_shcluster_status.yml
@@ -98,7 +104,8 @@
         - inventory_hostname in ( groups.searchhead_members | default([]) )
         - upgrade_check | default(true)
 
-    - include_role:
+    - name: Include role to precheck upgrade status
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           shcluster/precheck_upgrade_status.yml
@@ -106,7 +113,8 @@
         - inventory_hostname in ( groups.searchhead_members | default([]) )
         - upgrade_check | default(true)
 
-    - include_role:
+    - name: Include role to get cluster status
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           cluster/get_cluster_status.yml
@@ -114,7 +122,8 @@
         - inventory_hostname in ( groups.cluster_managers | default([]) )
         - upgrade_check | default(true)
 
-    - include_role:
+    - name: Include role to precheck upgrade status on cluster managers
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           cluster/precheck_upgrade_status.yml
@@ -122,7 +131,8 @@
         - inventory_hostname in ( groups.cluster_managers | default([]) )
         - upgrade_check | default(true)
 
-    - include_role:
+    - name: Include role to get splunk status peers and members
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           get_splunk_status.yml
@@ -130,7 +140,8 @@
         - inventory_hostname not in  ( groups.cluster_peers | default([]) ) or
           inventory_hostname not in  ( groups.searchhead_members | default([]) )
 
-    - include_role:
+    - name: Include role to precheck upgrade status non peers and members
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           precheck_upgrade_status.yml
@@ -147,9 +158,10 @@
 #    \____|_|\__,_|___/\__\___|_|  |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|  |___/
 #                                                            |___/
 
-- hosts: cluster_managers
+- name: Upgrade Cluster Manager
+  hosts: cluster_managers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
@@ -159,15 +171,16 @@
         tasks_from:
           wait_for_connection.yml
 
-    - setup:
+    - name: Setup network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
 
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-      vars:
-        cca_splunk_enterprise_upgrade: true
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
@@ -182,9 +195,10 @@
 #   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|___/
 #
 
-- hosts: data_collection_nodes:monitoring_consoles
+- name: Upgrade Search Heads
+  hosts: data_collection_nodes:monitoring_consoles
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
@@ -194,15 +208,16 @@
         tasks_from:
           wait_for_connection.yml
 
-    - setup:
+    - name: Setup network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
 
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-      vars:
-        cca_splunk_enterprise_upgrade: true
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
@@ -217,22 +232,25 @@
 #   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|\____|_|\__,_|___/\__\___|_|  |___/
 #
 
-- hosts: searchhead_members:&upgrade_shclusters_offline
+- name: Upgrade Search Head Clusters
+  hosts: searchhead_members:&upgrade_shclusters_offline
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           offline_upgrade.yml
       when:
         - shc_upgrade_method | default('rolling') == 'offline'
 
-- hosts: searchhead_deployers:&upgrade_shclusters_offline
+- name: Upgrade Search Head Deployers
+  hosts: searchhead_deployers:&upgrade_shclusters_offline
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
@@ -242,33 +260,39 @@
         tasks_from:
           wait_for_connection.yml
 
-    - setup:
+    - name: Setup network facts
+      ansible.builtin.setup:
         gather_subset: 'network'
 
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
       when:
         - shc_upgrade_method | default('rolling') == 'offline'
 
-- hosts: searchhead_members_shcluster_c1
+- name: Upgrade Search Head Members
+  hosts: searchhead_members_shcluster_c1
   serial: 1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - include_role:
+    - name: Include role to get search head cluster status
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           shcluster/get_shcluster_status.yml
 
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           shcluster/init_upgrade.yml
 
   tasks:
-    - include_role:
+    - name: Include role to install splunk enterprise on search head cluster members - non captain
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           shcluster_upgrade_handler.yml
@@ -277,7 +301,8 @@
         - inventory_hostname != current_shcluster_captain
 
   post_tasks:
-    - include_role:
+    - name: Include role to install splunk enterprise on search head members - captain
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           shcluster_upgrade_handler.yml
@@ -285,36 +310,40 @@
         - shc_upgrade_method | default('rolling') == 'rolling'
         - inventory_hostname == current_shcluster_captain
 
-- hosts: searchhead_deployer_shcluster_c1
+- name: Upgrade Search Head Deployers Cluster C1
+  hosts: searchhead_deployer_shcluster_c1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   tasks:
-    - include_role:
+    - name: Include role to install splunk enterprise on search head deployers
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-      vars:
-        cca_splunk_enterprise_upgrade: true
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
 
 
-- hosts: searchhead_members_shcluster_c1
+- name: Upgrade Search Head Members Cluster C1
+  hosts: searchhead_members_shcluster_c1
   serial: 1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - include_role:
+    - name: Include role to finalize splunk enterprise on search head members - non captain
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           shcluster/finalize_upgrade.yml
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
@@ -333,99 +362,109 @@
 #   |___|_| |_|\__,_|\___/_/\_\_|   \___|\___|_|  |___/
 
 
-- hosts: cluster_manager_cluster_c1
+- name: Upgrade Cluster Manager Cluster C1
+  hosts: cluster_manager_cluster_c1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           cluster/init_upgrade.yml
 
-- hosts: cluster_peers_cluster_c1:&ag1
+- name: Upgrade Cluster Peers Cluster C1 AG1
+  hosts: cluster_peers_cluster_c1:&ag1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 20%
   pre_tasks:
-    - include_role:
+    - name: Include role to offline splunk on cluster peers C1 AG1
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           cluster/splunk_offline.yml
 
-    - include_role:
+    - name: Include role to install splunk enterprise on cluster peers C1 AG1
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-      vars:
-        cca_splunk_enterprise_upgrade: true
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
 
-- hosts: cluster_peers_cluster_c1:&ag2
+- name: Upgrade Cluster Peers Cluster C1 AG2
+  hosts: cluster_peers_cluster_c1:&ag2
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 20%
   pre_tasks:
-    - include_role:
+    - name: Include role to offline splunk on cluster peers C1 AG2
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           cluster/splunk_offline.yml
 
-    - include_role:
+    - name: Include role to install splunk enterprise on cluster peers C1 AG2
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-      vars:
-        cca_splunk_enterprise_upgrade: true
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
 
-- hosts: cluster_peers_cluster_c1:&ag3
+- name: Upgrade Cluster Peers Cluster C1 AG3
+  hosts: cluster_peers_cluster_c1:&ag3
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 20%
   pre_tasks:
-    - include_role:
+    - name: Include role to offline splunk on cluster peers C1 AG3
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           cluster/splunk_offline.yml
 
-    - include_role:
+    - name: Include role to install splunk enterprise on cluster peers C1 AG3
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
-      vars:
-        cca_splunk_enterprise_upgrade: true
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
 
-- hosts: cluster_manager_cluster_c1
+- name: Finalize Cluster Manager Cluster C1
+  hosts: cluster_manager_cluster_c1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - include_role:
+    - name: Include role to install splunk enterprise
+      ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           cluster/finalize_upgrade.yml
 
-    - include_role:
+    - name: Include role to run post upgrade tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
-
 
 
 #    ____           _   _   _                           _      ____  _   _  ____ _____         _
@@ -442,7 +481,7 @@
   hosts: searchhead_members_shcluster_c1
   strategy: linear
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
@@ -489,7 +528,7 @@
   hosts: searchhead_members_shcluster_c1
   strategy: linear
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
@@ -520,7 +559,7 @@
       ansible.builtin.include_role:
         name: cca.splunk.role-searchhead
         tasks_from:
-           upgrade_kvstore_engine_version.yml
+          upgrade_kvstore_engine_version.yml
       when:
         - shc_upgrade_kvstore_engine | default(false)
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')

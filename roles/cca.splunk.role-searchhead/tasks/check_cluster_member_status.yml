@@ -10,7 +10,7 @@
 # Release: 2023.1.1
 
 - name: Include task to login
-  include_tasks: splunk_login.yml
+  ansible.builtin.include_tasks: splunk_login.yml
 
 - name: Check if a search head cluster member is joined to the cluster
   ansible.builtin.command:

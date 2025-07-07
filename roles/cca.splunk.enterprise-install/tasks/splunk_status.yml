@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
 
 - name: Check if Splunk is installed
   ansible.builtin.stat:
@@ -42,7 +42,13 @@
 
 - name: Get current installed splunk version
   ansible.builtin.shell:
-    cmd: "timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | awk '{ print $2 }'"
+    cmd: >
+      set -o pipefail timeout {{ cca_splunk_command_timeout | default('60') }} && {{ splunk_path }}/bin/splunk version
+      --accept-license
+      --answer-yes
+      --no-prompt | awk '{ print $2 }'
+  args:
+    executable: /bin/bash
   register: splunk_enterprise_version_result
   when:
     - stat_splunk_enterprise_bin.stat.exists
@@ -62,6 +68,8 @@
     cmd: "{{ splunk_path }}/bin/splunk stop"
   when:
     - splunk_enterprise_version_result.stderr | default('') | regex_search('Migration information')
+  tags:
+    - skip_ansible_lint
 
 - name: If Splunk is left in migration state, then start it with migration arguments
   ansible.builtin.command:
@@ -69,6 +77,8 @@
   when:
     - splunk_enterprise_version_result.stderr is defined
     - splunk_enterprise_version_result.stderr | default('') | regex_search('Migration information')
+  tags:
+    - skip_ansible_lint
 
 - name: Control logic if Splunk should be upgraded
   ansible.builtin.set_fact:

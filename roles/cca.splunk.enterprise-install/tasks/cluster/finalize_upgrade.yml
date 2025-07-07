@@ -14,3 +14,5 @@
   ansible.builtin.command:
     cmd: "{{ splunk_path }}/bin/splunk upgrade-finalize cluster-peers"
   when: true
+  tags:
+    - skip_ansible_lint

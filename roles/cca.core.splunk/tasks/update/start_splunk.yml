@@ -1,0 +1,24 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Start splunk and enable service
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.1.1
+
+- name: Enable and start splunk (with retries to avoid race condition)
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: root
+  ansible.builtin.systemd:
+    name: '{{ systemd_enterprise_name }}'
+    enabled: true
+    state: started
+  register: splunk_systemd_result
+  until: splunk_systemd_result is succeeded
+  retries: 5
+  delay: 10
+  no_log: "{{ hide_password }}"

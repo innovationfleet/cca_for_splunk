@@ -71,7 +71,9 @@
     - control.linux_configuration.splunk_limits | default(true)
 
 - name: Get splunk version
-  ansible.builtin.include_tasks: ../../cca.core.splunk/tasks/get_splunk_version.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: get_splunk_version
   when:
     - control.linux_configuration.splunk_version | default(true)
 

@@ -23,7 +23,7 @@
       ansible-galaxy collection install community.crypto
       ansible-galaxy collection install ansible.posix
       pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3 splunk-appinspect aiohttp asyncio tenacity datetime
-    mode: 0755
+    mode: '0755'
   tags:
     - skip_ansible_lint
 

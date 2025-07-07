@@ -1,7 +1,7 @@
 # Set dynamic inventory and environment variable or data onboarding
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_onboarding_onboarding_file_version: '2024.2.1'
+cca_onboarding_onboarding_file_version: '2025.2.1'
 
 
 absolute_file_store_path: '{{ lookup("env", "CCA_ONBOARDING_REPO_DIR", default=inventory_dir + "/../..") }}/splunk'
@@ -13,6 +13,20 @@ shcluster_apps_sourcedir: 'shcluster/{{ environment_name }}/{{ shcluster_label }
 selected_shcluster_apps_sourcedir: 'shcluster/selectable'
 manager_apps_sourcedir: '{{ cluster_manager_config_bundle_dir }}/{{ environment_name }}/{{ cluster_label }}'
 selected_manager_apps_sourcedir: '{{ cluster_manager_config_bundle_dir }}/selectable'
+
+# Optional variables for customizing source directory paths
+# Uncomment and update with absolute paths
+# manager_apps_absolute_sourcedir:
+# selected_manager_apps_absolute_sourcedir:
+# shcluster_apps_absolute_sourcedir:
+# selected_shcluster_apps_absolute_sourcedir:
+# selected_apps_absolute_sourcedir:
+# versioned_apps_absolute_sourcedir
+
+# Uncomment to enable serverclass mode for bulk serverclass deployments
+# Requires special setup of deployment-server, seek support for guidance.
+# use_serverclass_mode: true
+# serial_deployment: 1
 deployment_servers_apps_source_dir: 'apps/deployment_servers/{{ environment_name }}'
 
 # Default rsync options for onboarding deployment

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 
 - name: Check Splunk binary
@@ -27,8 +27,11 @@
 
 - name: Check that Splunk Enterprise is running
   ansible.builtin.command:
-    cmd: "timeout 10 {{ splunk_path }}/bin/splunk status"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status"
   register: splunk_status_result
+  retries: "{{ cca_splunkd_status_retries | default(10) | int }}"
+  delay: 10
+  until: splunk_status_result.rc == 0
   changed_when: false
   when:
     - splunk_enterprise_is_installed

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Check if splunk is running by examine pid file
   ansible.builtin.stat:
@@ -16,9 +16,19 @@
 
 - name: Check current installed splunk version from running instance
   ansible.builtin.shell:
-    cmd: >-
-     timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | grep -E "Splunk [0-9\.]+ \(build" | awk '{ print $2 }'
+    cmd: >
+     set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }}
+     {{ splunk_path }}/bin/splunk version
+     --accept-license
+     --answer-yes
+     --no-prompt
+     | grep -E "Splunk [0-9\.]+ \(build" | awk '{ print $2 }'
+  args:
+    executable: /bin/bash
   register: splunk_enterprise_version_result
+  retries: "{{ cca_splunkd_cli_version_retries | default(10) | int }}"
+  delay: 10
+  until: splunk_enterprise_version_result.rc == 0
   when:
     - stat_splunk_pid.stat.exists
   changed_when: false
@@ -44,7 +54,9 @@
     current_splunk_enterprise_version: >-
       {% if stat_splunk_pid.stat.exists and splunk_enterprise_version_result.stdout is defined and splunk_enterprise_version_result.stdout | trim != '' %}
         {{ splunk_enterprise_version_result.stdout | trim }}
-      {% elif splunk_version_file_stat.stat.exists and splunk_version_file_content.content is defined and splunk_version_file_content.content | b64decode | trim != '' %}
+      {% elif splunk_version_file_stat.stat.exists
+        and splunk_version_file_content.content is defined
+        and splunk_version_file_content.content | b64decode | trim != '' %}
         {{ splunk_version_file_content.content | b64decode | trim }}
       {% else %}
         {{ splunk_enterprise_version | default('0.0.0') }}

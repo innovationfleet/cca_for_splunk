@@ -1,0 +1,264 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Take inventory name and get a adjecent search head cluster
+# member instance.
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.3.2
+
+
+# Bash script used to generate the structure for all clusters
+
+# Remove initail space in shebang line
+# !/usr/bin/bash
+# for i in {1..9} ; do
+# cat <<EOF
+
+# #####################################################################################
+# #
+# #  Find adjecent host a Search Head cluster Member that is used to transfer
+# #  captaincy if needed.
+# #
+# #####################################################################################
+# - name: Get index position of current host in group searchhead_members_shcluster_c${i}
+#   set_fact:
+# group_host_index: '{{ groups.searchhead_members_shcluster_c${i}.index(inventory_hostname) }}'
+# group_length: "{{ groups['searchhead_members_shcluster_c${i}'] | length }}"
+#   when:
+# - inventory_hostname in ( groups.searchhead_members | default([]) )_shcluster_c${i}
+#
+# - name: Set an adjecent host index in group searchhead_members_shcluster_c${i}
+#   set_fact:
+# next_host_index: "{{ group_host_index | int -1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+#   when:
+# - inventory_hostname in ( groups.searchhead_members | default([]) )_shcluster_c${i}
+#
+# - name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c${i}
+#   set_fact:
+# adjecent_host: "{{ groups['searchhead_members_shcluster_c${i}'][ next_host_index | int] }}"
+#   when:
+# - inventory_hostname in ( groups.searchhead_members | default([]) )_shcluster_c${i}
+#
+# EOF
+
+# done
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c1
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c1.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c1
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c1
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c1'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c2
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c2.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c2
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c2
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c2'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c3
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c3.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c3
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c3
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c3'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c4
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c4.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c4
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c4
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c4'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c5
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c5.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c5
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c5
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c5'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c6
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c6.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c6
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c6
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c6'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c7
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c7.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c7
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c7
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c7'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c8
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c8.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c8
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c8
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c8'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
+
+#####################################################################################
+#
+#  Find adjecent host a Search Head cluster Member that is used to transfer
+#  captaincy if needed.
+#
+#####################################################################################
+- name: Get index position of current host in group searchhead_members_shcluster_c9
+  ansible.builtin.set_fact:
+    group_host_index: '{{ groups.searchhead_members_shcluster_c9.index(inventory_hostname) }}'
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
+
+- name: Set an adjecent host index in group searchhead_members_shcluster_c9
+  ansible.builtin.set_fact:
+    adjecent_host_index: "{{ group_host_index | int - 1 if group_host_index | int >= 1 else group_host_index | int + 1 }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
+
+- name: Get inventory_hostname of the adjecent host in group searchhead_members_shcluster_c9
+  ansible.builtin.set_fact:
+    adjecent_host: "{{ groups['searchhead_members_shcluster_c9'][adjecent_host_index | int] }}"
+  when:
+    - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )

@@ -20,3 +20,5 @@
     - upgrade_init_cluster_peers.rc != 0
     - not upgrade_init_cluster_peers.stderr | regex_search('Rolling upgrade/restart is already in progress')
   when: true
+  tags:
+    - skip_ansible_lint

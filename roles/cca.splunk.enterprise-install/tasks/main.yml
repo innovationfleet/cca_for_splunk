@@ -12,33 +12,33 @@
 # tasks file for cca.splunk.enterprise-install
 #
 - name: Check Splunk status
-  include_tasks: splunk_status.yml
+  ansible.builtin.include_tasks: splunk_status.yml
 
 - name: Include task to stage install files
-  include_tasks: stage_install_files.yml
+  ansible.builtin.include_tasks: stage_install_files.yml
   when:
     - not stat_splunk_enterprise_bin.stat.exists or
       enterprise_upgrade | default(false)
 
 - name: Include task to set cluster-manager migrate state at initial install
-  include_tasks: set_cluster_manager_migrate_state.yml
+  ansible.builtin.include_tasks: set_cluster_manager_migrate_state.yml
   when:
     - not stat_splunk_enterprise_bin.stat.exists
     - inventory_hostname in ( groups.cluster_managers | default([]) )
     - splunk_enterprise_version is version('9.0.0', '>=')
 
 - name: Include task to ensure splunk version
-  include_tasks: ensure_splunk_version.yml
+  ansible.builtin.include_tasks: ensure_splunk_version.yml
   when:
     - not stat_splunk_enterprise_bin.stat.exists or
       enterprise_upgrade | default(false)
 
 - name: Include task to always ensure that splunk is running
-  include_tasks: ensure_splunk_status_started.yml
+  ansible.builtin.include_tasks: ensure_splunk_status_started.yml
   when:
     - ensure_splunkd_started | default(true)
 
 - name: Include task to inform that this host is managed by ansible
-  include_tasks: ansible_managed.yml
+  ansible.builtin.include_tasks: ansible_managed.yml
   when:
     - not cca_splunk_enterprise_upgrade | default(false)

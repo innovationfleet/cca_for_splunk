@@ -7,7 +7,9 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
+
+
 - name: Perform a splunkd restart in a block
   block:
     - name: Include tasks to login to splunk cli
@@ -17,20 +19,24 @@
 # TODO: Check if there is a pending rolling restart before starting
 #       a new one, espcially when init the SHC
     - name: Kick off a rolling restart of a SHC member
-      ansible.builtin.shell: "{{ shcluster_members_rolling_restart_command }}"
+      ansible.builtin.command: "{{ shcluster_members_rolling_restart_command }}"
       register: splunk_rolling_restart_result
       when:
         ( stat_ansible_managed.stat.exists is defined and
-          stat_ansible_managed.stat.exists == true )
+          stat_ansible_managed.stat.exists)
         or
-        ( cca_splunk_init | default (false) == true )
+        ( cca_splunk_init | default (false) )
       failed_when:
         - splunk_rolling_restart_result.rc != 22
         - splunk_rolling_restart_result.rc != 0
+      tags:
+        - skip_ansible_lint
 
     - name: Perform a cleanup of state file
       ansible.builtin.file:
         path: "{{ rolling_restart_pending }}"
         state: absent
       when:
-        - splunk_rolling_restart_result.changed | default(false) == true
+        - splunk_rolling_restart_result.changed | default(false)
+      tags:
+        - skip_ansible_lint

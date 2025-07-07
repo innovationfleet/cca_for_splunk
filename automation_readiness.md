@@ -102,12 +102,12 @@ Logon as the same user that executed the Automation Readiness Playbook. Execute 
 ```
 cd
 alias python='/usr/bin/python3.11'
-mkdir -p ~/tools/python-venv/ansible2.14
+mkdir -p ~/tools/python-venv/ansible2.18
 cd ~/tools/python-venv
-python -m venv ansible2.14
-source ansible2.14/bin/activate
-~/tools/python-venv/ansible2.14/bin/python3.11 -m pip install --upgrade pip
-pip install ansible-core==2.14.13
+python -m venv ansible2.18
+source ansible2.18/bin/activate
+~/tools/python-venv/ansible2.18/bin/python3.11 -m pip install --upgrade pip
+pip install ansible-core==2.18.6
 pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3
 ansible-galaxy collection install community.general
 ansible-galaxy collection install ansible.posix
@@ -117,7 +117,7 @@ ansible-galaxy collection install community.crypto
 Add the following line to your user profile to activate the Python virtual environment every time you login.
 
 ```
-source ~/tools/python-venv/ansible2.14/bin/activate
+source ~/tools/python-venv/ansible2.18/bin/activate
 ```
 Perform a test by logging out & in again and execute the following command.
 ```
@@ -126,13 +126,13 @@ if [[ -v VIRTUAL_ENV ]] ; then ansible --version ; else echo "VIRTUAL_ENV is not
 
 You should expect a similar output as below. If you are not getting the expected result, review the previous steps.
 ```
-ansible [core 2.14.13]
+ansible [core 2.18.6]
   config file = None
   configured module search path = ['/opt/cca_manager/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
-  ansible python module location = /opt/cca_manager/tools/python-venv/ansible2.14/lib64/python3.11/site-packages/ansible
+  ansible python module location = /opt/cca_manager/tools/python-venv/ansible2.18/lib64/python3.11/site-packages/ansible
   ansible collection location = /opt/cca_manager/.ansible/collections:/usr/share/ansible/collections
-  executable location = /opt/cca_manager/tools/python-venv/ansible2.14/bin/ansible
-  python version = 3.11.6 (main, Nov 22 2023, 00:00:00) [GCC 11.4.1 20230605 (Red Hat 11.4.1-2)] (/opt/cca_manager/tools/python-venv/ansible2.14/bin/python3.11)
+  executable location = /opt/cca_manager/tools/python-venv/ansible2.18/bin/ansible
+  python version = 3.11.6 (main, Nov 22 2023, 00:00:00) [GCC 11.4.1 20230605 (Red Hat 11.4.1-2)] (/opt/cca_manager/tools/python-venv/ansible2.18/bin/python3.11)
   jinja version = 3.1.2
   libyaml = True
   ```
@@ -166,7 +166,7 @@ The default strategy in Ansible is called linear and doesn't need to be specifie
 If we set it to `mitogen_linear` the playbooks will run much faster, up 4X.
 
 To use it your self, read up on [Ansible Mitogen](https://github.com/mitogen-hq/mitogen).
-Temporarily we have forked and patched the mitogen package. Get latest from https://github.com/innovationfleet/mitogen Remember to checkout branch ansible.2.14.13 after cloning the repo. Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
+Temporarily we have forked and patched the mitogen package. Get latest from https://github.com/innovationfleet/mitogen Remember to checkout branch ansible.2.18.6 after cloning the repo. Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
 
 Add `export ANSIBLE_STRATEGY="mitogen_linear"`
 to start using the highly recommended strategy plugin.
@@ -203,7 +203,7 @@ export CCA_INFRASTRUCTURE_REPO_DIR=~/data/main/cca_splunk_infrastructure
 export CCA_ONBOARDING_REPO_DIR=~/data/main/cca_splunk_onboarding
 export CCA_REPO_DIR=~/data/main/cca_for_splunk
 
-source ~/tools/python-venv/ansible2.14/bin/activate
+source ~/tools/python-venv/ansible2.18/bin/activate
 ```
 Wait with ANSIBLE_VAULT_PASSWORD_FILE until it exists.
 

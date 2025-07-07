@@ -7,51 +7,64 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Include tasks to login to splunk cli
-  ansible.builtin.include_tasks: ../../cca.core.splunk/tasks/splunk_login.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: splunk_login.yml
   when:
     - enterprise_upgrade | default(false)
 
 - name: Check if kvstore is enabled
-  ansible.builtin.shell: "{{ splunk_path }}/bin/splunk show kvstore-status"
+  ansible.builtin.command:
+    cmd: "{{ splunk_path }}/bin/splunk show kvstore-status"
   register: kvstore_status
+  tags:
+    - skip_ansible_lint
 
 - name: Check if standalone-kvupgrade-status command is available
-  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk help show | grep standalone-kvupgrade-status"
+  ansible.builtin.shell: "set -o pipefail && timeout 30 {{ splunk_path }}/bin/splunk help show | grep standalone-kvupgrade-status"
+  args:
+    executable: /bin/bash
   register: kv_command_check
   ignore_errors: true
   changed_when: false
-  retries: 5
-  delay: 30
+  retries: "{{ cca_splunk_kvstore_command_retries | default(5) | int }}"
+  delay: "{{ cca_splunk_kvstore_command_delay | default(30) | int }}"
   until: kv_command_check.rc is defined and kv_command_check.rc == 0 or kv_command_check.rc == 1
   when:
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
     - kvstore_status.stdout is search('status :')
   no_log: "{{ hide_password | default(false) }}"
+  tags:
+    - skip_ansible_lint
 
 
 - name: Wait for KVStore upgrade to complete
-  ansible.builtin.shell: "timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
+  ansible.builtin.shell: "set -o pipefail && timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
+  args:
+    executable: /bin/bash
   register: kv_status
   until: >
     kv_status.stdout is search('Upgrade Status:\s+0')
   retries: "{{ cca_splunk_kvstore_upgrade_retries | default(75) | int }}"
   delay: "{{ cca_splunk_kvstore_upgrade_delay | default(60) | int }}"
   changed_when: false
-  failed_when: 
+  failed_when:
     - kv_status.stdout is not search('Upgrade Status:\s+0')
     - "'is not a valid argument' not in kv_status.stderr"
   when:
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
     - kv_command_check is defined
-    - kv_command_check.rc | default(0) == 0 
+    - kv_command_check.rc | default(0) == 0
     - kv_command_check.stdout | default('') != ""
     - kvstore_status.stdout is search('status :')
-  
+  tags:
+    - skip_ansible_lint
+
 - name: Debug KVStore upgrade status
   ansible.builtin.debug:
     msg: "KVStore Upgrade Output: {{ kv_status.stdout }}"
@@ -59,16 +72,18 @@
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
     - kv_command_check is defined
-    - kv_command_check.rc | default(0) == 0 
+    - kv_command_check.rc | default(0) == 0
     - kv_command_check.stdout | default('') != ""
     - ansible_verbosity > 1
     - kvstore_status.stdout is search('status :')
 
 - name: Include tasks to logout on splunk cli
-  ansible.builtin.include_tasks: ../../cca.core.splunk/tasks/splunk_logout.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: splunk_logout.yml
   when:
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
     - kv_command_check is defined
-    - kv_command_check.rc | default(0) == 0 
+    - kv_command_check.rc | default(0) == 0
     - kv_command_check.stdout | default('') != ""

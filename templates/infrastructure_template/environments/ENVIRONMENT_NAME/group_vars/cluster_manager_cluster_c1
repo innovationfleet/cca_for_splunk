@@ -400,6 +400,51 @@ splunk_conf_group_settings:
          comment: >-
            Override default value from manager-apps/_cluster/defaults/indexes.conf
 
+    - section: '_dsphonehome'
+      options:
+       - option: 'frozenTimePeriodInSecs'
+         value: "{{ splunk_retentiontime_dsphonehome | default('604800') }}"
+         comment: >-
+          If not set, it defaults to approx 6 years
+       - option: 'homePath'
+         value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
+         comment: >-
+           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+       - option: 'coldPath'
+         value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
+         comment: >-
+           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+
+    - section: '_dsappevent'
+      options:
+       - option: 'frozenTimePeriodInSecs'
+         value: "{{ splunk_retentiontime_dsappevent | default('5184000') }}"
+         comment: >-
+          If not set, it defaults to approx 6 years
+       - option: 'homePath'
+         value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
+         comment: >-
+           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+       - option: 'coldPath'
+         value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
+         comment: >-
+           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+
+    - section: '_dsclient'
+      options:
+       - option: 'frozenTimePeriodInSecs'
+         value: "{{ splunk_retentiontime_dsclient | default('5184000') }}"
+         comment: >-
+          If not set, it defaults to approx 6 years
+       - option: 'homePath'
+         value: "{{ 'volume:' + splunk_volume_name_hot + '/$_index_name/db' }}"
+         comment: >-
+           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+       - option: 'coldPath'
+         value: "{{ 'volume:' + splunk_volume_name_cold + '/$_index_name/colddb' }}"
+         comment: >-
+           Splunk doesn't honor the default value for homePath or coldPath in version 8.2
+
     - section: '_telemetry'
       options:
        - option: 'frozenTimePeriodInSecs'

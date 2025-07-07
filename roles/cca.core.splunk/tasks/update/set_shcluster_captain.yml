@@ -1,0 +1,72 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Set new search head cluster captain
+#
+# Prerequisite: If check_capatincy.yml is executed the adjecent_host
+#               is set, if not use inventory_hostname
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Ensure that splunk is running
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('120') }} {{ start_command }}
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_start_retries | default(10) | int }}"
+  delay: 10
+  changed_when:
+    - false
+  tags:
+    - skip_ansible_lint
+
+- name: Verify that Splunk is running
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status
+      --accept-license
+      --answer-yes
+      --no-prompt
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_status_retries | default(10) | int }}"
+  delay: 10
+  changed_when: false
+  check_mode: false
+
+- name: Splunk login
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk login
+      --accept-license
+      --answer-yes
+      --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'
+  register: splunk_login_result
+  no_log: "{{ hide_password }}"
+  until: splunk_login_result.rc == 0
+  retries: "{{ cca_splunk_login_retries | default(10) | int }}"
+  delay: 10
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Set new target captain
+  ansible.builtin.set_fact:
+    shcluster_captain: "{{ adjecent_host if adjecent_host is defined else inventory_hostname }}"
+
+- name: Update splunk shcluster captain self or adjecent host
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('360') }} {{ splunk_path }}/bin/splunk transfer shcluster-captain
+      -mgmt_uri https://{{ shcluster_captain }}:{{ splunk_enterprise_mgmt_port }}
+  register: splunk_transfer_result
+  retries: "{{ cca_splunkd_cli_transfer_retries | default(10) | int }}"
+  delay: 10
+  until: splunk_transfer_result.rc == 0
+  tags:
+    - skip_ansible_lint

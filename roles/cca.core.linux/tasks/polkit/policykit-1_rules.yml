@@ -7,16 +7,17 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2024.2.2
+# Release: 2024.3.1
 
 - name: Gather the package facts
   ansible.builtin.package_facts:
     manager: apt
 
 - name: Block for old config syntax
+  when: ansible_facts.packages['policykit-1'][0].version is version('0.106', '<')
   block:
     - name: Information lower than 0.105
-      debug:
+      ansible.builtin.debug:
         msg: "Version lower than 0.106, implementing old syntax for config"
 
     - name: Configure polkit rule in /etc/polkit.1/rules.d
@@ -25,12 +26,12 @@
         dest: /etc/polkit-1/localauthority/50-local.d/10-Splunkd.pkla
         mode: '0644'
       register: polkit_template_status
-  when: ansible_facts.packages.get('policykit-1')[0].version < "0.106"
 
 - name: Block for new config syntax
+  when: ansible_facts.packages['policykit-1'][0].version is version('0.106', '>')
   block:
     - name: Information greater than 0.105
-      debug:
+      ansible.builtin.debug:
         msg: "Version greater than 0.106, implementing new syntax for config"
 
     - name: Configure polkit rule in /etc/polkit.1/rules.d
@@ -39,13 +40,13 @@
         dest: /etc/polkit-1/rules.d/10-Splunkd.rules
         mode: '0644'
       register: polkit_template_status
-  when: ansible_facts.packages.get('policykit-1')[0].version > "0.106"
 
 - name: Restart polkit systemd service
   ansible.builtin.systemd:
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
     name: polkit
-  when:
-    - polkit_template_status.changed
+  when: polkit_template_status.changed
   no_log: "{{ ansible_verbosity < 3 }}"
+  tags:
+    - skip_ansible_lint

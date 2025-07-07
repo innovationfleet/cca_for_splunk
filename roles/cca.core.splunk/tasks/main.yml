@@ -16,40 +16,42 @@
 # Release: 2023.3.2
 
 - name: Include task for checking cca_for_splunk init state
-  include_tasks: check_init.yml
+  ansible.builtin.include_tasks: check_init.yml
 
 - name: Include task for checking splunk.secret
-  include_tasks: check_splunk_secret.yml
+  ansible.builtin.include_tasks: check_splunk_secret.yml
 
 - name: Include task ensuring local admin user
-  include_tasks: local_users.yml
+  ansible.builtin.include_tasks: local_users.yml
 
 - name: Include task for checking certificate status
-  include_tasks: ../../cca.splunk.ssl-certificates/tasks/validate_target_certificates.yml
+  ansible.builtin.include_role:
+    name: cca.splunk.ssl-certificates
+    tasks_from: validate_target_certificates
 
 - name: Include task to calculate splunk enterprise version
-  include_tasks: get_splunk_version.yml
+  ansible.builtin.include_tasks: get_splunk_version.yml
 
 - name: Run a precheck of the config to find errors
-  include_tasks: precheck_settings.yml
+  ansible.builtin.include_tasks: precheck_settings.yml
 
 - name: Include task for splunk general settings
-  include_tasks: set_splunk_general_settings.yml
+  ansible.builtin.include_tasks: set_splunk_general_settings.yml
   when:
     - splunk_conf_general_settings_flattened is defined
 
 - name: Include task for splunk group settings
-  include_tasks: set_splunk_group_settings.yml
+  ansible.builtin.include_tasks: set_splunk_group_settings.yml
   when:
     - splunk_conf_group_settings_flattened is defined
 
 - name: Include task for splunk host settings
-  include_tasks: set_splunk_host_settings.yml
+  ansible.builtin.include_tasks: set_splunk_host_settings.yml
   when:
     - splunk_conf_host_settings_flattened is defined
 
 - name: Include task for adding Splunk license
-  include_tasks: add_license.yml
+  ansible.builtin.include_tasks: add_license.yml
   when:
     - is_license_manager | default(false)
 
@@ -64,13 +66,15 @@
 
 - name: Restart Splunkd if splunk.secret is replaced
   ansible.builtin.command:
-    cmd: "timeout 120 {{ restart_command }}"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('120') }} {{ restart_command }}"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
   retries: "{{ cca_splunkd_restart_retries | default(5) | int }}"
   delay: 10
   when:
-    - result_splunk_secret_replace.changed == true
+    - result_splunk_secret_replace.changed
+  tags:
+    - skip_ansible_lint
 
 - name: Check for first time run
   ansible.builtin.stat:
@@ -79,28 +83,40 @@
 
 - name: Ensure splunk is running on non searchhead members
   ansible.builtin.command:
-    cmd: "timeout 120 {{ start_command }}"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('240') }} {{ start_command }}"
   register: splunk_status_result
-  until: splunk_status_result.rc == 0
+  until: >
+    splunk_status_result.rc == 0 or
+    ('The splunk daemon (splunkd) is already running' in splunk_status_result.stdout)
   retries: "{{ cca_splunkd_start_retries | default(5) | int }}"
   delay: 10
   changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
+  failed_when: >
+    splunk_status_result.rc != 0 and
+    ('The splunk daemon (splunkd) is already running' not in splunk_status_result.stdout)
   when:
     - inventory_hostname not in  ( groups.searchhead_members | default([]) )
 
 - name: Wait for a rolling restart on search head cluster to complete
-  ansible.builtin.import_tasks: ../../cca.splunk.role-searchhead/tasks/wait_for_shcluster.yml
+  ansible.builtin.import_role:
+    name: cca.splunk.role-searchhead
+    tasks_from: wait_for_shcluster.yml
   when:
     - inventory_hostname in ( groups.searchhead_members | default([]) )
     - stat_var_run_splunk.stat.exists
 
 - name: Ensure splunk is running on searchhead members
   ansible.builtin.command:
-    cmd: "timeout 240 {{ start_command }}"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('240') }} {{ start_command }}"
   register: splunk_status_result
-  until: splunk_status_result.rc == 0
+  until: >
+    splunk_status_result.rc == 0 or
+    ('The splunk daemon (splunkd) is already running' in splunk_status_result.stdout)
   retries: "{{ cca_splunkd_start_retries | default(5) | int }}"
   delay: 10
   changed_when: "'This appears to be your first time running this version of Splunk.' in splunk_status_result.stdout"
+  failed_when: >
+    splunk_status_result.rc != 0 and
+    ('The splunk daemon (splunkd) is already running' not in splunk_status_result.stdout)
   when:
     - inventory_hostname in ( groups.searchhead_members | default([]) )

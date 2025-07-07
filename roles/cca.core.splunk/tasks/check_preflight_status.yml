@@ -7,7 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
+
 - name: Authenticate and check Pre-flight status
   block:
     - name: Include tasks to login to splunk cli
@@ -15,18 +16,24 @@
         splunk_login.yml
 
     - name: Wait until kvstore is ready
-      ansible.builtin.shell:
-        cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
+      ansible.builtin.command:
+        cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show kvstore-status"
       register: kvstore_status
       retries: "{{ cca_splunk_kvstore_status_retries | default(6) | int }}"
       delay: 10
       until: "'status : ready' in kvstore_status.stdout | default('') | string"
       changed_when: false
       check_mode: false
+      tags:
+        - skip_ansible_lint
 
     - name: Check Pre-flight status on Cluster Manager
       ansible.builtin.shell:
-        cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose | grep Pre-flight"
+        cmd: >
+          set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show cluster-status
+          --verbose | grep Pre-flight
+      args:
+        executable: /bin/bash
       register: cluster_manager_preflight_status
       retries: "{{ preflight_command_retries }}"
       delay: 60
@@ -37,19 +44,57 @@
         - preflight_command_retries | int < 90
         - not skip_preflight_check | default(false)
 
-    - name: Check Pre-flight status on Cluster Manager, no log
-      ansible.builtin.shell:
-        cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose -auth {{ splunk_cli_user }}:{{ splunk_cli_user_password }} | grep Pre-flight"
-      register: cluster_manager_preflight_status_no_log
-      retries: "{{ preflight_command_retries }}"
-      delay: 60
-      until: cluster_manager_preflight_status_no_log.stdout | regex_search(('Pre-flight check successful.*YES'))
-      changed_when: false
-      check_mode: false
-      no_log: "{{ hide_password }}"
-      when:
-        - preflight_command_retries | int >= 90
-        - not skip_preflight_check | default(false)
+    - name: Check Pre-flight status on Cluster Manager with fallback
+      block:
+        - name: Check Pre-flight status on Cluster Manager, no log
+          ansible.builtin.shell:
+            cmd: >
+              set -o pipefail &&
+              timeout {{ cca_splunk_command_timeout | default('60') }}
+              {{ splunk_path }}/bin/splunk show cluster-status --verbose
+              --auth {{ splunk_cli_user }}:{{ splunk_cli_user_password }}
+              | grep Pre-flight
+          args:
+            executable: /bin/bash
+          register: cluster_manager_preflight_status_no_log
+          retries: "{{ preflight_command_retries }}"
+          delay: 60
+          until: cluster_manager_preflight_status_no_log.stdout | regex_search('Pre-flight check successful.*YES')
+          changed_when: false
+          check_mode: false
+          no_log: "{{ hide_password }}"
+          when:
+            - preflight_command_retries | int >= 90
+            - not skip_preflight_check | default(false)
+
+      rescue:
+        - name: Restart Splunk as preflight failed
+          ansible.builtin.command:
+            cmd: "{{ splunk_path }}/bin/splunk restart"
+          register: splunk_restart_result
+          changed_when: false
+          no_log: "{{ hide_password }}"
+
+        - name: Retry Pre-flight status on Cluster Manager after restart, no log
+          ansible.builtin.shell:
+            cmd: >
+              set -o pipefail &&
+              timeout {{ cca_splunk_command_timeout | default('60') }}
+              {{ splunk_path }}/bin/splunk show cluster-status --verbose
+              --auth {{ splunk_cli_user }}:{{ splunk_cli_user_password }}
+              | grep Pre-flight
+          args:
+            executable: /bin/bash
+          register: cluster_manager_preflight_status_no_log
+          retries: "{{ preflight_command_retries }}"
+          delay: 60
+          until: cluster_manager_preflight_status_no_log.stdout | regex_search('Pre-flight check successful.*YES')
+          changed_when: false
+          check_mode: false
+          no_log: "{{ hide_password }}"
+          when:
+            - preflight_command_retries | int >= 90
+            - not skip_preflight_check | default(false)
 
     - name: Include tasks to logout from splunk cli
       ansible.builtin.include_tasks:

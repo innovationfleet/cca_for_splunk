@@ -1,0 +1,177 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Login to splunk on cluster manager that relates to the host
+#              given as cluster_manager_loop_var variable from outer loop.
+#              Wait until preflight status is ok on the cluster manager.
+#              Option to skip pre flight check by setting cluster_peer_preflight to false
+#              Enable splunk maintenance-mode on the cluster manager.
+#
+# Prerequisite: This tasks must be include in an outer task that sets the
+#               cluster_manager inventory name and passes that in the include_tasks
+#               module.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Ensure that splunk is running
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('120') }} {{ start_command }}
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_start_retries | default(10) | int }}"
+  delay: 10
+  changed_when:
+    - false
+  delegate_to: "{{ cluster_manager_loop_var }}"
+
+- name: Verify that Splunk is running
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status
+      --accept-license --answer-yes
+      --no-prompt
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_status_retries | default(10) | int }}"
+  delay: 10
+  changed_when: false
+  check_mode: false
+  delegate_to: "{{ cluster_manager_loop_var }}"
+
+- name: Splunk login
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk login
+      --accept-license
+      --answer-yes
+      --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'
+  register: splunk_login_result
+  no_log: "{{ hide_password }}"
+  until: splunk_login_result.rc == 0
+  retries: "{{ cca_splunk_login_retries | default(10) | int }}"
+  delay: 10
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  delegate_to: "{{ cluster_manager_loop_var }}"
+
+- name: Assert to find out if the login was successful
+  ansible.builtin.assert:
+    that:
+      - splunk_login_result.rc | int == 0
+    fail_msg: >-
+      Splunk command or login failed with the reason (
+      {{ splunk_login_result.stderr | default('Skipped task, disregard this stderr message') }} )
+      Splunk command had an unexpected result if this is not blank (
+      {{ splunk_login_result.stdout | default('Skipped task, disregard this stderr message') }}
+      Return code ={{ splunk_login_result.rc }} )
+    success_msg: >-
+      Login successful
+  delegate_to: "{{ cluster_manager_loop_var }}"
+
+- name: Wait until kvstore is ready
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show kvstore-status
+  register: kvstore_status
+  retries: "{{ cca_splunk_kvstore_status_retries | default(6) | int }}"
+  delay: 10
+  until: "'status : ready' in kvstore_status.stdout | default('') | string"
+  changed_when: false
+  check_mode: false
+  delegate_to: "{{ cluster_manager_loop_var }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Disable maintenance mode, in case it was enabled from a previous failed run
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('30') }} {{ splunk_path }}/bin/splunk disable maintenance-mode
+      --answer-yes
+      --no-prompt
+  delegate_to: "{{ cluster_manager_loop_var }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Check Pre-flight status on Cluster Manager
+  ansible.builtin.shell:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show cluster-status
+      --verbose | grep Pre-flight
+  register: cluster_manager_preflight_status
+  retries: "{{ (preflight_command_retries | int) * 2 }}"
+  delay: "{{ 60 // 2 }}"
+  until: cluster_manager_preflight_status.stdout | regex_search(('Pre-flight check successful.*YES'))
+  changed_when: false
+  check_mode: false
+  when:
+    - preflight_command_retries | int < 90
+    - cluster_peer_preflight | default(true)
+  delegate_to: "{{ cluster_manager_loop_var }}"
+  tags:
+    - skip_ansible_lint
+
+# An intermittent error has been discovered during delegate action and retry.
+# Shorten delay and doubled number of retires has cleared the issue.
+# Playbook error saved as reference for future.
+#
+# fatal: [splunk-aws-demo-release-test-clp-1202 -> splunk-aws-demo-release-test-clm-1101]: UNREACHABLE! => changed=false
+#  msg: 'Failed to create temporary directory. In some cases, you may have been able to authenticate and did not have permissions
+#  on the target directory. Consider changing the remote tmp path in ansible.cfg to a path rooted in "/tmp", for more error information
+#  use -vvv. Failed command was: ( umask 77 && mkdir -p " echo /var/tmp "&& mkdir "
+#  echo /var/tmp/ansible-tmp-1720585249.9389756-1473768-25663933403322 " && echo ansible-tmp-1720585249.9389756-1473768-25663933403322="
+#  echo /var/tmp/ansible-tmp-1720585249.9389756-1473768-25663933403322 " ), exited with result -13'
+#  unreachable: true
+#
+- name: Check Pre-flight status on Cluster Manager, no log
+  ansible.builtin.shell:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show cluster-status
+      --verbose -auth {{ splunk_cli_user }}:{{ splunk_cli_user_password }} | grep Pre-flight
+  register: cluster_manager_preflight_status_no_log
+  retries: "{{ (preflight_command_retries | int) * 2 }}"
+  delay: "{{ 60 // 2 }}"
+  until: cluster_manager_preflight_status_no_log.stdout | regex_search(('Pre-flight check successful.*YES'))
+  changed_when: false
+  check_mode: false
+  no_log: "{{ hide_password }}"
+  when:
+    - preflight_command_retries | int >= 90
+    - cluster_peer_preflight | default(true)
+  delegate_to: "{{ cluster_manager_loop_var }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Enable maitenance mode
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('30') }} {{ splunk_path }}/bin/splunk enable maintenance-mode
+      --answer-yes --no-prompt
+  delegate_to: "{{ cluster_manager_loop_var }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Splunk logout
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk logout
+  register: splunk_logout_result
+  until: splunk_logout_result.rc == 0
+  retries: "{{ cca_splunk_logout_retries | default(60) | int }}"
+  delay: 10
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  delegate_to: "{{ cluster_manager_loop_var }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Create state file that the cluster manager should be restarted
+  ansible.builtin.file:
+    path: "{{ splunkd_restart_pending }}"
+    state: touch
+    mode: '0400'
+  delegate_to: "{{ cluster_manager_loop_var }}"

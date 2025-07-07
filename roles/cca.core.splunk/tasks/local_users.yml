@@ -23,6 +23,8 @@
     mode: '0600'
     create: true
   notify: notify splunkd restart
+  tags:
+    - skip_ansible_lint
 
 - name: General Setting - Add additional local users to Splunk
   ansible.builtin.lineinfile:

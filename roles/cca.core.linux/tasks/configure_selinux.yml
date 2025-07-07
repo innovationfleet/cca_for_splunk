@@ -7,11 +7,39 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.2.1
+# Release: 2025.2.1
 
 
 - name: Put SELinux in desired mode
-  selinux:
+  ansible.posix.selinux:
     policy: targeted
     state: "{{ cca_selinux_state | default('disabled') }}"
   notify: notify server reboot
+  when:
+    - not use_shell_fallback | default(false)
+
+- name: Get current SELinux mode
+  ansible.builtin.command: getenforce
+  register: selinux_mode
+  changed_when: false
+  when:
+    - use_shell_fallback | default(false)
+
+- name: Ensure SELINUX=enforcing in /etc/selinux/config
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: "SELINUX={{ cca_selinux_state | default('disabled') }}"
+  notify: notify server reboot
+  when:
+    - selinux_mode.stdout | default('') != cca_selinux_state | default('disabled')
+    - use_shell_fallback | default(false)
+
+- name: Set SELinux runtime state via shell (fallback)
+  ansible.builtin.command: >
+    setenforce {{ '1' if cca_selinux_state == 'enforcing' else '0' }}
+  when:
+    - use_shell_fallback | default(false)
+    - cca_selinux_state in ['enforcing', 'permissive']
+  tags:
+    - skip_ansible_lint

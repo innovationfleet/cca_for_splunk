@@ -13,7 +13,9 @@
   ansible.builtin.include_tasks: splunk_login.yml
 
 - name: Include task to check if Search head cluster is boot strapped
-  ansible.builtin.include_tasks: ../../cca.splunk.role-searchhead/tasks/check_captain_init_status.yml
+  ansible.builtin.include_role:
+    name: cca.splunk.role-searchhead
+    tasks_from: check_captain_init_status.yml
 
 - name: Set fact if shcluster C1 is bootstrapped
   ansible.builtin.set_fact:
@@ -81,10 +83,13 @@
   check_mode: false
   when:
     - not status_shc_init
+  tags:
+    - skip_ansible_lint
 
 - name: Wait until kvstore is ready
-  ansible.builtin.shell:
-    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show kvstore-status
   register: kvstore_status
   retries: "{{ cca_splunk_kvstore_status_retries | default(6) | int }}"
   delay: 10
@@ -93,6 +98,8 @@
   check_mode: false
   when:
     - not status_shc_init
+  tags:
+    - skip_ansible_lint
 
 - name: Wait until rolling restart is completed
   ansible.builtin.command:

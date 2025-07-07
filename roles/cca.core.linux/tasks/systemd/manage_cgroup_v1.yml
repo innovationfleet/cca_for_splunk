@@ -7,9 +7,14 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Block for debian based hosts
+  when:
+    - ansible_distribution == 'Debian' or
+      ansible_distribution == 'Ubuntu'
+    - running_kernel_cgroup_version | default('') != 'cgroupv1'
+  notify: notify server reboot
   block:
     - name: Configure legacy cgroup version until Splunk supports cgroupv2
       ansible.builtin.lineinfile:
@@ -21,17 +26,14 @@
 
     - name: Update Grub
       ansible.builtin.command:
-        cmd: |
+        cmd: >
           update-grub
-  when:
-    - ansible_distribution == 'Debian' or
-      ansible_distribution == 'Ubuntu'
-    - running_kernel_cgroup_version | default('') != 'cgroupv1'
-  notify: notify server reboot
+      tags:
+        - skip_ansible_lint
 
 - name: Configure legacy cgroup version until Splunk supports cgroupv2
   ansible.builtin.command:
-    cmd: |
+    cmd: >
       grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0"
   when:
     - ansible_distribution != 'Debian'
@@ -39,6 +41,8 @@
     - running_kernel_cgroup_version | default('') != 'cgroupv1'
   register: grubby_kernel_update_status
   notify: notify server reboot
+  tags:
+    - skip_ansible_lint
 
 - name: Copy cgroup handler script
   ansible.builtin.copy:
@@ -60,4 +64,4 @@
     configure_cgroup_version: cgroupv1
 
 - name: Trigger restart if pending from cgroups update
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers

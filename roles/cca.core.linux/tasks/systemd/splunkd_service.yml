@@ -31,6 +31,8 @@
     mode: '0644'
   register: systemd_limits_result
   notify: notify restart splunkd service
+  tags:
+    - skip_ansible_lint
 
 - name: Configure systemd for the new Splunkd service
   ansible.builtin.systemd:

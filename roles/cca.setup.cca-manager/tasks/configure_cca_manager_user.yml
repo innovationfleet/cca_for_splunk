@@ -25,10 +25,11 @@
   ansible.builtin.file:
     path: "{{ directory }}"
     state: 'directory'
+    mode: '0700'
   loop:
     "{{ cca_manager_directories }}"
   loop_control:
-     loop_var: directory
+    loop_var: directory
 
 - name: Check if secrets file exists
   ansible.builtin.stat:
@@ -40,6 +41,8 @@
     cmd: "openssl rand -hex 32 >> {{ cca_manager_ansible_vault_secret_path }}"
   when:
     - not stat_vault_secret.stat.exists
+  tags:
+    - skip_ansible_lint
 
 - name: Generate a .profile for the user
   ansible.builtin.copy:
@@ -98,17 +101,20 @@
       shopt -s histappend
       PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
 
-    mode: 400
+    mode: '0400'
 
 - name: Get python path
   ansible.builtin.command:
     cmd: "which python{{ cca_python_minor_version }}"
   register: result_python_path
+  tags:
+    - skip_ansible_lint
 
 - name: Touch file to ensure it exists
   ansible.builtin.file:
     path: "{{ cca_manager_user_dir }}/.profile_local"
     state: 'touch'
+    mode: '0600'
 
 - name: Add settings to .profile_local for CCA usage
   ansible.builtin.lineinfile:
