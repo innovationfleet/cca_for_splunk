@@ -7,20 +7,29 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
 
 - name: Login to splunk
-  include_tasks: ../../../cca.core.splunk/tasks/splunk_login.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: splunk_login.yml
 
 - name: Set a search head cluster member in manual detention
   ansible.builtin.command:
     cmd: "{{ splunk_path }}/bin/splunk edit shcluster-config -manual_detention on"
   when:
     - enterprise_upgrade | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Check status and wait until all historical searches has completed
   ansible.builtin.shell:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk list shcluster-member-info | grep "active"'
+    cmd: >
+      set -o pipefail && timeout {{ splunk_timeout_shcluster_member_info | default('120') }}
+      {{ splunk_path }}/bin/splunk list shcluster-member-info
+      | grep "active"
+  args:
+    executable: /bin/bash
   register: shcluster_member_info_status
   until: "'active_historical_search_count:0' in shcluster_member_info_status.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -29,10 +38,17 @@
   when:
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
+  tags:
+    - skip_ansible_lint
 
 - name: Check status and wait until all realtime searches has completed
   ansible.builtin.shell:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk list shcluster-member-info | grep "active"'
+    cmd: >
+      set -o pipefail && timeout {{ splunk_timeout_shcluster_member_info | default('120') }}
+      {{ splunk_path }}/bin/splunk list shcluster-member-info
+      | grep "active"
+  args:
+    executable: /bin/bash
   register: shcluster_member_info_status
   until: "active_realtime_search_count:0' in shcluster_member_info_status.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -41,18 +57,26 @@
   when:
     - enterprise_upgrade | default(false)
     - not ansible_check_mode
+  tags:
+    - skip_ansible_lint
 
 - name: Include tasks to upgrade splunk
-  include_tasks: ensure_splunk_version.yml
+  ansible.builtin.include_tasks: ensure_splunk_version.yml
 
 - name: Login to splunk
-  include_tasks: ../../../cca.core.splunk/tasks/splunk_login.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: splunk_login.yml
 
 - name: Turn off manual detention for search head cluster member
   ansible.builtin.command:
     cmd: "{{ splunk_path }}/bin/splunk edit shcluster-config -manual_detention off"
   when:
     - enterprise_upgrade | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Include task to check cluster status
-  include_tasks: ../../../cca.splunk.role-searchhead/tasks/wait_for_shcluster.yml
+  ansible.builtin.include_role:
+    name: cca.splunk.role-searchhead
+    tasks_from: wait_for_shcluster.yml
