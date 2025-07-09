@@ -7,9 +7,11 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2024.1.2
+# Release: 2025.2.1
 
 - name: Ensure Chrony is installed and updated
   ansible.builtin.yum:
     name: chrony
-    state: latest
+    state: present
+  tags:
+    - skip_ansible_lint
