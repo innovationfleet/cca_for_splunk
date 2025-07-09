@@ -7,11 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
 
 - name: Strip out any existing transparent_hugepage settings from GRUB_CMD_LINE
   ansible.builtin.shell:
-    cmd: cat /etc/default/grub | grep GRUB_CMDLINE_LINUX | awk -F\" '{ print $2 }' | sed -E 's:transparent_hugepage=[[:alpha:]]{1,}[[:space:]]{0,}::' | xargs
+    cmd: >
+      set -o pipefail && grep GRUB_CMDLINE_LINUX /etc/default/grub
+      | awk -F'"' '{ print $2 }'
+      | sed -E 's:transparent_hugepage=[[:alpha:]]+[[:space:]]*::'
+      | xargs
+  args:
+    executable: /bin/bash
   register: grub_cmdline_linux_result
   changed_when: false
 
@@ -36,35 +42,41 @@
   register: stat_grub2_grubcfg
 
 - name: Block for grub
+  when:
+    - stat_grub_grubcfg.stat.exists
+    - not stat_grub2_grubcfg.stat.exists
+    - grub_file_status.changed
   block:
     - name: Take backup of existing grub.cfg, with timestamp
       ansible.builtin.copy:
         src: '/boot/grub/grub.cfg'
         dest: "/root/grub_backup-{{ ansible_date_time.date }}.cfg"
         remote_src: true
+        mode: '0644'
 
     - name: Rebuild grub conf
-      ansible.builtin.shell:
+      ansible.builtin.command:
         cmd: 'grub-mkconfig -o /boot/grub/grub.cfg'
       register: grub_mkconfig
-  when:
-    - stat_grub_grubcfg.stat.exists
-    - not stat_grub2_grubcfg.stat.exists
-    - grub_file_status.changed
+      tags:
+        - skip_ansible_lint
 
 - name: Block for grub2
+  when:
+    - not stat_grub_grubcfg.stat.exists
+    - stat_grub2_grubcfg.stat.exists
+    - grub_file_status.changed
   block:
     - name: Take backup of existing grub.cfg, with timestamp
       ansible.builtin.copy:
         src: '/boot/grub2/grub.cfg'
         dest: "/root/grub_backup-{{ ansible_date_time.date }}.cfg"
+        mode: '0644'
         remote_src: true
 
     - name: Rebuild grub conf
-      ansible.builtin.shell:
+      ansible.builtin.command:
         cmd: 'grub2-mkconfig -o /boot/grub2/grub.cfg'
       register: grub_mkconfig
-  when:
-    - not stat_grub_grubcfg.stat.exists
-    - stat_grub2_grubcfg.stat.exists
-    - grub_file_status.changed
+      tags:
+        - skip_ansible_lint

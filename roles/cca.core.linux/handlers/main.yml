@@ -3,11 +3,11 @@
 #
 - name: Server reboot notification handler
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
     state: touch
-    mode: 0400
+    mode: '0400'
   listen: notify server reboot
   check_mode: false
 
@@ -33,7 +33,7 @@
   ansible.builtin.file:
     path: "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     state: touch
-    mode: 0400
+    mode: '0400'
   when: not splunk_restart_pending_stat.stat.exists
   listen: notify restart splunkd service
   check_mode: false

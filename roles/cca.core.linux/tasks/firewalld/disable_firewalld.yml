@@ -15,4 +15,3 @@
     state: stopped
     enabled: false
   no_log: "{{ ansible_verbosity < 3 }}"
-
