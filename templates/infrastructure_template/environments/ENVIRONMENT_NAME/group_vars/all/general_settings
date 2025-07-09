@@ -278,6 +278,13 @@ splunk_conf_general_settings:
            Enable config audit as it will assist in management of configuration
            changes
 
+      - section: 'prometheus'
+        options:
+          - option: 'disabled'
+            value: 'true'
+            comment: >-
+              Disabling non-documented feature to avoid memory leakage in Splunk.
+              https://splunk.my.site.com/customer/s/article/Memory-leak-detected-since-upgrading-heavy-forwarders-to-9-4
 
   - name: Splunk splunk-launch.conf
     filename: splunk-launch.conf
