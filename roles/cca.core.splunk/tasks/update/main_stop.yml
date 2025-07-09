@@ -1,0 +1,33 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Handle differences in splunk between cluster peers, search
+#              head membes and other splunk servers.
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.3.2
+
+- name: Set fact from terraform to be used in this role
+  ansible.builtin.set_fact:
+    os_update: true
+  when:
+    - terraform_os_update | default(false)
+
+- name: Stop splunk on index peers
+  ansible.builtin.include_tasks: update/stop_splunk_on_index_peers.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers | default([]) )
+
+- name: Stop splunk on search head members
+  ansible.builtin.include_tasks: update/stop_splunk_on_searchhead_member.yml
+  when:
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
+
+- name: Stop splunk on non clustered servers
+  ansible.builtin.include_tasks: update/stop_splunk.yml
+  when:
+    - inventory_hostname not in  ( groups.cluster_peers | default([]) )
+    - inventory_hostname not in  ( groups.searchhead_members | default([]) )

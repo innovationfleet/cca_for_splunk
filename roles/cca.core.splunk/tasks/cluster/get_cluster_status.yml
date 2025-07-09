@@ -7,16 +7,24 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Include tasks to login to splunk cli
-  ansible.builtin.include_tasks:
-    splunk_login.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: splunk_login.yml
 
 - name: Get running Splunk versions from Index Cluster
   ansible.builtin.shell:
-    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose | grep \"Splunk Version=\" | awk -F= '{ print $2 }' | sort -u"
+    cmd: >
+      set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show cluster-status
+      --verbose | grep "Splunk Version=" | awk -F= '{ print $2 }' | sort -u
+  args:
+    executable: /bin/bash
   register: cluster_peer_splunk_version
+  retries: "{{ cca_splunkd_cli_peer_version_retries | default(10) | int }}"
+  delay: 10
+  until: cluster_peer_splunk_version.rc == 0
   changed_when: false
   check_mode: false
 
@@ -42,10 +50,15 @@
 
 - name: Collect full Index Cluster status
   ansible.builtin.command:
-    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show cluster-status --verbose"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show cluster-status --verbose"
   register: verbose_cluster_status
+  retries: "{{ cca_splunkd_cli_cluster_status_retries | default(10) | int }}"
+  delay: 10
+  until: verbose_cluster_status.rc ==  0
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Set fact for preflight status
   ansible.builtin.set_fact:
@@ -66,7 +79,9 @@
     - verbose_cluster_status.stdout | regex_search('(Searchable rolling upgrade is in progress)')
 
 - name: Include task to get certificate status
-  ansible.builtin.include_tasks:
-    get_certificate_status.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: get_certificate_status.yml
   when:
     - inventory_hostname not in (groups.cluster_peers | default([]))
+    - deploy_scope is not defined

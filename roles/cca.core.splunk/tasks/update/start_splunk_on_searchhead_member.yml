@@ -1,0 +1,13 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.2
+
+- name: Stop splunk
+  ansible.builtin.include_tasks: update/start_splunk.yml

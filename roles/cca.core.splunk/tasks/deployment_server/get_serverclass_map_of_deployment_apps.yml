@@ -1,0 +1,63 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Classify apps based on rsync output
+  ansible.builtin.set_fact:
+    classified_apps: "{{ deployment_apps_update_status.stdout_lines | default([]) | classify_apps }}"
+
+- name: Read serverclass data JSON
+  connection: local
+  become: false
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    serverclass_data:
+      "{{ lookup('file',
+      (cca_local_tmp_dir | default('/tmp')) ~ '/' ~ cca_runid ~ '/'  ~ environment_name ~ '/' ~ 'localhost' ~ '/serverclass_data_local.json') }}"
+  no_log: "{{ hide_password }}"
+
+- name: Perform lookup for classified apps
+  connection: local
+  become: false
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    reload_serverclasses: "{{ classified_apps | classify_and_lookup(serverclass_data | to_json) }}"
+
+- name: Set fact for serverclass excluding RESTART_DEPLOYMENT_SERVER
+  ansible.builtin.set_fact:
+    clean_serverclass: "{{ reload_serverclasses | difference(['RESTART_DEPLOYMENT_SERVER']) }}"
+
+- name: Parse serverclass_compare_result
+  ansible.builtin.set_fact:
+    serverclass_compare_result: "{{ (compare_serverclass_output.stdout | from_json) }}"
+
+- name: Merge serverclass with Modified list from serverclass_compare_result
+  ansible.builtin.set_fact:
+    serverclass: "{{ clean_serverclass | union(serverclass_compare_result.Modified | default([])) }}"
+
+- name: Determine if deployment server reload is needed
+  ansible.builtin.set_fact:
+    restart_needed: "{{ (serverclass_compare_result.Deleted | length > 0) or
+                      (serverclass_compare_result.Added | length > 0) or
+                      ('RESTART_DEPLOYMENT_SERVER' in reload_serverclasses) }}"
+
+- name: Notify standalone deployment server splunkd restart
+  ansible.builtin.debug:
+    msg: "Standalone deployment server splunkd restart handler notified."
+  when: restart_needed
+  changed_when: restart_needed
+  notify: notify standalone splunkd restart
+
+- name: Notify deployment server reload
+  ansible.builtin.debug:
+    msg: "Deployment server reload handler notified."
+  when: serverclass | length > 0
+  changed_when: serverclass | length > 0
+  notify: notify deployment server reload

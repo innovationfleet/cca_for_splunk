@@ -18,10 +18,12 @@
     - "{{ start_command }}"
   when:
     - force_splunkd_restart | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Verify that Splunk is running
   ansible.builtin.command:
-    cmd: "timeout 5 {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
   register: splunk_status_result
   until: splunk_status_result.rc == 0
   retries: "{{ cca_splunkd_status_retries | default(10) }}"
@@ -30,10 +32,16 @@
   check_mode: false
   when:
     - not skip_splunk_status_check | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Splunk login
   ansible.builtin.command:
-    cmd: "timeout 60 {{ splunk_path }}/bin/splunk login --accept-license --answer-yes --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'"
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk login
+      --accept-license
+      --answer-yes
+      --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'
   register: splunk_login_result
   no_log: "{{ hide_password }}"
   until: splunk_login_result.rc == 0
@@ -44,6 +52,8 @@
   check_mode: false
   when:
     - not skip_splunk_status_check | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Assert to find out if the login was successful
   ansible.builtin.assert:

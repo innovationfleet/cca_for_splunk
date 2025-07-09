@@ -13,13 +13,14 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
+    mode: '0700'
   loop:
     - "{{ cca_environment.infrastructure_repo_dir | default(infrastructure_repo_dir) }}"
     - "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}"
     - "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}/splunk/etc"
 
 - name: Synchronize general files for infrastructure template
-  synchronize:
+  ansible.posix.synchronize:
     src: "{{ script_cwd }}/templates/infrastructure_template/"
     dest: "{{ cca_environment.infrastructure_repo_dir | default(infrastructure_repo_dir) }}"
     rsync_path: "rsync"
@@ -30,7 +31,7 @@
   connection: local
 
 - name: Synchronize ENVIRONMENT files for infrastructure template
-  synchronize:
+  ansible.posix.synchronize:
     src: "{{ script_cwd }}/templates/infrastructure_template/environments/ENVIRONMENT_NAME/"
     dest: "{{ cca_environment.infrastructure_repo_dir | default(infrastructure_repo_dir) }}/environments/{{ environment_dir }}"
     rsync_path: "rsync"
@@ -39,7 +40,7 @@
   connection: local
 
 - name: Synchronize general files onboarding template
-  synchronize:
+  ansible.posix.synchronize:
     src: "{{ script_cwd }}/templates/onboarding_template/"
     dest: "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}"
     rsync_path: "rsync"
@@ -50,7 +51,7 @@
   connection: local
 
 - name: Synchronize ENVIRONMENT files for onboarding template
-  synchronize:
+  ansible.posix.synchronize:
     src: "{{ script_cwd }}/templates/onboarding_template/environments/ENVIRONMENT_NAME/"
     dest: "{{ cca_environment.onboarding_repo_dir | default(onboarding_repo_dir) }}/environments/{{ environment_dir }}"
     rsync_path: "rsync"

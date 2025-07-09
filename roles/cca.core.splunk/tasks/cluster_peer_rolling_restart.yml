@@ -7,15 +7,19 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.4
+# Release: 2025.2.1
+
 - name: Perform an orchestrated rolling restart of cluster peers
   block:
     - name: Include tasks to login to splunk cli
       ansible.builtin.include_tasks: splunk_login.yml
 
     - name: Perform a rolling restart of cluster peers
-      shell: "{{ splunk_path }}/bin/splunk rolling-restart cluster-peers -searchable {{ searchable_rolling_restart | default('false') }} --answer-yes"
+      ansible.builtin.command:
+        cmd: "{{ splunk_path }}/bin/splunk rolling-restart cluster-peers -searchable {{ searchable_rolling_restart | default('false') }} --answer-yes"
       register: cluster_peers_rolling_restart_status
+      tags:
+        - skip_ansible_lint
 
     - name: Cleanup state file for rolling restart
       ansible.builtin.file:
@@ -23,7 +27,7 @@
         state: absent
 
     - name: Wait for the cluster manager to update its status
-      pause:
+      ansible.builtin.pause:
         minutes: "{{ wait_time_cluster_peers_report | default(3) }}"
         prompt: >-
           Wait {{ wait_time_cluster_peers_report | default(3) }} minutes for the cluster manager to update its status.

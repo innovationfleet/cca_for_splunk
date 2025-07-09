@@ -11,7 +11,7 @@
 
 - name: Start and enable splunk
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: root
   ansible.builtin.systemd:
     name: '{{ systemd_enterprise_name }}'

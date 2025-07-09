@@ -10,11 +10,13 @@
 #   (intermediate -> root) required to validate the server cert.
 #
 # Author: Roger Lindquist (github.com/rlinq)
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Run certificate validation in a block
+  when:
+    - cca_splunk_cert_enrollment_method != 'selfsigned'
   block:
-    - name: "Ensure that {{ privkey_staging_file_name }} has a proper EOL"
+    - name: "Ensure proper EOL of file {{ privkey_staging_file_name }}"
       delegate_to: localhost
       connection: local
       become: false
@@ -36,7 +38,7 @@
       register: cert_count_result
       changed_when: false
 
-    - name: "Trim {{ cert_staging_file_name }} to only include the server certificate (if needed)"
+    - name: "Trim file to only include the server certificate (if needed) - {{ cert_staging_file_name }}"
       delegate_to: localhost
       connection: local
       become: false
@@ -56,7 +58,7 @@
       register: cert_trim_result
       changed_when: cert_count_result.stdout | int > 1
 
-    - name: "Ensure that {{ cert_staging_file_name }} has a proper EOL"
+    - name: "Ensure proper EOL of file {{ cert_staging_file_name }}"
       delegate_to: localhost
       connection: local
       become: false
@@ -87,12 +89,14 @@
       register: openssl_verify_result
       failed_when: false
       changed_when: false
+      tags:
+        - skip_ansible_lint
 
     - name: "Show OpenSSL validation error if failed"
       delegate_to: localhost
       connection: local
       become: false
-      debug:
+      ansible.builtin.debug:
         msg: "{{ openssl_verify_result.stderr }}"
       when: openssl_verify_result.rc != 0
 
@@ -116,24 +120,22 @@
             openssl verify -x509_strict -CAfile {{ ca_chain_path }} {{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}
       when: cca_splunk_cert_enrollment_method != 'selfsigned'
 
-    - name: "Set fact for {{ cert_type }} cert file names and concatenation order"
+    - name: "Set fact for cert file names and concatenation order of cert of type {{ cert_type }}"
       ansible.builtin.set_fact:
         certificate_data:
           - '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
           - '{{ cca_splunk_extension_certs_path }}/{{ privkey_staging_file_name }}'
 
-    - name: "DRY RUN - Perform a final {{ cert_type }} cert build"
+    - name: "DRY RUN - Perform a final cert build for cert of type {{ cert_type }}"
       ansible.builtin.template:
-        src: ../templates/etc/auth/certs/build_final_cert.j2
+        src: etc/auth/certs/build_final_cert.j2
         dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
+        mode: '0644'
       check_mode: true
       register: final_cert_file_result
 
-    - name: "Set fact if {{ cert_type }} cert is found and valid"
+    - name: "Set fact if cert is found and valid of type {{ cert_type }} "
       ansible.builtin.set_fact:
         {"{{ facts_variable }}": true}
       when:
         - not final_cert_file_result.changed
-
-  when:
-    - cca_splunk_cert_enrollment_method != 'selfsigned'

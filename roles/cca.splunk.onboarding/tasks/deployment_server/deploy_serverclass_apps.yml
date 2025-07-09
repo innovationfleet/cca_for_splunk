@@ -1,0 +1,35 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.2.1
+
+
+- name: Deploy apps from the staging directory to the deployment server apps directory
+  become: false
+  ansible.posix.synchronize:
+    src: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/localhost/'
+    dest: '{{ splunk_path }}/etc/apps/'
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
+    rsync_opts: "{{ deployment_servers_apps_rsync_opts }}"
+  register: deploy_serverclass_apps_status
+  changed_when: >
+    deploy_serverclass_apps_status.stdout_lines | length > 0 and
+    (
+      deploy_serverclass_apps_status.stdout_lines | select('match', '^((?!cca_merged_serverclass_).)*$') | length > 0
+    )
+  notify: notify standalone splunkd restart
