@@ -21,4 +21,4 @@
   ansible.builtin.set_fact:
     cca_splunk_init: true
   when:
-    - stat_dot_ansible_managed.stat.exists == false
+    - not stat_dot_ansible_managed.stat.exists | default(false)

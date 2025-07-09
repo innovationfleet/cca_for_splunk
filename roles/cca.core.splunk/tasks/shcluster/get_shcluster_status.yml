@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
@@ -15,13 +15,20 @@
 
 - name: Get running Splunk versions from SH Cluster
   ansible.builtin.shell:
-    cmd: |
-      timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status --verbose |
-      grep 'splunk_version :' |
-      awk '{ print $3 }' | sort -u
+    cmd: >
+      set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show shcluster-status --verbose
+      | grep 'splunk_version :'
+      | awk '{ print $3 }' | sort -u
+  args:
+    executable: /bin/bash
   register: shcluster_splunk_version
+  retries: "{{ cca_splunkd_cli_shcluster_version_retries | default(10) | int }}"
+  delay: 10
+  until: shcluster_splunk_version.rc == 0
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Store splunk current_splunk_enterprise_version
   ansible.builtin.set_fact:
@@ -45,36 +52,59 @@
 
 - name: Get info of kvstore engine
   ansible.builtin.shell:
-    cmd: |
-      timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status |
-      grep 'storageEngine :' |
-      awk '{ print $3 }'
+    cmd: >
+      set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show kvstore-status
+      | grep 'storageEngine :'
+      | awk '{ print $3 }'
+  args:
+    executable: /bin/bash
   register: kvstore_engine
+  retries: "{{ cca_splunkd_cli_kvstore_engine_retries | default(10) | int }}"
+  delay: 10
+  until: kvstore_engine.rc == 0
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Collect full Search Head Cluster status
   ansible.builtin.command:
-    cmd: "timeout 180 {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
+    cmd: "timeout {{ splunk_timeout_shcluster_status | default('180') }} {{ splunk_path }}/bin/splunk show shcluster-status --verbose"
   register: verbose_shcluster_status
+  retries: "{{ cca_splunkd_cli_shcluster_status_retries | default(10) | int }}"
+  delay: 10
+  until: verbose_shcluster_status.rc == 0
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Collect Captain information from Search Head Cluster status
   ansible.builtin.shell:
-    cmd: |
-      timeout 60 {{ splunk_path }}/bin/splunk show shcluster-status |
-      head -9 | grep 'label' | awk -F'label : ' '{ print $2 }'
+    cmd: >
+      set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show shcluster-status
+      | head -9
+      | grep "label"
+      | awk -F"label : " "{ print $2 }"
+  args:
+    executable: /bin/bash
   register: shcluster_captain
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Collect kvstore status
   ansible.builtin.command:
-    cmd: "timeout 60 {{ splunk_path }}/bin/splunk show kvstore-status"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show kvstore-status"
   register: shcluster_kvstore_status
+  retries: "{{ cca_splunkd_cli_kvstore_status_retries | default(10) | int }}"
+  delay: 10
+  until: shcluster_kvstore_status.rc == 0
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Set fact for kvstore status
   ansible.builtin.set_fact:

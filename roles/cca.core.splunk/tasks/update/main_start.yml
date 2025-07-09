@@ -1,0 +1,27 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Handle differences in splunk between cluster peers and
+#              other splunk servers.
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2023.3.2
+
+- name: Start splunk on index peers
+  ansible.builtin.include_tasks: update/start_splunk_on_index_peers.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers | default([]) )
+
+- name: Start splunk on search head members
+  ansible.builtin.include_tasks: update/start_splunk_on_searchhead_member.yml
+  when:
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
+
+- name: Start splunk on non clustered servers
+  ansible.builtin.include_tasks: update/start_splunk.yml
+  when:
+    - inventory_hostname not in  ( groups.cluster_peers | default([]) )
+    - inventory_hostname not in  ( groups.searchhead_members | default([]) )

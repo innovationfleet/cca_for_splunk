@@ -12,4 +12,3 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: absent
-

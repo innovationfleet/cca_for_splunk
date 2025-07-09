@@ -7,17 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.2
+# Release: 2025.2.1
 
 # tasks file for cca.splunk.onboarding
 
 - name: Set variable for selected_apps source path
   ansible.builtin.set_fact:
-    selected_apps_source_path: '{{ absolute_file_store_path }}/etc/{{ selected_apps_sourcedir }}'
+    selected_apps_source_path: '{{ selected_apps_absolute_sourcedir | default(absolute_file_store_path + "/etc/" + selected_apps_sourcedir) }}'
 
 - name: Set variable for versioned_apps source path
   ansible.builtin.set_fact:
-    versioned_apps_source_path: '{{ absolute_file_store_path }}/etc/{{ versioned_apps_sourcedir }}'
+    versioned_apps_source_path: '{{ versioned_apps_absolute_sourcedir | default(absolute_file_store_path + "/etc/" + versioned_apps_sourcedir) }}'
 
 - name: Include task for shcluster app staging
   ansible.builtin.include_tasks: stage_shcluster_apps.yml
@@ -30,6 +30,23 @@
   when:
     - shcluster_label is defined
     - deploy_scope | default('') == "shcluster_apps"
+
+- name: Include task to check cluster status
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: cluster/get_cluster_status.yml
+  when:
+    - cluster_label is defined
+    - deploy_scope | default('') == "manager-apps"
+
+- name: Check and fail if cluster is not preflight ready
+  ansible.builtin.assert:
+    that:
+      - cluster_preflight_status_flag | default(false)
+    fail_msg: "Pre-Flight check failed, cluster status is not ready"
+  when:
+    - cluster_label is defined
+    - deploy_scope | default('') == "manager-apps"
 
 - name: Include task for master apps staging
   ansible.builtin.include_tasks: stage_manager_apps.yml
@@ -68,7 +85,7 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "/tmp/{{ cca_runid }}/{{ environment_name }}"
+    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}"
     state: absent
   changed_when: false
   when:

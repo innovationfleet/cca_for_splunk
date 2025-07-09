@@ -7,10 +7,13 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2025.2.1
 
 - name: Include task to delete lockfile
   ansible.builtin.include_tasks: remove_lockfile.yml
+
+- name: Include task to clean up temporary files
+  ansible.builtin.include_tasks: cleanup_temp_files.yml
 
 - name: Include licensed CCA finalize tasks
   ansible.builtin.include_role:

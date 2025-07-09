@@ -16,3 +16,5 @@
   loop_control:
     loop_var: ensure_baseline_software
   loop: '{{ cca_baseline_software | default([]) if cca_baseline_software | default([]) is iterable else [] }}'
+  tags:
+    - skip_ansible_lint

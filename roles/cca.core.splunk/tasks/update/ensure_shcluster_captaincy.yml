@@ -1,0 +1,98 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Handle differences in splunk between cluster peers and
+#              other splunk servers.
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Ensure that splunk is running
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('120') }} {{ start_command }}
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_start_retries | default(10) | int }}"
+  delay: 10
+  changed_when:
+    - false
+
+- name: Verify that Splunk is running
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status
+      --accept-license
+      --answer-yes
+      --no-prompt
+  register: splunk_status_result
+  until: splunk_status_result.rc == 0
+  retries: "{{ cca_splunkd_status_retries | default(10) | int }}"
+  delay: 10
+  changed_when: false
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Splunk login
+  ansible.builtin.command:
+    cmd: >
+      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk login
+      --accept-license
+      --answer-yes
+      --no-prompt -auth "{{ splunk_cli_user }}:{{ splunk_cli_user_password }}"
+  register: splunk_login_result
+  no_log: "{{ hide_password }}"
+  until: splunk_login_result.rc == 0
+  retries: "{{ cca_splunk_login_retries | default(10) | int }}"
+  delay: 10
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Collect Captain information from Seach Head Cluster status
+  ansible.builtin.shell:
+    cmd: >
+      set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show shcluster-status
+      | head -9
+      | grep "label"
+      | awk -F"label : " "{ print $2 }"
+  args:
+    executable: /bin/bash
+  register: shcluster_captain
+  changed_when: false
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Set fact of current captain
+  ansible.builtin.set_fact:
+    current_shcluster_captain: "{{ shcluster_captain.stdout }}"
+
+- name: Check if current host is captain
+  ansible.builtin.set_fact:
+    is_shcluster_captain: true
+  when:
+    - current_shcluster_captain == inventory_hostname
+
+- name: Get adjecent search head member, returns adjecent_host
+  ansible.builtin.include_tasks: update/get_adjecent_searchhead_member.yml
+  when:
+    - is_shcluster_captain | default(false)
+
+- name: Set adjecent_host as new captain
+  ansible.builtin.include_tasks: update/set_shcluster_captain.yml
+  when:
+    - is_shcluster_captain | default(false)
+
+- name: Wait for the captain transfer to stabilize
+  ansible.builtin.pause:
+    prompt: "Wait 60 seconds for the captain to be transferred"
+    seconds: 60
+  when:
+    - is_shcluster_captain | default(false)

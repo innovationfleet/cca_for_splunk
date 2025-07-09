@@ -7,10 +7,21 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 
 - name: Finalize rolling upgrade on the cluster manager
   ansible.builtin.command:
-    cmd: "{{ splunk_path }}/bin/splunk upgrade-finalize cluster-peers"
-  when: true
+    cmd: >
+      timeout {{ splunk_command_upgrade_finalize_timeout | default('360') }}
+      {{ splunk_path }}/bin/splunk upgrade-finalize cluster-peers
+  register: splunk_cluster_upgrade_finalize_status
+  until: splunk_cluster_upgrade_finalize_status.rc == 0
+  retries: "{{ cca_splunk_finalize_upgrade_retries | default(30) | int }}"
+  delay: 30
+  run_once: true
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+  tags:
+    - skip_ansible_lint

@@ -11,11 +11,12 @@ function Usage () {
     CCA for Splunk is a toolset used to automate infrastructure
     and onboarding tasks using Ansible.
 
-    $0  [-d|--debug] [-c|--check] [-s|--setup] [-h|--help]
+    $0  [-d|--debug] [-c|--check] [-s|--setup] [-u|--upgrade] [-h|--help]
 
    -d,--debug  Enable script debug
    -c,--check  Configures Ansible to run in check mode
    -s,--setup  Guided setup wizard to initially setup or upgrade CCA for Splunk
+   -u,--upgrade Upgrade CCA Manager
    -h,--help   Print usage
 HELP_USAGE
 exit 0
@@ -46,6 +47,7 @@ CcaOnbRepoPath=~/data/main/cca_splunk_onboarding
 CcaRepoShort="cca"
 ScriptParams=$@
 Setup=false
+Upgrade=false
 EnforceMultiplexer=true
 
 
@@ -76,7 +78,7 @@ else
 fi
 
 WhiptailHight=30
-BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2025.1.1"
+BackTitle="   $(hostname -s) - CCA for Splunk $(date +'%Y') v2025.2.2"
 CookieFile="${ScriptPath}/.cookie"
 LicenseFile=~/clones/cca_for_splunk/LICENSE
 InfoFile=~/clones/cca_for_splunk/RELEASE_NOTES.txt
@@ -85,7 +87,7 @@ Debug=false
 
 
 Options=:dchsu
-LongOpts=debug,check,help,setup,user
+LongOpts=debug,check,help,setup,upgrade,user
 
 ! PARSED=$(getopt --options=$Options --longoptions=$LongOpts --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -113,6 +115,11 @@ while true; do
         -s|--setup)
             Setup=true
             SelectedPlaybook=setup_wizard.yml
+            shift
+            ;;
+        -u|--upgrade)
+            Upgrade=true
+            SelectedPlaybook=upgrade_cca_manager.yml
             shift
             ;;
         -s|--user)
@@ -234,10 +241,17 @@ cat <<EOF
   infrastructure automation as well as Splunk onboarding
   automation.
 
-* This script will exit now. If you would like to configure
-  your environment run the script again with
+* This script will exit now.
+  If you would like to configure your environment run
+  the script again with
 
   ./cca_ctrl --setup
+
+* If you would like to upgrade CCA Manager run the script
+  again with
+
+  ./cca_ctrl --upgrade
+
 EOF
 
 exit 0
@@ -975,39 +989,61 @@ function playbook_hosts() {
 ###############################################################################
 function get_extra_vars() {
 
-# Get extra vars options from playbook
+  # Extract EXTRA_VARS block from playbook header using line continuation \
+  local PlaybookVars=$(awk '
+    BEGIN { ORS=" " }
+    /^# EXTRA_VARS=/ {
+      collecting=1
+      sub(/^# EXTRA_VARS=/, "", $0)
+      gsub(/\\$/, "", $0)
+      print $0
+      next
+    }
+    collecting && /^#/ {
+      sub(/^#/, "", $0)
+      if ($0 ~ /\\$/) {
+        gsub(/\\$/, "", $0)
+        print $0
+      } else if (NF == 0) {
+        next
+      } else {
+        print $0
+        collecting=0
+      }
+      next
+    }
+    collecting && NF==0 {
+      collecting=0
+    }
+  ' "${SelectedPlaybook}" | xargs)
 
-local PlaybookVars=$(grep EXTRA_VARS ${SelectedPlaybook} | cut -d"=" -f2)
-local WindowTextSelectedPlaybook=$(echo ${SelectedPlaybook}\
-                     | ${sed_cmd} "s|\.\.\./|playbooks/|g"\
-                     | ${sed_cmd} "s|${CcaRepoShort}/|${CcaRepoPath}/|g"\
-                     | ${sed_cmd} "s|infra/|${CcaInfraRepoPath}/|g"\
-                     | ${sed_cmd} "s|onb/|${CcaOnbRepoPath}/|g")
+  # Normalize playbook path for display
+  local WindowTextSelectedPlaybook=$(echo "${SelectedPlaybook}" \
+    | ${sed_cmd} "s|\.\.\./|playbooks/|g" \
+    | ${sed_cmd} "s|${CcaRepoShort}/|${CcaRepoPath}/|g" \
+    | ${sed_cmd} "s|infra/|${CcaInfraRepoPath}/|g" \
+    | ${sed_cmd} "s|onb/|${CcaOnbRepoPath}/|g")
 
-local Title="Extra vars for ${WindowTextSelectedPlaybook}"
-local Description="  Here you can add extra variables for the playbook\n\n\
-  The supported extra-vars are read from the playbook as #EXTRA_VARS=\n\n\
+  local Title="Extra vars for ${WindowTextSelectedPlaybook}"
+  local Description="  Here you can add extra variables for the playbook\n\n\
+  The supported extra-vars are read from the playbook as # EXTRA_VARS=\n\n\
   Available default variables in this playbook are:\n\
 \n$(for Var in ${PlaybookVars}; do echo "    ${Var}" ; done)\n\n\
   Change default values to alter the behaviour.
   Correct syntax for the text box is:\n\
   {\"text_var\": \"value\", \"boolean_var\":true}"
-local Init="{\"\":\"\"}"
+  local Init="{\"\":\"\"}"
 
+  # Launch whiptail input box
   ExtraVars=$(whiptail_inputbox "${Title}" "${Description}" "${Init}" "Run")
 
-  if [[ ${ExtraVars} == ${Init} ]] ; then
-
+  if [[ "${ExtraVars}" == "${Init}" ]]; then
     ExtraVars="{${CcaRunId}}"
-
   else
-
-    ExtraVars=$(echo ${ExtraVars} | sed "s/\}/,${CcaRunId}\}/g")
-
+    ExtraVars=$(echo "${ExtraVars}" | sed "s/}/,${CcaRunId}}/g")
   fi
 
-  ${Debug} && echo "Extra Vars --extra-vars are:" ${ExtraVars}
-
+  ${Debug} && echo "Extra Vars --extra-vars are:" "${ExtraVars}"
 }
 
 
@@ -1265,13 +1301,16 @@ validate_script_version
 # Validate that we have a supported OS and we have the required tools.
 validate_os
 
-# If we are running cca_ctrl from main repo, trigger setup of new repo/env
-! $Setup && environment_helper
+# If we are running cca_ctrl from main repo, trigger setup or upgrade of CCA
+# when passing --setup or --upgrade as arguments, the environment_helper
+# is not triggered
+if ! $Setup && ! $Upgrade; then
+  environment_helper
+fi
 
 # Check option if we should enforce tmux or screen sessions
 test -f .storage/settings && source <(grep = .storage/settings)
 multiplexer_control
-
 
 # Dialog to show the release notes and info text
 info_dialog

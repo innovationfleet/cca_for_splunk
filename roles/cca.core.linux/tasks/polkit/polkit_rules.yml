@@ -20,8 +20,10 @@
 - name: Restart polkit systemd service
   ansible.builtin.systemd:
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
     name: polkit
   when:
     - polkit_template_status.changed
   no_log: "{{ ansible_verbosity < 3 }}"
+  tags:
+    - skip_ansible_lint

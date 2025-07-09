@@ -10,7 +10,7 @@
 # Release: 2024.1.2
 
 - name: Install Chrony
-  include_tasks: "ntp/{{ package_manager }}/install_chrony.yml"
+  ansible.builtin.include_tasks: "ntp/{{ package_manager }}/install_chrony.yml"
 
 - name: Enable and start chrony
   ansible.builtin.include_tasks: ntp/ensure_chrony.yml

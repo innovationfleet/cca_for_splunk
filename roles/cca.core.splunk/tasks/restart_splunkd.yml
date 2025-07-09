@@ -7,21 +7,57 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
+
 - name: Perform a splunkd restart in a block
   block:
     - name: Restart splunkd on cli
-      ansible.builtin.shell: "{{ restart_command }}"
+      ansible.builtin.command: "{{ restart_command }}"
       register: splunk_restart_result
       when:
-        ( stat_ansible_managed.stat.exists is defined and
-          stat_ansible_managed.stat.exists == true )
+        (
+          stat_ansible_managed.stat.exists is defined and
+          stat_ansible_managed.stat.exists
+        )
         or
-        ( cca_splunk_init | default (false) == true )
+        (
+          cca_splunk_init | default(false)
+        )
+      tags:
+        - skip_ansible_lint
 
     - name: Perform a cleanup of state file
       ansible.builtin.file:
         path: "{{ splunkd_restart_pending }}"
         state: absent
       when:
-        - splunk_restart_result.changed | default(false) == true
+        - splunk_restart_result.changed | default(false)
+      tags:
+        - skip_ansible_lint
+
+  rescue:
+    - name: Check if restart failed due to web interface unavailability
+      ansible.builtin.fail:
+        msg: "Splunk restart failed for unexpected reason"
+      when: "'web interface does not seem to be available' not in splunk_restart_result.stderr"
+
+    - name: Wait for Splunk to be fully operational after restart
+      ansible.builtin.command:
+        cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
+      register: splunk_status_result
+      until: splunk_status_result.rc == 0
+      retries: "{{ cca_splunkd_restart_status_retries | default(60) | int }}"
+      delay: 10
+      changed_when: false
+      check_mode: false
+      tags:
+        - skip_ansible_lint
+
+    - name: Perform a cleanup of state file after recovery
+      ansible.builtin.file:
+        path: "{{ splunkd_restart_pending }}"
+        state: absent
+      when:
+        - splunk_restart_result.changed | default(false)
+      tags:
+        - skip_ansible_lint

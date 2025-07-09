@@ -12,5 +12,6 @@
   ansible.builtin.file:
     path: "{{ dot_managed_by_ansible }}"
     state: touch
+    mode: "0644"
   register: stat_dot_managed_by_ansible
   changed_when: false

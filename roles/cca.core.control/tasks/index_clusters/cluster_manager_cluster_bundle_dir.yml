@@ -13,7 +13,7 @@
 - name: Check if we have a master-apps directory
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.stat:
     path: "{{ splunk_path }}/etc/master-apps"
   register: stat_master_apps
@@ -21,7 +21,7 @@
 - name: Get files in master-apps directory of Cluster Manager
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "{{ splunk_path }}/etc/master-apps"
     patterns: ".*"
@@ -35,7 +35,7 @@
 - name: Loop through master-apps directory files
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.debug:
     msg: "{{ item.path }}"
   with_items:
@@ -49,7 +49,7 @@
 - name: Set fact when master-apps are untouched
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.set_fact:
     master_apps_untouched: true
   when:
@@ -88,7 +88,7 @@
 - name: Get directories in master-apps directory of Cluster Manager
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.find:
     paths: "{{ splunk_path }}/etc/master-apps"
     recurse: true
@@ -100,7 +100,7 @@
 - name: Create directories in manager-apps before copying files
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item.path | replace('master-apps', 'manager-apps') }}"
     state: directory
@@ -115,7 +115,7 @@
 - name: Copy files from master-apps to manager-apps
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.copy:
     src: "{{ item.path }}"
     dest: "{{ item.path | replace('master-apps', 'manager-apps') }}"
@@ -131,36 +131,36 @@
 - name: Delete files from master-apps after content copy
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
   with_items:
     "{{ master_apps_files.files }}"
   when:
-    - item.path != "{{ splunk_path }}/etc/master-apps/_cluster/default/indexes.conf"
-    - item.path != "{{ splunk_path }}/etc/master-apps/_cluster/local/README"
-    - not master_apps_untouched | default(false)
+    - item.path != (splunk_path + '/etc/master-apps/_cluster/default/indexes.conf')
+    - item.path != (splunk_path + '/etc/master-apps/_cluster/local/README')
+    - not (master_apps_untouched | default(false))
 
 - name: Delete directories from master-apps after content copy
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
   with_items:
     "{{ master_apps_directories.files }}"
   when:
-    - master_apps_directories.matched | default(0) > 0
-    - 'item.path not in "{{ splunk_path }}/etc/master-apps/_cluster/default"'
-    - 'item.path not in "{{ splunk_path }}/etc/master-apps/_cluster/local"'
-    - not master_apps_untouched | default(false)
+    - (master_apps_directories.matched | default(0)) > 0
+    - item.path not in (splunk_path + '/etc/master-apps/_cluster/default')
+    - item.path not in (splunk_path + '/etc/master-apps/_cluster/local')
+    - not (master_apps_untouched | default(false))
 
 - name: Delete .git related files and directories from master-apps after content copy
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
@@ -173,7 +173,7 @@
 - name: Create directory used by cca to store state files
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.file:
     path: "{{ splunk_path }}/.cca"
     state: directory

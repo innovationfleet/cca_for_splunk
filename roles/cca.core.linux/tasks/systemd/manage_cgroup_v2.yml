@@ -41,6 +41,8 @@
   when:
     - ansible_distribution in ['Debian', 'Ubuntu']
     - debian_grub_revert_status.changed
+  tags:
+    - skip_ansible_lint
 
 - name: Restore cgroup v2 setting with grubby (non-Debian systems)
   ansible.builtin.command: >
@@ -51,6 +53,8 @@
     - ansible_distribution not in ['Debian', 'Ubuntu']
     - running_kernel_cgroup_version == 'cgroupv1'
     - supported_kernel_cgroup_version == 'cgroupv2'
+  tags:
+    - skip_ansible_lint
 
 - name: Include role to configure splunk service
   ansible.builtin.include_tasks: systemd/splunkd_service.yml
@@ -58,4 +62,4 @@
     configure_cgroup_version: cgroupv2
 
 - name: Trigger restart if pending from cgroups update
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers

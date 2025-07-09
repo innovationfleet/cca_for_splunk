@@ -10,11 +10,11 @@
 # Release: 2023.1.1
 
 - name: Include task to login
-  include_tasks: splunk_login.yml
+  ansible.builtin.include_tasks: splunk_login.yml
 
 - name: Check if a search head cluster member is joined to the cluster
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_member_status_result
   changed_when: false
 

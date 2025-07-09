@@ -13,13 +13,17 @@
   ansible.builtin.service_facts:
 
 - name: Get current Splunk Enterprise status
-  include_tasks: ../../cca.core.splunk/tasks/get_splunk_status.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: get_splunk_status.yml
   when:
     - ansible_facts.services[systemd_enterprise_name] is defined
     - ansible_facts.services[systemd_enterprise_name].state == "running"
 
 - name: Get current Splunk Enterprise version
-  include_tasks: ../../cca.core.splunk/tasks/get_splunk_version.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: get_splunk_version.yml
 
 - name: Include systemd setup
-  include_tasks: systemd/main.yml
+  ansible.builtin.include_tasks: systemd/main.yml

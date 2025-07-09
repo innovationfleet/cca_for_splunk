@@ -71,6 +71,7 @@
   ansible.builtin.file:
     path: "{{ splunk_path }}/var/run/splunk/kvstore_upgrade/versionFile{{ cca_splunk_kvstore_engine_version | regex_replace('\\.', '') }}"
     state: touch
+    mode: '0644'
   when:
     - (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '<')
     - "'db version v' ~ cca_splunk_kvstore_engine_version in mongod_version.stdout"
@@ -84,3 +85,5 @@
       Please verify that the certificate is signed by a trusted CA and matches the expected hostname and chain.
     success_msg: >
       Splunk certificate successfully passed strict X.509 validation.
+  when:
+    - (splunk_enterprise_version | string) is version('9.4', '>=')

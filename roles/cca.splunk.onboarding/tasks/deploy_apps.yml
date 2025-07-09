@@ -11,7 +11,7 @@
 
 - name: Deploy the apps from the selected apps directory to the splunk servers
   ansible.posix.synchronize:
-    src:  >-
+    src: >-
         {{
           (item.source_path | default(selected_apps_source_path)) ~
           ('/' ~ item.source_app if item.source_app is defined else '') ~ '/'

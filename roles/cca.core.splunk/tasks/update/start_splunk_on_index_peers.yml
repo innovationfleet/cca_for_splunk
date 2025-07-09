@@ -1,0 +1,94 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Start splunk and use inventory group to
+#              find related cluster manager to a cluster_peer.
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.3.1
+
+- name: Enable and start splunk
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: root
+  ansible.builtin.systemd:
+    name: '{{ systemd_enterprise_name }}'
+    state: started
+    enabled: true
+  failed_when: false
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Disable maintenance mode for cluster peers in Cluster C1
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c1 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c1 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C2
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c2 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c2 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C3
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c3 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c3 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C4
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c4 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c4 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C5
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c5 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c5 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C6
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c6 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c6 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C7
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c7 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c7 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C8
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c8 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c8 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Disable maintenance mode for cluster peers in Cluster C9
+  ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c9 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c9 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var

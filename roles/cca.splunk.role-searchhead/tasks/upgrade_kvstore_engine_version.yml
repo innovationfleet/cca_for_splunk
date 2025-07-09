@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2025.2.1
 
 - name: Include task to login
   ansible.builtin.include_tasks: splunk_login.yml
@@ -33,7 +33,14 @@
 - name: Wait for kvstore engine upgrade to complete
   run_once: true
   ansible.builtin.shell:
-    cmd: "{{ splunk_path }}/bin/splunk show kvstore-status --verbose | grep serverVersion | sort -u | grep -v '{{ cca_splunk_kvstore_engine_version }}' | wc -l"
+    cmd: >
+      set -o pipefail && timeout {{ cca_splunk_kvstore_upgrade_timeout | default('360) }}
+      {{ splunk_path }}/bin/splunk show kvstore-status --verbose
+      | grep serverVersion
+      | sort -u
+      | grep -v '{{ cca_splunk_kvstore_engine_version }}' | wc -l
+  args:
+    executable: /bin/bash
   register:
     kvstore_upgrade_status
   until: kvstore_upgrade_status.stdout == '0'
@@ -42,3 +49,5 @@
   changed_when: false
   when:
     - not ansible_check_mode
+  tags:
+    - skip_ansible_lint

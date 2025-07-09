@@ -1,0 +1,210 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+
+- name: Set fact for ds inventory name
+  ansible.builtin.set_fact:
+    ds_inventory_hostname: "{{ inventory_hostname }}"
+  delegate_to: localhost
+  delegate_facts: true
+
+- name: Set fact for local and remote dir
+  ansible.builtin.set_fact:
+    remote_directory: "{{ splunk_path }}/etc/apps"
+    local_directory: >
+      {{ absolute_onboarding_repo_path }}/splunk/etc/apps/deployment_servers/{{ environment_name }}
+
+- name: Ensure the bin directory exists on the remote host
+  ansible.builtin.file:
+    path: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/bin
+    state: directory
+    mode: '0755'
+  changed_when: false
+  check_mode: false
+
+- name: Ensure unique directories exist on localhost
+  delegate_to: localhost
+  connection: local
+  become: false
+  ansible.builtin.file:
+    path: >
+      {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}
+    state: directory
+    mode: '0755'
+  changed_when: false
+  check_mode: false
+
+- name: Copy sc_parser.py to remote host
+  ansible.builtin.copy:
+    src: >
+      {{ role_path }}/files/bin/sc_parser.py
+    dest: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/bin/sc_parser.py
+    mode: '0755'
+  changed_when: false
+  check_mode: false
+
+- name: Copy compare_serverclass_data.py to localhost
+  connection: local
+  become: false
+  ansible.builtin.copy:
+    src: >
+      {{ role_path }}/files/bin/compare_serverclass_data.py
+    dest: >
+      {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/compare_serverclass_data.py
+    mode: '0755'
+  delegate_to: localhost
+  changed_when: false
+  check_mode: false
+
+- name: Ensure directory for output files
+  connection: local
+  become: false
+  ansible.builtin.file:
+    path: >
+      {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost
+    state: 'directory'
+    mode: '0755'
+  delegate_to: localhost
+  changed_when: false
+  check_mode: false
+
+- name: Ensure directory for output files
+  ansible.builtin.file:
+    path: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}
+    state: 'directory'
+    mode: '0644'
+  changed_when: false
+  check_mode: false
+
+- name: Run sc_parser.py on localhost
+  connection: local
+  become: false
+  ansible.builtin.command: >
+    {{ ansible_python_interpreter }} {{ role_path }}/files/bin/sc_parser.py \
+    {{ local_directory }} \
+    {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/serverclass_data_local.json \
+    {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/duplicates_data_local.json \
+    {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/
+  delegate_to: localhost
+  register: local_result
+  changed_when: false
+  check_mode: false
+
+- name: Read duplicates data
+  connection: local
+  become: false
+  delegate_to: localhost
+  ansible.builtin.slurp:
+    src: >
+      {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/duplicates_data_local.json
+  register: duplicates_data
+
+- name: Check if duplicates data is present
+  ansible.builtin.set_fact:
+    duplicates_present: >
+      {{ duplicates_data.content | b64decode | from_json }}
+
+- name: Fail if duplicates data is present
+  ansible.builtin.fail:
+    msg: >
+      There are duplicate entries in the serverclass data:
+      {{ duplicates_present | to_nice_json }}
+  when: >
+    duplicates_present.duplicate_keys | length > 0 or
+    duplicates_present.duplicate_sections | length > 0
+
+- name: Run sc_parser.py on remote host
+  ansible.builtin.command: >
+    {{ ansible_python_interpreter }} \
+    {{ (cca_remote_tmp_dir | default('/tmp')) }}/bin/sc_parser.py \
+    {{ remote_directory }} \
+    {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/ \
+    {{ hostvars['localhost']['ds_inventory_hostname'] }}/serverclass_data_remote.json \
+    {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/ \
+    {{ hostvars['localhost']['ds_inventory_hostname'] }}/duplicates_data_remote.json \
+    {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/ \
+    {{ hostvars['localhost']['ds_inventory_hostname'] }} \
+    "cca_merged_serverclass_*"
+  register: remote_result
+  changed_when: false
+  check_mode: false
+
+- name: Fetch remote serverclass data
+  ansible.builtin.fetch:
+    src: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+      {{ hostvars['localhost']['ds_inventory_hostname'] }}/serverclass_data_remote.json
+    dest: >
+      {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+      {{ hostvars['localhost']['ds_inventory_hostname'] }}/serverclass_data_remote.json
+    flat: true
+  changed_when: false
+  check_mode: false
+
+- name: Fetch remote duplicates data
+  ansible.builtin.fetch:
+    src: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+      {{ hostvars['localhost']['ds_inventory_hostname'] }}/duplicates_data_remote.json
+    dest: >
+      {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+      {{ hostvars['localhost']['ds_inventory_hostname'] }}/duplicates_data_remote.json
+    flat: true
+  changed_when: false
+  check_mode: false
+
+- name: Compare local and remote serverclass data
+  connection: local
+  become: false
+  ansible.builtin.command: >
+    {{ ansible_python_interpreter }} \
+    {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/compare_serverclass_data.py \
+    {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/serverclass_data_local.json \
+    {{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+    {{ hostvars['localhost']['ds_inventory_hostname'] }}/serverclass_data_remote.json
+  delegate_to: localhost
+  changed_when: false
+  no_log: "{{ hide_password }}"
+  register: compare_serverclass_output
+  check_mode: false
+
+- name: Cleanup temporary files on remote
+  ansible.builtin.file:
+    path: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/bin/sc_parser.py
+    state: absent
+  changed_when: false
+  check_mode: false
+
+- name: Cleanup temporary JSON files on remote
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+      {{ hostvars['localhost']['ds_inventory_hostname'] }}/serverclass_data_remote.json
+    - >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/
+      {{ hostvars['localhost']['ds_inventory_hostname'] }}/duplicates_data_remote.json
+  changed_when: false
+  check_mode: false
+
+- name: Cleanup unique directories on remote
+  ansible.builtin.file:
+    path: >
+      {{ (cca_remote_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}
+    state: absent
+  changed_when: false
+  check_mode: false

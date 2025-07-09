@@ -8,7 +8,7 @@
 - name: Configure all splunk_servers
   hosts: splunk_servers:!localhost
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   gather_facts: false
   strategy: linear
   pre_tasks:
@@ -25,7 +25,7 @@
 - name: Reboot servers in availability group 1
   hosts: splunk_servers:&ag1:!localhost
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   pre_tasks:
     - name: Include task for reboot handler
       ansible.builtin.include_role:
@@ -35,7 +35,7 @@
 - name: Reboot servers in availability group 2
   hosts: splunk_servers:&ag2:!localhost
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   pre_tasks:
     - name: Include task for reboot handler
       ansible.builtin.include_role:
@@ -45,7 +45,7 @@
 - name: Reboot servers in availability group 3
   hosts: splunk_servers:&ag3:!localhost
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   pre_tasks:
     - name: Include task for reboot handler
       ansible.builtin.include_role:

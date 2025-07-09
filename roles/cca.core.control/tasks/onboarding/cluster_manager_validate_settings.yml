@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2025.2.1
 
 - name: To support Splunk Enterprise version 9+, verify that there is a valid defaults file version
   ansible.builtin.assert:
@@ -54,7 +54,7 @@
 
 - name: Check if manager-apps directory exists in onboarding repo
   ansible.builtin.stat:
-    path: "{{ absolute_file_store_path }}/etc/manager-apps"
+    path: "{{ manager_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/manager-apps') }}"
   register: stat_onboarding_repo_manager_apps
 
 - name: Fail playbook if manager-apps is missing in onboarding repo

@@ -14,7 +14,7 @@
     state: present
     gid: "{{ splunk_user_gid | int }}"
 
-- name: Create {{ splunk_user }} on system
+- name: Create user on system for {{ splunk_user }}
   ansible.builtin.user:
     name: "{{ splunk_user }}"
     comment: 'Splunk CCA created account, locked no passwd'

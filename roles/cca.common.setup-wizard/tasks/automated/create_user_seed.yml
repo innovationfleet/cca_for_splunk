@@ -1,0 +1,64 @@
+---
+# tasks file for cca.common.setup-wizard
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist
+#
+# Release: 2024.1.2
+
+- name: Store admin password
+  ansible.builtin.set_fact:
+    user_password: '{{ cca_environment.default_admin_user_password }}'
+  no_log: true
+
+- name: Hash the admin password
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && echo '{{ user_password }}' | pcrypt -r 700000"
+  args:
+    executable: /bin/bash
+  register: tmp_password_hash
+  no_log: true
+  tags:
+    - skip_ansible_lint
+
+- name: Set fact for user_info
+  ansible.builtin.set_fact:
+    user_info:
+      username: "{{ cca_environment.default_admin_user }}"
+      password: "{{ user_password }}"
+      password_hash: "{{ tmp_password_hash.stdout }}"
+  no_log: true
+
+- name: Vault the admin password
+  ansible.builtin.set_fact:
+    vaulted_secret_value: >-
+      {{ user_info.password | vault(lookup('ansible.builtin.file', ansible_env.ANSIBLE_VAULT_PASSWORD_FILE))
+      | split() | join('\r\n')
+      | regex_replace('1.2;AES256;filter_default', '1.1;AES256') }}
+
+- name: Save cli username to vars file in infra and onboarding repo
+  ansible.builtin.lineinfile:
+    path: "{{ item }}"
+    line: "cca_splunk_admin_user: '{{ user_info.username }}'"
+    regex: '^cca_splunk_admin_user:'''
+  loop:
+    - "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
+    - "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
+
+- name: Save the clear text secret as an ansible vault in infra and onboarding repo
+  ansible.builtin.lineinfile:
+    path: "{{ item }}"
+    line: 'cca_splunk_admin_password: !vault "{{ vaulted_secret_value }}"'
+    regex: '^cca_splunk_admin_password:'
+  loop:
+    - "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
+    - "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
+
+- name: Save the hashed secret to the file
+  ansible.builtin.lineinfile:
+    path: "{{ cca_splunk_secret_file }}"
+    line: "cca_splunk_admin_password_hash: '{{ user_info.password_hash }}'"
+    regex: '^cca_splunk_admin_password_hash:'

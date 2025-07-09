@@ -1,16 +1,29 @@
 ---
 # tasks file for cca.setup.cca-manager
 
-- include_tasks: python_check.yml
-- include_tasks: pre_configure_cca_manager_user.yml
-- include_tasks: create_python_venv.yml
-- include_tasks: install_ansible_venv.yml
-- include_tasks: install_mitogen.yml
+- name: Check if we have the required python version is installed
+  ansible.builtin.include_tasks: python_check.yml
+
+- name: Pre configure cca manager user
+  ansible.builtin.include_tasks: pre_configure_cca_manager_user.yml
+
+- name: Create python venv
+  ansible.builtin.include_tasks: create_python_venv.yml
+
+- name: Install ansible venv
+  ansible.builtin.include_tasks: install_ansible_venv.yml
+
+- name: Install mitogen
+  ansible.builtin.include_tasks: install_mitogen.yml
   when:
     - cca_install_mitogen | default(true)
-- include_tasks: install_cca_for_splunk.yml
+
+- name: Install cca for splunk
+  ansible.builtin.include_tasks: install_cca_for_splunk.yml
   when:
     - clone_cca_for_splunk | default(true)
-- include_tasks: post_configure_cca_manager_user.yml
+
+- name: Post configure cca manager user
+  ansible.builtin.include_tasks: post_configure_cca_manager_user.yml
   when:
     - not docker_build | default(false)

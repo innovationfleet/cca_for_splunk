@@ -1,0 +1,6 @@
+skip_list:
+  - role-name
+  - var-naming[no-role-prefix]
+verbosity: 1
+warn_list: []
+offline: false

@@ -10,16 +10,16 @@
 # Release: 2023.2.1
 
 - name: Include tasks that will install/upgrade polkit
-  include_tasks: "polkit/{{ package_manager }}/ensure_polkit.yml"
+  ansible.builtin.include_tasks: "polkit/{{ package_manager }}/ensure_polkit.yml"
 
 - name: Configure polkit for splunk, rpm based distros
-  include_tasks: polkit/polkit_rules.yml
+  ansible.builtin.include_tasks: polkit/polkit_rules.yml
   when:
     - ansible_distribution != "Debian"
     - ansible_distribution != "Ubuntu"
 
 - name: Configure polkit for splunk, debian based distros
-  include_tasks: polkit/policykit-1_rules.yml
+  ansible.builtin.include_tasks: polkit/policykit-1_rules.yml
   when:
     - ansible_distribution == "Debian" or
       ansible_distribution == "Ubuntu"

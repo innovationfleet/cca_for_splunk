@@ -7,28 +7,34 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Get Splunk Enterprise version
-  ansible.builtin.include_tasks: ../../cca.core.splunk/tasks/get_splunk_version.yml
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: get_splunk_version.yml
 
 - name: Get running cgroup version
   ansible.builtin.command:
-    cmd: |
+    cmd: >
       grep -c "group2 /sys/fs/cgroup cgroup2" /etc/mtab
   register: cgroup_version_result
   changed_when: false
   failed_when:
     - cgroup_version_result.rc > 1
+  tags:
+    - skip_ansible_lint
 
 - name: Get supported cgroup version 2
   ansible.builtin.command:
-    cmd: |
+    cmd: >
       grep -c "cgroup2 /sys/fs/cgroup.* cgroup2" /etc/mtab
   register: cgroupv2_version_result
   changed_when: false
   failed_when:
     - cgroupv2_version_result.rc > 1
+  tags:
+    - skip_ansible_lint
 
 - name: Set running kernel cgroup version and supported version
   ansible.builtin.set_fact:
@@ -37,12 +43,14 @@
 
 - name: Get current configured systemd cgroup version
   ansible.builtin.command:
-    cmd: |
+    cmd: >
       grep -c "cgroup /sys/fs/cgroup/systemd cgroup" /etc/mtab
   register: systemd_cgroup_version_result
   changed_when: false
   failed_when:
     - systemd_cgroup_version_result.rc > 1
+  tags:
+    - skip_ansible_lint
 
 - name: Set current systemd cgroup version
   ansible.builtin.set_fact:
@@ -55,6 +63,9 @@
 - name: Configure cgroup version based on Splunk version and current state
   block:
     - name: Configure cgroup v1 for Splunk versions below 9.4.0
+      when:
+        - running_kernel_cgroup_version == 'cgroupv1'
+        - not supported_kernel_cgroup_version == 'cgroupv2'
       block:
         - name: Include tasks for configuring cgroup v1
           ansible.builtin.include_tasks: systemd/manage_cgroup_v1.yml
@@ -63,11 +74,23 @@
           ansible.builtin.set_fact:
             cgroups_configured: true
 
+    - name: Configure cgroup v1 because current Splunk version does not support v2
       when:
-        - not splunk_supports_cgroupv2
         - running_kernel_cgroup_version == 'cgroupv1'
+        - supported_kernel_cgroup_version == 'cgroupv2'
+        - not splunk_supports_cgroupv2
+      block:
+        - name: Include tasks for configuring cgroup v1
+          ansible.builtin.include_tasks: systemd/manage_cgroup_v1.yml
+
+        - name: Set fact that cgroups has been configured
+          ansible.builtin.set_fact:
+            cgroups_configured: true
 
     - name: Configure cgroup v2 for Splunk versions 9.4.0 and above
+      when:
+        - splunk_supports_cgroupv2
+        - (running_kernel_cgroup_version == 'cgroupv2' or supported_kernel_cgroup_version == 'cgroupv2')
       block:
         - name: Include tasks for configuring cgroup v2
           ansible.builtin.include_tasks: systemd/manage_cgroup_v2.yml
@@ -76,9 +99,6 @@
           ansible.builtin.set_fact:
             cgroups_configured: true
 
-      when:
-        - splunk_supports_cgroupv2
-        - (running_kernel_cgroup_version == 'cgroupv2' or supported_kernel_cgroup_version == 'cgroupv2')
 
 - name: Include role to check if there is a pending reboot
   ansible.builtin.include_tasks: check_pending_actions.yml

@@ -1,0 +1,20 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Add a search peer to a splunk server.
+#
+# Prerequisite: This task needs a outher task that loops over server and pass host as the
+#               loop variable.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2024.1.2
+
+- name: Include add_search_servers task to setup monitoring console
+  ansible.builtin.include_tasks: looped_tasks/add_search_server.yml
+  loop: "{{ query('inventory_hostnames', 'splunk_servers:!forwarders') }}"
+  loop_control:
+    loop_var: host
+  when:
+    - inventory_hostname != host
+    - is_monitoring_console | default(false)

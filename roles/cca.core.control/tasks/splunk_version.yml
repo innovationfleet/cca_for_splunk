@@ -7,15 +7,22 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.3.1
+# Release: 2025.2.1
 
 - name: Get current installed splunk version
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.shell:
-    cmd: "timeout 10 {{ splunk_path }}/bin/splunk version --accept-license --answer-yes --no-prompt | awk '{ print $2 }'"
+    cmd: >
+     set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk version
+     --accept-license --answer-yes --no-prompt | awk '{ print $2 }'
+  args:
+    executable: /bin/bash
   register: splunk_enterprise_version_result
+  retries: "{{ cca_splunkd_cli_version_retries | default(10) | int }}"
+  delay: 10
+  until: splunk_enterprise_version_result.rc == 0
   changed_when: false
   check_mode: false
 

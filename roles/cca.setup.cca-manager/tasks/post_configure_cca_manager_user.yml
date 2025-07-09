@@ -19,10 +19,11 @@
   ansible.builtin.file:
     path: "{{ directory }}"
     state: 'directory'
+    mode: '0700'
   loop:
     "{{ cca_manager_directories }}"
   loop_control:
-     loop_var: directory
+    loop_var: directory
 
 - name: Check if secrets file exists
   ansible.builtin.stat:
@@ -41,6 +42,7 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: 'touch'
+    mode: '0600'
   with_items:
     - "{{ cca_manager_user_dir }}/.profile_local"
     - "{{ cca_manager_user_dir }}/.bash_profile"

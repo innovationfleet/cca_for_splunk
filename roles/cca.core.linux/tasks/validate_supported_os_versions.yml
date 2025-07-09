@@ -13,106 +13,95 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.2.1
+# Release: 2025.2.1
 #
 
-- name: List of supported RedHat versions
+- name: Set package manager compatibility flags
   ansible.builtin.set_fact:
-     redhat_support: true
-     package_manager: 'yum'
-  when:
-     - ansible_distribution == "RedHat"
-     - ansible_distribution_major_version == "7"
-     - ansible_architecture == "x86_64"
+    use_shell_fallback: "{{ ansible_distribution_major_version == '8' and ansible_distribution in ['RedHat', 'CentOS', 'Rocky', 'OracleLinux'] }}"
 
 - name: List of supported RedHat versions
   ansible.builtin.set_fact:
-     redhat_support: true
-     package_manager: 'dnf'
+    redhat_support: true
+    package_manager: 'yum'
   when:
-     - ansible_distribution == "RedHat"
-     - ansible_distribution_major_version == "8" or
-       ansible_distribution_major_version == "9"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version in ["8", "9"]
+    - ansible_architecture == "x86_64"
+
+- name: List of supported RedHat versions
+  ansible.builtin.set_fact:
+    redhat_support: true
+    package_manager: 'dnf'
+  when:
+    - ansible_distribution == "RedHat"
+    - ansible_distribution_major_version in ["8", "9"]
+    - ansible_architecture == "x86_64"
 
 - name: List of supported CentOS versions
   ansible.builtin.set_fact:
-     centos_support: true
-     package_manager: 'yum'
+    centos_support: true
+    package_manager: 'yum'
   when:
-     - ansible_distribution == "CentOS"
-     - ansible_distribution_major_version == "7" or
-       ansible_distribution_major_version == "8" or
-       ansible_distribution_major_version == "9"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version in ["8", "9"]
+    - ansible_architecture == "x86_64"
 
 - name: List of supported Rocky Linux versions
   ansible.builtin.set_fact:
-     rocky_support: true
-     package_manager: 'dnf'
+    rocky_support: true
+    package_manager: 'dnf'
   when:
-     - ansible_distribution == "Rocky"
-     - ansible_distribution_major_version == "8" or
-       ansible_distribution_major_version == "9"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "Rocky"
+    - ansible_distribution_major_version in ["8", "9"]
+    - ansible_architecture == "x86_64"
 
 - name: List of supported Oracle Linux versions
   ansible.builtin.set_fact:
-     oracle_support: true
-     package_manager: 'dnf'
+    oracle_support: true
+    package_manager: 'dnf'
   when:
-     - ansible_distribution == "OracleLinux"
-     - ansible_distribution_major_version == "8" or
-       ansible_distribution_major_version == "9"
-     - ansible_architecture == "x86_64"
-
-- name: List of supported Amazon Linux 2 versions
-  ansible.builtin.set_fact:
-     amazon_al2_support: true
-     package_manager: 'yum'
-  when:
-     - ansible_distribution == "Amazon"
-     - ansible_distribution_major_version == "2"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "OracleLinux"
+    - ansible_distribution_major_version in ["8", "9"]
+    - ansible_architecture == "x86_64"
 
 - name: List of supported Amazon Linux 2023+ versions
   ansible.builtin.set_fact:
-     amazon_al2023_support: true
-     package_manager: 'dnf'
+    amazon_al2023_support: true
+    package_manager: 'dnf'
   when:
-     - ansible_distribution == "Amazon"
-     - ansible_distribution_major_version == "2023"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "Amazon"
+    - ansible_distribution_major_version == "2023"
+    - ansible_architecture == "x86_64"
 
 - name: List of supported Debian versions
   ansible.builtin.set_fact:
-     debian_support: true
-     package_manager: 'apt'
+    debian_support: true
+    package_manager: 'apt'
   when:
-     - ansible_distribution == "Debian"
-     - ansible_distribution_major_version == "12"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "Debian"
+    - ansible_distribution_major_version == "12"
+    - ansible_architecture == "x86_64"
 
 - name: List of supported Ubuntu versions
   ansible.builtin.set_fact:
-     ubuntu_support: true
-     package_manager: 'apt'
+    ubuntu_support: true
+    package_manager: 'apt'
   when:
-     - ansible_distribution == "Ubuntu"
-     - ansible_distribution_major_version == "22"
-     - ansible_architecture == "x86_64"
+    - ansible_distribution == "Ubuntu"
+    - ansible_distribution_major_version in ["22", "24"]
+    - ansible_architecture == "x86_64"
 
 - name: Assert that only supported OS Versions are found
   ansible.builtin.assert:
     that:
-       - redhat_support is defined or
-         centos_support is defined or
-         rocky_support is defined or
-         oracle_support is defined or
-         amazon_al2_support is defined or
-         amazon_al2023_support is defined or
-         debian_support is defined or
-         ubuntu_support is defined
+      - redhat_support is defined or
+        centos_support is defined or
+        rocky_support is defined or
+        oracle_support is defined or
+        amazon_al2023_support is defined or
+        debian_support is defined or
+        ubuntu_support is defined
     fail_msg: >-
         This Ansible framework has not been against the following OS/Version combination:
           ansible_distribution = {{ ansible_distribution }}

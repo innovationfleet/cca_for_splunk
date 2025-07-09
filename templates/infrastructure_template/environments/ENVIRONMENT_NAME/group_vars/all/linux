@@ -13,8 +13,10 @@ splunk_user_gid: 'UPDATE_SPLUNK_GID'
 cca_baseline_software:
   - 'rsync'
   - 'git'
+  - 'tar'
   - 'openssl'
-  - 'openssh'
+  - '{{"openssh-server" if package_manager == "apt" else "openssh" }}'
+  - '{{"openssh-client" if package_manager == "apt" else None }}'
   - '{{"dnsutils" if package_manager == "apt" else "bind-utils" }}'
   - '{{"acl" if package_manager == "apt" else None }}'
 control:

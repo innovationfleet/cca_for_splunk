@@ -1,0 +1,64 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Robin Blomdahl
+#
+# Release: 2024.2.2
+
+- name: Debugging exclude list
+  ansible.builtin.debug:
+    msg: "{{ cca_control.package.updates.exclude_packages }}"
+
+- name: "Excluding packages that should not be updated"
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - ansible
+    - ansible-core
+    - splunk
+
+- name: "DRY RUN: Get apt update status"
+  ansible.builtin.apt:
+    name: "{{ cca_control.package.updates.include_packages }}"
+    state: latest
+  register: apt_update_status
+  check_mode: true
+  tags:
+    - skip_ansible_lint
+
+- name: Debugging exclude list
+  ansible.builtin.debug:
+    msg: "{{ apt_update_status }}"
+
+- name: Set fact if kernel update is detected
+  ansible.builtin.set_fact:
+    kernel_update_needed: true
+  when: item | regex_search('kernel')
+  with_items: "{{ apt_update_status.changes.updated | default('') | list }}"
+
+- name: Get pending actions
+  ansible.builtin.include_role:
+    name: cca.core.linux
+    tasks_from: check_pending_actions.yml
+
+- name: End play for this host due to this reason
+  ansible.builtin.debug:
+    msg: "{{ apt_update_status.results }}"
+  when:
+    - apt_update_status.results is defined
+    - apt_update_status.results | list | regex_search('Nothing to do here, all packages are up to date')
+    - not stat_server_reboot_pending.stat.exists | default(false)
+    - not config_update | default(false)
+
+- name: End play for host if nothing needs to be done
+  ansible.builtin.meta: end_host
+  when:
+    - apt_update_status.results is defined
+    - apt_update_status.results | list | regex_search('Nothing to do here, all packages are up to date')
+    - not stat_server_reboot_pending.stat.exists | default(false)
+    - not config_update | default(false)

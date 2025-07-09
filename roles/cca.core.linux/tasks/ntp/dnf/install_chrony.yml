@@ -7,9 +7,25 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2024.1.2
+# Release: 2025.2.1
 
-- name: Ensure Chrony is installed and updated
+- name: Ensure Chrony is installed and updated (using dnf module)
   ansible.builtin.dnf:
     name: chrony
-    state: latest
+    state: present
+  when: not use_shell_fallback | default(false)
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Ensure Chrony is installed and updated (using shell)
+  ansible.builtin.command: |
+    if ! rpm -q chrony >/dev/null 2>&1; then
+      dnf install -y chrony
+    else
+      dnf update -y chrony
+    fi
+  args:
+    executable: /bin/bash
+  when: use_shell_fallback | default(false)
+  no_log: "{{ ansible_verbosity < 3 }}"
+  tags:
+    - skip_ansible_lint

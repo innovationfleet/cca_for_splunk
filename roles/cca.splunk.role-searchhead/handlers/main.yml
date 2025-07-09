@@ -68,6 +68,8 @@
     - '{{ splunk_path }}/bin/splunk start'
   when:
     - force_splunkd_restart | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Splunk shcluster bundle push handler on clustered search head peers
   ansible.builtin.file:
@@ -264,4 +266,3 @@
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c9 | default([]) }}"
-

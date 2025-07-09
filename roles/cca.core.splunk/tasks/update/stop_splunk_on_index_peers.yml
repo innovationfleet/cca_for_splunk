@@ -1,0 +1,139 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description: Stop splunk and use inventory group to
+#              find related cluster manager to a cluster_peer.
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+- name: Enable maintenance mode for cluster peers in Cluster C1
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c1 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c1 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C2
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c2 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c2 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C3
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c3 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c3 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C4
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c4 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c4 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C5
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c5 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c5 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C6
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c6 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c6 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C7
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c7 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c7 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C8
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c8 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c8 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Enable maintenance mode for cluster peers in Cluster C9
+  ansible.builtin.include_tasks: update/enable_maintenance_mode.yml
+  when:
+    - inventory_hostname in ( groups.cluster_peers_cluster_c9 | default([]) )
+  loop: "{{ groups.cluster_manager_cluster_c9 | default([]) }}"
+  loop_control:
+    loop_var: cluster_manager_loop_var
+
+- name: Check if Splunk is running
+  ansible.builtin.command:
+    cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk status --accept-license --answer-yes --no-prompt"
+  register: splunk_status_result
+  retries: "{{ cca_splunkd_status_retries | default(10) | int }}"
+  delay: 10
+  until: splunk_status_result.rc == 0
+  failed_when: false
+  tags:
+    - skip_ansible_lint
+
+- name: Include tasks to login to splunk cli
+  ansible.builtin.include_tasks:
+    splunk_login.yml
+  when:
+    - splunk_status_result.rc == 0
+
+- name: Splunk offline command, be patient, might take up to 10 min
+  ansible.builtin.command:
+    cmd: "timeout 900 {{ splunk_path }}/bin/splunk offline"
+  register: splunk_offline_result
+  changed_when: false
+  failed_when: false
+  when:
+    - enterprise_upgrade | default(false) or
+      kernel_update_needed | default(false) or
+      stat_server_reboot_pending.stat.exists | default(false) or
+      stat_splunk_service_restart_pending.stat.exists | default(false)
+    - splunk_status_result.rc == 0
+  tags:
+    - skip_ansible_lint
+
+- name: Fallback - stop Splunk if offline failed (e.g., due to timeout)
+  ansible.builtin.command:
+    cmd: "timeout {{ cca_splunk_stop_timeout | default('600') }} {{ splunk_path }}/bin/splunk stop"
+  register: splunk_stop_result
+  retries: "{{ cca_splunkd_cli_stop_retries | default(10) | int }}"
+  delay: 10
+  until: splunk_stop_result.rc == 0
+  when:
+    - splunk_offline_result is defined
+    - splunk_offline_result.rc | default(0) != 0
+  tags:
+    - skip_ansible_lint
+
+- name: Disable Splunk.service
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: root
+  ansible.builtin.systemd:
+    name: '{{ systemd_enterprise_name }}'
+    enabled: false
+    state: stopped
+  no_log: "{{ ansible_verbosity < 3 }}"
+  failed_when: false

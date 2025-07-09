@@ -19,13 +19,13 @@
   register: find_cca_splunk_tgz
 
 - name: Find all Splunk tgz files in the tmp directory
-  find:
+  ansible.builtin.find:
     paths: "{{ cca_splunk_var_tmp }}"
     patterns: 'splunk-*-Linux-x86_64.tgz'
   register: find_cca_splunk_tmp_tgz
 
 - name: Cleanup all Splunk tgz files in tmp except current version
-  file:
+  ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
   loop: "{{ find_cca_splunk_tmp_tgz.files }}"
@@ -48,7 +48,7 @@
       enterprise_upgrade | default(false)
 
 - name: Stage splunk_cca files used during initial install or upgrade of Splunk Enterprise
-  ansible.builtin.synchronize:
+  ansible.posix.synchronize:
     src: "{{ role_path }}/files/"
     dest: "{{ cca_splunk_var_tmp }}/"
     recursive: true
@@ -64,7 +64,7 @@
   check_mode: false
 
 - name: Stage Splunk tgz file at initial install or upgrade of Splunk Enterprise
-  ansible.builtin.synchronize:
+  ansible.posix.synchronize:
     src: "{{ absolute_infrastructure_repo_path }}/splunk/var/images/"
     dest: "{{ cca_splunk_var_tmp }}/"
     recursive: true

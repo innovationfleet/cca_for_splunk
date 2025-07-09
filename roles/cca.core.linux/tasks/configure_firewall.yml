@@ -14,7 +14,12 @@
 
 - name: Determine which firewall service is active
   ansible.builtin.set_fact:
-    firewall_service: "{% if ansible_facts.services['firewalld.service'] is defined %}firewalld{% elif ansible_facts.services['ufw.service'] is defined %}ufw{% else %}none{% endif %}"
+    firewall_service: >-
+      {{
+        'firewalld' if ansible_facts.services['firewalld.service'] is defined
+        else 'ufw' if ansible_facts.services['ufw.service'] is defined
+        else 'none'
+      }}
 
 - name: Include tasks that will install/upgrade firewalld
   ansible.builtin.include_tasks: firewalld/ensure_firewalld.yml

@@ -12,8 +12,8 @@ cca_for_splunk_directory: 'cca_for_splunk'
 cca_manager_cca_for_splunk_path: '{{ cca_manager_user_dir }}/clones/{{ cca_for_splunk_directory }}'
 cca_python_minor_version: '3.11'
 cca_python_release: '3.11.6'
-cca_ansible_minor_version: '2.14'
-cca_ansible_release: '2.14.13'
+cca_ansible_minor_version: '2.18'
+cca_ansible_release: '2.18.6'
 cca_manager_user_dir: "{{ ansible_facts.user_dir }}"
 cca_manager_tools_directories:
   - "{{ cca_manager_user_dir }}/tools/python-venv"
@@ -24,7 +24,7 @@ cca_manager_directories:
   - "{{ cca_manager_user_dir + '/' + cca_manager_data_dirname | default() + 'main' }}"
 
 cca_manager_ansible_vault_secret_path: '~/{{ cca_manager_data_dirname | default(none) }}secrets/cca_ansible_vault_secret'
-cca_ansible_roles_path: "{{ './roles:~/clones/' + cca_repo_name | default('cca_for_splunk') +'/roles' }}"
+cca_ansible_roles_path: "{{ './roles:~/clones/' + cca_repo_name | default('cca_for_splunk') + '/roles' }}"
 
 # CCA for Splunk is a strong supporter of the Mitogen framework as it speeds up
 # CCA playbooks by at least 4X. Read more details about it below.
@@ -36,4 +36,4 @@ cca_install_mitogen: false
 cca_use_mitogen_strategy: true
 cca_manager_mitogen_repo_url: 'https://github.com/innovationfleet/mitogen.git'
 cca_manager_mitogen_path: '{{ cca_manager_user_dir }}/tools/mitogen'
-cca_manager_mitogen_release: 'ansible.2.14.13'
+cca_manager_mitogen_release: 'ansible.2.18.6'

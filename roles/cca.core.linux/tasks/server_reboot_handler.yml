@@ -15,11 +15,14 @@
   no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Include tasks to handle cgroup versions, secondary reboot if needed
-  include_tasks: systemd/manage_cgroup_version.yml
+  ansible.builtin.include_tasks: systemd/manage_cgroup_version.yml
   when:
     - not cgroups_configured | default(false)
 
 - name: Control services during server reboot and reboot server if required
+  when:
+    - stat_server_reboot_pending.stat.exists | default(false)
+    - not cca_skip_server_reboot | default(false)
   block:
     - name: Stop splunk service and disable it
       ansible.builtin.systemd:
@@ -65,9 +68,6 @@
       ansible.builtin.set_fact:
         cgroups_configured: true
 
-  when:
-    - stat_server_reboot_pending.stat.exists | default(false)
-    - not cca_skip_server_reboot | default(false)
 
 - name: Gather facts about configured services
   ansible.builtin.service_facts:
@@ -92,4 +92,3 @@
     - "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     - "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
   check_mode: false
-

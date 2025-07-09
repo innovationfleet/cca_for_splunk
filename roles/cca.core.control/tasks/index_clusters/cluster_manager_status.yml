@@ -12,7 +12,7 @@
 - name: Check if Splunk is installed and has been started
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.stat:
     path: "{{ splunk_path }}/var/log/splunk"
   register: stat_splunk_enterprise_started
@@ -29,7 +29,7 @@
 - name: Get migration status
   become: true
   become_user: "{{ splunk_user }}"
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   ansible.builtin.stat:
     path: "{{ splunk_path }}/.cca/master-apps_config_bundle_dir_migrated"
   register: stat_master_apps_migration_state

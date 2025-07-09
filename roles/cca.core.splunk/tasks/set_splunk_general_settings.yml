@@ -11,7 +11,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.2
+# Release: 2025.2.1
 
 - name: Find Splunk files in etc/system/local
   ansible.builtin.find:
@@ -33,21 +33,29 @@
     - accept_cca_management | default(false)
     - not cca_ansible_managed | default(false)
 
+- name: Get current file stats
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  register: file_stat
+  loop: "{{ splunk_conf_general_settings_flattened }}"
+  loop_control:
+    label: "{{ item.path }}"
+
 - name: Manage header line in splunk files, managed by ansible
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: "{{ item.path }}"
     section:
     option: '{{ file_managed_by_ansible }}'
     value: null
     state: present
     allow_no_value: true
-  loop:
-    "{{ splunk_conf_general_settings_flattened }}"
-  changed_when: false
+    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0644') }}"
+  loop: "{{ splunk_conf_general_settings_flattened }}"
   no_log: '{{ hide_password }}'
+  changed_when: false
 
 - name: Updates Splunk conf based on general settings
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: "{{ item.path }}"
     section: "{{ item.section }}"
     option: "{{ item.option | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
@@ -61,7 +69,7 @@
   register: cca_splunk_settings_update
 
 - name: Include task to notify restart or need to push general settings
-  include_tasks: notify_splunk.yml
+  ansible.builtin.include_tasks: notify_splunk.yml
   when:
     - cca_splunk_settings_update is defined
     - cca_splunk_settings_update.results is defined

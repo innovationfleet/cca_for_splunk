@@ -7,33 +7,46 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
+# Release: 2025.2.1
 
 - name: Include task to check pending actions
   ansible.builtin.include_tasks: check_pending_actions.yml
 
 - name: Reload Deployment Server
+  when:
+    - stat_deployment_server_reload_pending.stat.exists
+    - not stat_splunkd_restart_pending.stat.exists
   block:
     - name: Include tasks to login to splunk cli
       ansible.builtin.include_tasks:
         file: splunk_login.yml
 
     - name: Reload deploy-server serverclass to notify clients of new apps
-      ansible.builtin.shell: >
-        {{ splunk_path }}/bin/splunk reload deploy-server -timeout {{ reload_deploy_server_timeout | default(900) }}
-        {% if item is defined and item %} -class {{ item }}
-        {% endif %}
+      ansible.builtin.command:
+        cmd: >
+          timeout {{ reload_deploy_server_timeout | default('900') | int + 60 }}
+          {{ splunk_path }}/bin/splunk reload deploy-server
+          -timeout {{ reload_deploy_server_timeout | default(900) }}
+          {% if item is defined and item %} -class {{ item }}
+          {% endif %}
       loop: "{{ serverclass }}"
       when:
         - not skip_ds_reload_handler | default(false) | bool
         - serverclass | default([]) | length > 0
+      tags:
+        - skip_ansible_lint
 
     - name: Reload deploy-server to notify clients of new apps
-      ansible.builtin.shell: >
-        {{ splunk_path }}/bin/splunk reload deploy-server -timeout {{ reload_deploy_server_timeout | default(900) }}
+      ansible.builtin.command:
+        cmd: >
+          timeout {{ reload_deploy_server_timeout | default('900') | int + 60 }}
+          {{ splunk_path }}/bin/splunk reload deploy-server
+          -timeout {{ reload_deploy_server_timeout | default(900) }}
       when:
         - not skip_ds_reload_handler | default(false) | bool
         - serverclass | default([]) | length == 0
+      tags:
+        - skip_ansible_lint
 
     - name: Cleanup state file for deployment apps push
       ansible.builtin.file:
@@ -43,10 +56,6 @@
     - name: Include tasks to logout of splunk cli
       ansible.builtin.include_tasks:
         file: splunk_logout.yml
-
-  when:
-    - stat_deployment_server_reload_pending.stat.exists
-    - not stat_splunkd_restart_pending.stat.exists
 
 - name: Restart Deployment Server
   ansible.builtin.include_tasks: restart_splunkd.yml

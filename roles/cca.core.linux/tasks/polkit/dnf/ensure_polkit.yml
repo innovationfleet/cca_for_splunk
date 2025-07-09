@@ -8,7 +8,24 @@
 # Author: Roger Lindquist (github.com/rlinq)
 #
 # Release: 2023.2.1
-- name: Ensure polkit is installed and updated, CVE-2021-3560 is solved in version 0.115.12
+
+- name: Ensure polkit is installed and updated, CVE-2021-3560 is solved in version 0.115.12 (using dnf module)
   ansible.builtin.dnf:
     name: polkit
-    state: latest
+    state: present
+  when: not use_shell_fallback | default(false)
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Ensure polkit is installed and updated, CVE-2021-3560 is solved in version 0.115.12 (using shell)
+  ansible.builtin.shell: |
+    if ! rpm -q polkit >/dev/null 2>&1; then
+      dnf install -y polkit
+    else
+      dnf update -y polkit
+    fi
+  args:
+    executable: /bin/bash
+  when: use_shell_fallback | default(false)
+  no_log: "{{ ansible_verbosity < 3 }}"
+  tags:
+    - skip_ansible_lint

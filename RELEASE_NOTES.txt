@@ -31,9 +31,56 @@
 
     Release notes:
 
+    2025.2.2
+              - ⚠️ REQUIRED ANSIBLE UPDATE ⚠️
+                Ansible 2.18.6+ is required to run CCA from this release and onwards.
+                Run ./cca_ctrl --upgrade from your CCA main repository and select the playbook
+                'upgrade_cca_manager.yml'. When the upgrade is complete, log out and log in again.
+                Your shell prompt (PS1) should now indicate that 'ansible2.18' is the active virtual environment.
+              - Important:
+                 * Copy settings from the infrastructure group_vars/all/general_settings template directory.
+                   An option to disable a non-documented prometheus setting that is know to cause memory leak
+                   issues on especially forwarders. CCA will disable on all hosts.
+                 * This version of CCA deprecates OS versions incompatible with Ansible 2.17+. To proceed
+                   with deprecated OS versions, set `"cca_accept_deprecated_os": true` when running the
+                   configure_linux_servers playbook.
+                 * CCA has solved the breaking changes in Ansible, by using shell fallback for deprecated OS
+                   versions.
+                 * Support for Enterprise Linux version 7 and Amazon Linux 2 has been removed.
+              - Bumped Splunk Enterprise version to 9.4.3, Splunk 9.4.x track is recommended for production usage.
+              - Added Ubuntu 24.04 support.
+                * Important: Update your infrastructure group_vars/all/linux file using the
+                  reference from templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/all/linux.
+                  It has added handling for OS package differences between dnf and apt package managers.
+              - Enhanced stability with ansible retry on all relevant Splunk commands. High load scenarios
+                will be gracefully retried and fail only after a configurable retry with proper default
+                values.
+              - Introduced rescue for Index Cluster pre-flight check, after the timeout, Splunkd is restarted
+                and pre-flight is checked again.
+              - Added command timeout for all command tasks.
+              - Added command timeout and pipefail to all shell tasks.
+              - Updated logic to control when to upgrade Splunk, moved functionality from playbook to tasks.
+              - Improved cgroups handling for kernels that support cgroups v2 but Splunk Enterprise
+                is less than 9.4.
+              - Playbook merge and updated with optional variables for onboarding directory references.
+              - Complete overhaul, handled all ansible-lint issues in tasks and playbooks. Changed shell to
+                command module where it's not required. Added /bin/bash as executable for shell module that
+                is required on ubuntu servers.
+              - Added a more robust cleanup of temp files on the CCA Manager server.
+
+
+              Bug fixes:
+                * Removed vars cca_splunk_enterprise_upgrade: true from rolling upgrade
+                  playbook as it overruled the default "false" and always triggered an upgrade.
+                * Fixed cgroups and Splunk version logic that prevented Systemd to be correctly configured on
+                  legacy hosts and Splunk Enterprise 9.4.
+                * Changed strict x509 certificate validation assessment to only run when
+                  splunk_enterprise_version is set to 9.4.0+.
+                * cca.core.linux: Fix reboot handler in selinux reconfiguration scenario.
+
     2025.1.1.1
               Bug fixes:
-                * Corrected destination path for app deployment after migration to ansible ynchronize module.
+                * Corrected destination path for app deployment after migration to ansible synchronize module.
 
     2025.1.1
               - Important:

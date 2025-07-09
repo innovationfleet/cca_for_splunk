@@ -1,0 +1,16 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2022.3.2
+
+- name: Check captaincy
+  ansible.builtin.include_tasks: update/ensure_shcluster_captaincy.yml
+
+- name: Stop splunk
+  ansible.builtin.include_tasks: update/stop_splunk.yml

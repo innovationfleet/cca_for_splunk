@@ -148,4 +148,3 @@
     mode: '664'
   listen: notify cluster bundle push
   when: inventory_hostname in ( groups.cluster_managers | default([]) )
-

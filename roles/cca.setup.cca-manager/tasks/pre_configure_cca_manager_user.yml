@@ -19,10 +19,11 @@
   ansible.builtin.file:
     path: "{{ directory }}"
     state: 'directory'
+    mode: '0700'
   loop:
     "{{ cca_manager_tools_directories }}"
   loop_control:
-     loop_var: directory
+    loop_var: directory
 
 - name: Generate a .profile for the user
   ansible.builtin.copy:
@@ -72,4 +73,4 @@
         source ~/{{ cca_docker_mount_dir | default(none) }}.bashrc
 
       fi
-    mode: 400
+    mode: '0400'

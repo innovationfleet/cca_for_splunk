@@ -27,12 +27,13 @@
 #
 # Roger Lindquist (github.com/rlinq)
 # META_DATE
-#  Release: 2024.2.1
+#  Release: 2025.2.1
 
 - name: Splunkd restart handler on non cluster instances
   ansible.builtin.file:
     path: "{{ splunkd_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname not in ( groups.cluster_peers | default([]) )
@@ -42,6 +43,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.searchhead_members | default([]) )
@@ -66,11 +68,14 @@
     - '{{ start_command }}'
   when:
     - force_splunkd_restart | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Splunk shcluster bundle push handler on clustered search head peers
   ansible.builtin.file:
     path: "{{ shcluster_bundle_push_pending }}"
     state: touch
+    mode: '0644'
   listen: notify shcluster bundle push
   when: inventory_hostname in ( groups.searchhead_deployers | default([]) )
 
@@ -78,6 +83,7 @@
   ansible.builtin.file:
     path: "{{ cluster_bundle_push_pending }}"
     state: touch
+    mode: '0644'
   listen: notify cluster bundle push
   when: inventory_hostname in ( groups.cluster_managers | default([]) )
 
@@ -85,6 +91,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c1 | default([]) )
@@ -96,6 +103,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c2| default([]) )
@@ -107,6 +115,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c3 | default([]) )
@@ -118,6 +127,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c4 | default([]) )
@@ -129,6 +139,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c5 | default([]) )
@@ -140,6 +151,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c6 | default([]) )
@@ -151,6 +163,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c7 | default([]) )
@@ -162,6 +175,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c8 | default([]) )
@@ -173,6 +187,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.cluster_peers_cluster_c9 | default([]) )
@@ -184,6 +199,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c1 | default([]) )
   delegate_to: "{{ item }}"
@@ -193,6 +209,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c2 | default([]) )
   delegate_to: "{{ item }}"
@@ -202,6 +219,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c3 | default([]) )
   delegate_to: "{{ item }}"
@@ -211,6 +229,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c4 | default([]) )
   delegate_to: "{{ item }}"
@@ -220,6 +239,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c5 | default([]) )
   delegate_to: "{{ item }}"
@@ -229,6 +249,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c6 | default([]) )
   delegate_to: "{{ item }}"
@@ -238,6 +259,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c7 | default([]) )
   delegate_to: "{{ item }}"
@@ -247,6 +269,7 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c8 | default([]) )
   delegate_to: "{{ item }}"
@@ -256,8 +279,8 @@
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
+    mode: '0644'
   listen: notify splunkd restart
   when: inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
   delegate_to: "{{ item }}"
   loop: "{{ groups.searchhead_deployer_shcluster_c9 | default([]) }}"
-

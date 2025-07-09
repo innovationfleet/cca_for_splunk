@@ -17,4 +17,6 @@
 
 # Misc ignored files
 ._*
+*.pyc
+__pycache__
 

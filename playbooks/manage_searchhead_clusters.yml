@@ -23,7 +23,7 @@
 - name: Verify that connection to all servers are ok before we start
   hosts: searchhead_deployers:searchhead_members
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   strategy: linear
@@ -44,12 +44,13 @@
 - name: Configure the deployer
   hosts: searchhead_deployers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Debug all vars
@@ -99,12 +100,13 @@
 - name: Configure general settings on the searchhead cluster members
   hosts: searchhead_members
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Debug all vars
@@ -157,12 +159,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -192,12 +195,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c2
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -227,12 +231,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c3
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -262,12 +267,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c4
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -297,12 +303,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c5
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -332,12 +339,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c6
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -367,12 +375,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c7
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -402,12 +411,13 @@
 - name: Configure the searchhead cluster members
   hosts: searchhead_members_shcluster_c8
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -435,14 +445,16 @@
           wait_for_shcluster.yml
 
 # Configure the searchhead cluster members
-- hosts: searchhead_members_shcluster_c9
+- name: Configure the searchhead cluster members for shcluster c9
+  hosts: searchhead_members_shcluster_c9
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
   tasks:
     - name: Check search head captain init
@@ -473,13 +485,14 @@
 - name: Check if there is any pending restarts that needs to be dealt with
   hosts: searchhead_deployers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 1
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -488,7 +501,7 @@
         tasks_from:
           check_pending_actions.yml
 
-#TODO: Check if the previous deployer push has caused a rolling restart that is
+# TODO: Check if the previous deployer push has caused a rolling restart that is
 #      already ongoing. Then don't perform this restart, just remove the state file.
     - name: Restart splunkd if needed
       ansible.builtin.include_role:
@@ -496,7 +509,7 @@
         tasks_from:
           restart_splunkd.yml
       when:
-        - stat_splunkd_restart_pending.stat.exists == true
+        - stat_splunkd_restart_pending.stat.exists
 
     - name: Perform a bundle push if a pending action is found
       ansible.builtin.include_role:
@@ -513,14 +526,16 @@
 
 # Check if there is any pending rolling restart that needs to be dealt with
 #
-- hosts: searchhead_members:&searchhead_members_shcluster_c1
+- name: Configure the searchhead cluster members for shcluster c1
+  hosts: searchhead_members:&searchhead_members_shcluster_c1
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -536,8 +551,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -553,14 +570,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c2
+- name: Configure the searchhead cluster members for shcluster c2
+  hosts: searchhead_members:&searchhead_members_shcluster_c2
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -576,8 +595,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -593,14 +614,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c3
+- name: Configure the searchhead cluster members for shcluster c3
+  hosts: searchhead_members:&searchhead_members_shcluster_c3
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Debug all vars
@@ -622,8 +645,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -639,14 +664,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c4
+- name: Configure the searchhead cluster members for shcluster c4
+  hosts: searchhead_members:&searchhead_members_shcluster_c4
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -662,8 +689,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -679,14 +708,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c5
+- name: Configure the searchhead cluster members for shcluster c5
+  hosts: searchhead_members:&searchhead_members_shcluster_c5
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -702,8 +733,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -719,14 +752,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c6
+- name: Configure the searchhead cluster members for shcluster c6
+  hosts: searchhead_members:&searchhead_members_shcluster_c6
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -742,8 +777,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -759,14 +796,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c7
+- name: Configure the searchhead cluster members for shcluster c7
+  hosts: searchhead_members:&searchhead_members_shcluster_c7
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -782,8 +821,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -799,14 +840,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c8
+- name: Configure the searchhead cluster members for shcluster c8
+  hosts: searchhead_members:&searchhead_members_shcluster_c8
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -822,8 +865,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -839,14 +884,16 @@
           post_tasks.yml
 
 
-- hosts: searchhead_members:&searchhead_members_shcluster_c9
+- name: Configure the searchhead cluster members for shcluster c9
+  hosts: searchhead_members:&searchhead_members_shcluster_c9
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   pre_tasks:
-    - ansible.builtin.setup:
+    - name: Setup network gather subset
+      ansible.builtin.setup:
         gather_subset: 'network'
 
     - name: Check if there is any pending actions
@@ -862,8 +909,10 @@
         tasks_from:
           shcluster_members_rolling_restart.yml
       when:
-        - stat_rolling_restart_pending.stat.exists == true
+        - stat_rolling_restart_pending.stat.exists
       run_once: true
+      tags:
+        - skip_ansible_lint
 
   post_tasks:
     - name: Clean up rolling restart from remaining members
@@ -879,11 +928,13 @@
           post_tasks.yml
 
 # Finalize playbook run on manager server
-- hosts: manager
+- name: Finalize playbook run on manager server - Search Head Clusters
+  hosts: manager
   connection: local
   strategy: linear
   pre_tasks:
-    - ansible.builtin.include_role:
+    - name: Include finalize role
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           finalize.yml

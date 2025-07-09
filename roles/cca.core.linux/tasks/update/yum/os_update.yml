@@ -1,0 +1,37 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+
+- name: "Perform yum updates"
+  ansible.builtin.yum:
+    name: "{{ cca_control.package.updates.include_packages }}"
+    state: latest
+    exclude: "{{ cca_control.package.updates.exclude_packages }}"
+  register: yum_update_status
+  tags:
+    - skip_ansible_lint
+
+- name: Set fact if kernel update was detected
+  ansible.builtin.set_fact:
+    kernel_update_needed: true
+  when: item | regex_search('kernel')
+  with_items:
+    - "{{ yum_update_status.changes.updated | default('') | list }}"
+    - "{{ yum_update_status.changes.installed | default('') | list }}"
+    - "{{ yum_update_status.results | default('') | list }}"
+
+- name: Server reboot notification state
+  ansible.builtin.file:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+    state: touch
+    mode: '0644'
+  when:
+    - kernel_update_needed | default(false)

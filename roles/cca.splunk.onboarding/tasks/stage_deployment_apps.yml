@@ -7,13 +7,19 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2025.2.1
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    deployment_server_apps_staging_dir: '/tmp/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ environment_name }}'
-
-- name: Cleanup manager before staging apps
+    deployment_server_apps_staging_dir: >-
+     {{ (cca_local_tmp_dir
+        | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ environment_name }}
+    selected_apps_source_dir: >-
+      {{
+        selected_deployment_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + selected_deployment_apps_sourcedir)
+      }}
+- name: Cleanup manager before staging apps§
   become: false
   connection: local
   ansible.builtin.file:
@@ -28,7 +34,7 @@
   delegate_to: localhost
   connection: local
   ansible.builtin.file:
-    path: '{{ deployment_server_apps_staging_dir }}'
+    path: "{{ deployment_server_apps_staging_dir }}/deployment_server/"
     state: directory
     mode: '0700'
   changed_when: false
@@ -38,7 +44,7 @@
   become: false
   connection: local
   ansible.builtin.stat:
-    path: "{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}"
+    path: "{{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir) }}"
   register: stat_environment_specific_path
   delegate_to: localhost
   check_mode: false
@@ -48,7 +54,7 @@
     that:
       - stat_environment_specific_path.stat.exists
     fail_msg: >-
-      The directory {{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }} is missing
+      The directory {{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir) }} is missing
       correct and rerun the playbook.
 
 - name: Stage manager with deployment apps from environment directory
@@ -56,18 +62,20 @@
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ absolute_file_store_path }}/etc/{{ deployment_apps_sourcedir }}/"
+    "{{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir) }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/"
   delegate_to: localhost
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with deployment server selected apps
   become: false
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ absolute_file_store_path }}/etc/{{ selected_deployment_apps_sourcedir }}/{{ item.source_app }}/"
+    "{{ selected_apps_source_dir }}/{{ item.source_app }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
@@ -77,6 +85,8 @@
   loop: '{{ selected_deployment_apps | default([]) if selected_deployment_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with versioned apps
   become: false
@@ -95,6 +105,8 @@
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with selected apps
   become: false
@@ -105,7 +117,6 @@
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
-    - selected_apps_source_path is defined
     - item.dest_dir is defined
     - item.dest_dir == 'deployment-apps'
     - item.state is defined
@@ -113,6 +124,8 @@
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Include and run tasks from custom onboarding roles
   ansible.builtin.include_role:

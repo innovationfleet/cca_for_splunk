@@ -10,7 +10,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Assert that default_tcpout valid group name when defined
   ansible.builtin.assert:
@@ -52,7 +52,11 @@
       - "not item.section is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
       - "not item.option is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
       - "not item.value is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
-      - "not (item.option is regex('^(?!#).*') and item.value != '' and item.option == '' and item.state | default('present') != 'absent') or not enable_precheck | default(true)"
+      - not (item.option is regex('^(?!#).*')
+        and item.value != ''
+        and item.option == ''
+        and item.state | default('present') != 'absent')
+        or not enable_precheck | default(true)
     msg: |
       Validation failed for the following item:
       Path: {{ item.path }}
@@ -73,7 +77,11 @@
       - "not item.section is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
       - "not item.option is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
       - "not item.value is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
-      - "not (item.option is regex('^(?!#).*') and item.value != '' and item.option == '' and item.state | default('present') != 'absent') or not enable_precheck | default(true)"
+      - not (item.option is regex('^(?!#).*')
+        and item.value != ''
+        and item.option == ''
+        and item.state | default('present') != 'absent')
+        or not enable_precheck | default(true)
     msg: |
       Validation failed for the following item:
       Path: {{ item.path }}
@@ -94,7 +102,11 @@
       - "not item.section is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
       - "not item.option is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
       - "not item.value is regex(invalid_config_regex) or item.state | default('present') == 'absent'"
-      - "not (item.option is regex('^(?!#).*') and item.value != '' and item.option == '' and item.state | default('present') != 'absent') or not enable_precheck | default(true)"
+      - not (item.option is regex('^(?!#).*')
+        and item.value != ''
+        and item.option == ''
+        and item.state | default('present') != 'absent')
+        or not enable_precheck | default(true)
     msg: |
       Validation failed for the following item:
       Path: {{ item.path }}

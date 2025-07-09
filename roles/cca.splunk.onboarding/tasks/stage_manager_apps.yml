@@ -7,11 +7,11 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2025.2.1
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    manager_apps_staging_dir: '/tmp/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ cluster_label }}'
+    manager_apps_staging_dir: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ cluster_label }}'
 
 - name: Cleanup manager before staging apps
   become: false
@@ -41,20 +41,22 @@
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ absolute_file_store_path }}/etc/{{ manager_apps_sourcedir }}/"
+    "{{ manager_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + manager_apps_sourcedir) }}/"
     "{{ manager_apps_staging_dir }}/"
   delegate_to: localhost
   when:
     - cluster_label is defined
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with selected manager apps
   become: false
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ absolute_file_store_path }}/etc/{{ selected_manager_apps_sourcedir }}/{{ item.source_app }}/"
+    "{{ selected_manager_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + selected_manager_apps_sourcedir) }}/{{ item.source_app }}/"
     "{{ manager_apps_staging_dir }}/{{ item.name }}/"
   delegate_to: localhost
   when:
@@ -64,8 +66,10 @@
   loop: '{{ selected_manager_apps | default([]) if selected_manager_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
-- name: Stage manager with versioned apps destined for {{ cluster_manager_config_bundle_dir }} folder on cluster manager
+- name: "Stage manager with versioned apps destined for cluster manager in folder  {{ cluster_manager_config_bundle_dir }}"
   become: false
   connection: local
   ansible.builtin.command: >
@@ -83,8 +87,10 @@
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
-- name: Stage manager with selected apps destined for {{ cluster_manager_config_bundle_dir }} folder on cluster manager
+- name: "Stage manager with selected apps destined for cluster manager in folder  {{ cluster_manager_config_bundle_dir }}"
   become: false
   connection: local
   ansible.builtin.command: >
@@ -102,6 +108,8 @@
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Include and run tasks from custom onboarding roles
   ansible.builtin.include_role:

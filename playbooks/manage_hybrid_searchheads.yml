@@ -22,7 +22,7 @@
 - name: Verify that connection to all servers are ok before we start
   hosts: hybrid_searchheads
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   strategy: linear
@@ -44,7 +44,7 @@
 - name: Configure the hybrid search head
   hosts: hybrid_searchheads
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 1

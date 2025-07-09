@@ -1,0 +1,14 @@
+aiohttp
+ansible-core>=2.18.6
+ansible-runner
+asyncio
+cryptography
+datetime
+Jinja2
+jmespath
+pcrypt
+PyYAML
+requests
+splunk-appinspect
+tenacity
+urllib3

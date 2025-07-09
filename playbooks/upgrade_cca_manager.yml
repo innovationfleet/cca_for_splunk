@@ -1,0 +1,125 @@
+---
+# MENU_DESC=Upgrade CCA Manager
+# REPO_TYPE=main
+# EXTRA_VARS=
+
+- name: Setup Ansible 2.18 venv and Mitogen
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../roles/cca.setup.cca-manager/defaults/main.yml
+  vars:
+    venv_path: "{{ lookup('env', 'HOME') }}/tools/python-venv/ansible{{ cca_ansible_minor_version }}"
+    python_version: "{{ cca_python_minor_version }}"
+    cca_ansible_version: "{{ cca_ansible_release }}"
+    mitogen_repo: "{{ cca_manager_mitogen_repo_url }}"
+    mitogen_tag: "{{ cca_manager_mitogen_release }}"
+    profile_local: "{{ lookup('env', 'HOME') }}/.profile_local"
+  tasks:
+    - name: Create Python venv for Ansible 2.18
+      ansible.builtin.command:
+        cmd: "python{{ python_version }} -m venv {{ venv_path }}"
+      args:
+        creates: "{{ venv_path }}/bin/activate"
+
+    - name: Upgrade pip in venv
+      ansible.builtin.command:
+        cmd: "{{ venv_path }}/bin/pip install --upgrade pip"
+      tags:
+        - skip_ansible_lint
+
+    - name: Install Python requirements from requirements.txt
+      ansible.builtin.command:
+        cmd: >
+          {{ venv_path }}/bin/pip install -r {{ playbook_dir | default('.') }}/../requirements.txt
+      args:
+        chdir: "{{ playbook_dir | default('.') }}/.."
+      register: pip_requirements
+      failed_when: pip_requirements.rc != 0 and 'No such file or directory' not in pip_requirements.stderr
+      tags:
+        - skip_ansible_lint
+
+    - name: Install Ansible collection community.general
+      ansible.builtin.command:
+        cmd: "{{ venv_path }}/bin/ansible-galaxy collection install community.general"
+      tags:
+        - skip_ansible_lint
+
+    - name: Install Ansible collection ansible.posix
+      ansible.builtin.command:
+        cmd: "{{ venv_path }}/bin/ansible-galaxy collection install ansible.posix"
+      tags:
+        - skip_ansible_lint
+
+    - name: Install Ansible collection community.crypto
+      ansible.builtin.command:
+        cmd: "{{ venv_path }}/bin/ansible-galaxy collection install community.crypto"
+      tags:
+        - skip_ansible_lint
+
+    - name: Set mitogen major.minor version
+      ansible.builtin.set_fact:
+        mitogen_major_minor: "{{ cca_ansible_release.split('.')[0] }}.{{ cca_ansible_release.split('.')[1] }}"
+
+    - name: Create mitogen versioned directory
+      ansible.builtin.file:
+        path: "/opt/cca_manager/tools/mitogen_{{ mitogen_major_minor }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone mitogen repo
+      ansible.builtin.git:
+        repo: "{{ mitogen_repo }}"
+        dest: "/opt/cca_manager/tools/mitogen_{{ mitogen_major_minor }}"
+        version: "{{ mitogen_tag }}"
+
+    - name: Ensure .profile_local sources the new venv
+      ansible.builtin.lineinfile:
+        path: "{{ profile_local }}"
+        regexp: '^source .*/tools/python-venv/ansible2.*'
+        line: "source {{ venv_path }}/bin/activate"
+        state: present
+
+    - name: Ensure .profile_local sets ANSIBLE_STRATEGY_PLUGINS for mitogen
+      ansible.builtin.lineinfile:
+        path: "{{ profile_local }}"
+        regexp: '^export ANSIBLE_STRATEGY_PLUGINS='
+        line: "export ANSIBLE_STRATEGY_PLUGINS=/opt/cca_manager/tools/mitogen_{{ mitogen_major_minor }}/ansible_mitogen/plugins/strategy"
+        state: present
+
+    - name: Check if ANSIBLE_STRATEGY is defined in .profile_local
+      ansible.builtin.command:
+        cmd: >
+         grep -q 'ANSIBLE_STRATEGY=' {{ profile_local }}
+      register: profile_local_strategy
+      ignore_errors: true
+      failed_when: false
+      tags:
+        - skip_ansible_lint
+
+    - name: Update ANSIBLE_STRATEGY in .profile_local if defined
+      ansible.builtin.lineinfile:
+        path: "{{ profile_local }}"
+        regexp: 'ANSIBLE_STRATEGY='
+        line: 'ANSIBLE_STRATEGY=mitogen_linear'
+        state: present
+      when: profile_local_strategy.rc == 0
+
+    - name: Check if ANSIBLE_STRATEGY is defined in cca_daemon_env
+      ansible.builtin.command:
+        cmd: >
+         grep -q '^ANSIBLE_STRATEGY=' {{ lookup('env', 'HOME') }}/.cca/cca_daemon_env
+      register: daemon_env_strategy
+      ignore_errors: true
+      failed_when: false
+      tags:
+        - skip_ansible_lint
+
+    - name: Update ANSIBLE_STRATEGY in cca_daemon_env if defined
+      ansible.builtin.lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.cca/cca_daemon_env"
+        regexp: '^ANSIBLE_STRATEGY='
+        line: 'ANSIBLE_STRATEGY=mitogen_linear'
+        state: present
+      when: daemon_env_strategy.rc == 0

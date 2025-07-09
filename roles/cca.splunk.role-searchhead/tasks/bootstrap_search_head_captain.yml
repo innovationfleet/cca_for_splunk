@@ -49,7 +49,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -63,7 +63,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -112,7 +112,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -126,7 +126,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -175,7 +175,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -189,7 +189,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -238,7 +238,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -252,7 +252,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -301,7 +301,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -315,7 +315,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -364,7 +364,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -378,7 +378,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -427,7 +427,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -441,7 +441,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -490,7 +490,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -504,7 +504,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -553,7 +553,7 @@
 
 - name: Wait until cluster is initialized
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'initialized_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
@@ -567,7 +567,7 @@
 
 - name: Wait until service ready flag is set
   ansible.builtin.command:
-    cmd: 'timeout 20 {{ splunk_path }}/bin/splunk show shcluster-status'
+    cmd: 'timeout {{ splunk_timeout_shcluster_status | default(120) }} {{ splunk_path }}/bin/splunk show shcluster-status'
   register: shcluster_status_result
   until: "'service_ready_flag : 1' in shcluster_status_result.stdout | default('')"
   retries: "{{ shc_sync_retry_num | default('30') }}"

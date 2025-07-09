@@ -9,23 +9,66 @@
 #
 # Release: 2024.2.2
 
-- name: Ensure cron functionality is kept while systemd.timer is present
+- name: Ensure cron functionality is kept while systemd.timer is present (using dnf module)
   ansible.builtin.dnf:
     name: "cronie"
     state: present
-  no_log: "{{ ansible_verbosity < 3 }}"
+  when: not use_shell_fallback | default(false)
+  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
 
-- name: Enable and start cron service
+- name: Ensure cron functionality is kept while systemd.timer is present (using shell)
+  ansible.builtin.shell: |
+    if ! rpm -q cronie >/dev/null 2>&1; then
+      dnf install -y cronie
+    fi
+  args:
+    executable: /bin/bash
+  when: use_shell_fallback | default(false)
+  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Enable and start cron service (using systemd module)
   ansible.builtin.systemd:
     name: 'crond.service'
     enabled: true
     state: started
-  no_log: "{{ ansible_verbosity < 3 }}"
+  when: not use_shell_fallback | default(false)
+  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
 
-- name: Install wanted baseline software on server
+- name: Enable and start cron service (using shell)
+  ansible.builtin.shell: |
+    systemctl enable crond.service
+    systemctl start crond.service
+  args:
+    executable: /bin/bash
+  when: use_shell_fallback | default(false)
+  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  tags:
+    - skip_ansible_lint
+
+- name: Install wanted baseline software on server (using dnf module)
   ansible.builtin.dnf:
     name: "{{ ensure_baseline_software }}"
     state: present
   loop_control:
     loop_var: ensure_baseline_software
   loop: '{{ cca_baseline_software | default([]) if cca_baseline_software | default([]) is iterable else [] }}'
+  when: not use_shell_fallback | default(false)
+  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+
+- name: Install wanted baseline software on server (using shell)
+  ansible.builtin.shell: |
+    if [ -n "{{ cca_baseline_software | default('') }}" ]; then
+      for package in {{ cca_baseline_software | default([]) | join(' ') }}; do
+        if ! rpm -q "$package" >/dev/null 2>&1; then
+          dnf install -y "$package"
+        fi
+      done
+    fi
+  args:
+    executable: /bin/bash
+  when: use_shell_fallback | default(false)
+  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  tags:
+    - skip_ansible_lint

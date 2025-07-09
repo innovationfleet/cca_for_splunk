@@ -22,17 +22,17 @@
     - cca_splunk_cert_enrollment_method =='api'
 
 - name: Validate certificates on remote target to find if they need updates
-  include_tasks: validate_target_certificates.yml
+  ansible.builtin.include_tasks: validate_target_certificates.yml
   when:
     - cca_splunk_cert_enrollment_method != 'selfsigned'
 
 - name: Include task to deploy manual certs
-  include_tasks: deploy_certs.yml
+  ansible.builtin.include_tasks: deploy_certs.yml
   when:
     - cca_splunk_cert_enrollment_method != 'selfsigned'
     - final_cert_file_result.changed
 
-- name: "Set fact if {{ cert_type }} cert is found and valid"
+- name: "Set fact if cert is found and valid for {{ cert_type }}"
   ansible.builtin.set_fact:
     {"{{ facts_variable }}":true}
   when:

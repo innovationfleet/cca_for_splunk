@@ -11,7 +11,7 @@
 - name: Ensure that the local cca splunk manager user is added to sudoers
   ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ cca_splunk_manager_user }}"
-    mode: 0700
+    mode: '0700'
     content: "%{{ cca_splunk_manager_user }} ALL=(ALL) NOPASSWD:ALL"
   when:
     - cca_splunk_manager_user is defined

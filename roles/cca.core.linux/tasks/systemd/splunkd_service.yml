@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 
 - name: Configure splunk service in /etc/systemd/system/{{ systemd_enterprise_name }}
@@ -31,6 +31,8 @@
     mode: '0644'
   register: systemd_limits_result
   notify: notify restart splunkd service
+  tags:
+    - skip_ansible_lint
 
 - name: Configure systemd for the new Splunkd service
   ansible.builtin.systemd:
@@ -42,3 +44,11 @@
     - not server_reboot_status.rebooted | default(false) or
       systemd_service_result.changed or
       systemd_limits_result.changed
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Include role to check if there is a pending actions
+  ansible.builtin.include_tasks: check_pending_actions.yml
+  when:
+    - not cca_skip_server_reboot | default(false)

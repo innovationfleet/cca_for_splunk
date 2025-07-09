@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
 
 - name: Upgrade precheck
   ansible.builtin.assert:
@@ -30,3 +30,4 @@
   when:
     - inventory_hostname not in (groups.cluster_peers | default([]))
     - cca_splunk_enterprise_upgrade | default(false)
+    - (splunk_enterprise_version | string) is version('9.4', '>=')
