@@ -1,0 +1,88 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.2.1
+
+
+- name: Get dnf update status with releasever
+  ansible.builtin.dnf:
+    name: "{{ cca_control.package.updates.include_packages }}"
+    state: latest
+    exclude: "{{ cca_control.package.updates.exclude_packages }}"
+    releasever: "{{ cca_dnf_releasever }}"
+  register: dnf_update_status_releasever
+  when:
+    - cca_dnf_releasever is defined
+    - not use_shell_fallback | default(false)
+  tags:
+    - skip_ansible_lint
+
+- name: Get dnf update status with releasever (using shell fallback)
+  ansible.builtin.shell: |
+    dnf update --assumeno --releasever="{{ cca_dnf_releasever }}" \
+    {{ cca_control.package.updates.include_packages | default('') }} \
+    --exclude="{{ cca_control.package.updates.exclude_packages | default('') }}"
+  register: dnf_update_status_releasever
+  when:
+    - cca_dnf_releasever is defined
+    - use_shell_fallback | default(false)
+  changed_when: false
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Get dnf update status
+  ansible.builtin.dnf:
+    name: "{{ cca_control.package.updates.include_packages }}"
+    state: latest
+    exclude: "{{ cca_control.package.updates.exclude_packages }}"
+  register: dnf_update_status
+  when:
+    - cca_dnf_releasever is not defined
+    - not use_shell_fallback | default(false)
+  tags:
+    - skip_ansible_lint
+
+- name: Get dnf update status (using shell fallback)
+  ansible.builtin.shell: |
+    dnf update --assumeno {{ cca_control.package.updates.include_packages | default('') }} \
+    --exclude="{{ cca_control.package.updates.exclude_packages | default('') }}"
+  register: dnf_update_status
+  when:
+    - cca_dnf_releasever is not defined
+    - use_shell_fallback | default(false)
+  changed_when: false
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Set fact if kernel update is detected (dnf module)
+  ansible.builtin.set_fact:
+    kernel_update_needed: true
+  with_items:
+    - "{{ dnf_update_status_releasever.results | default('') | list }}"
+    - "{{ dnf_update_status.results | default('') | list }}"
+  check_mode: false
+  when:
+    - item | regex_search('kernel')
+    - not use_shell_fallback | default(false)
+
+- name: Set fact if kernel update is detected (shell fallback)
+  ansible.builtin.set_fact:
+    kernel_update_needed: true
+  when:
+    - (dnf_update_status_releasever.stdout is defined and (dnf_update_status_releasever.stdout | regex_search('kernel')))
+      or
+      (dnf_update_status.stdout is defined and (dnf_update_status.stdout | regex_search('kernel')))
+    - use_shell_fallback | default(false)
+  check_mode: false
+
+- name: Server reboot notification state
+  ansible.builtin.file:
+    path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
+    state: touch
+    mode: '0644'
+  when:
+    - kernel_update_needed | default(false)

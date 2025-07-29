@@ -23,8 +23,9 @@
 - name: Deploy deployment-apps to Splunk servers
   hosts: deployment_servers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
+  serial: "{{ serial_deployment | default(omit) }}"
   gather_facts: false
   any_errors_fatal: true
 
@@ -45,7 +46,45 @@
         tasks_from:
           pre_deployment_tasks.yml
 
+    # Serverclass specific tasks
+    # Not used in standard deployments
+    - name: Get serverclass state
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          deployment_server/get_serverclass_state.yml
+      when: use_serverclass_mode | default(false)
+
+    - name: Stage deployment apps
+      ansible.builtin.include_role:
+        name: cca.splunk.onboarding
+        tasks_from:
+          stage_deployment_apps.yml
+      when: use_serverclass_mode | default(false)
+
+    - name: Dry run deployment apps towards target
+      ansible.builtin.include_role:
+        name: cca.splunk.onboarding
+        tasks_from:
+          dry_run_deployment_apps.yml
+      when: use_serverclass_mode | default(false)
+
+    - name: Map deployment apps updates to serverclass data
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          deployment_server/get_serverclass_map_of_deployment_apps.yml
+      when: use_serverclass_mode | default(false)
+
   tasks:
+    # Serverclass app deployment
+    - name: Include role for serverclass app deployment
+      ansible.builtin.include_role:
+        name: cca.splunk.onboarding
+        tasks_from:
+          deployment_server/deploy_serverclass_apps.yml
+      when: use_serverclass_mode | default(false)
+
     - name: Include onboarding role for deployment-apps
       ansible.builtin.include_role:
         name: cca.splunk.onboarding
@@ -57,7 +96,6 @@
         name: cca.splunk.onboarding
       vars:
         deploy_scope: "apps"
-
 
   post_tasks:
     - name: Reload deployment server

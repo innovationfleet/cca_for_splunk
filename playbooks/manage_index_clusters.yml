@@ -22,7 +22,7 @@
 - name: Verify that connection to all servers are ok before we start
   hosts: cluster_managers:cluster_peers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   strategy: linear
@@ -44,7 +44,7 @@
 - name: Configure the Cluster Manager instances
   hosts: cluster_managers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
@@ -100,7 +100,7 @@
 - name: Configure the cluster peers
   hosts: cluster_peers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
@@ -153,7 +153,7 @@
 - name: Check if there is any pending restarts or pushes that needs to be dealt with
   hosts: cluster_managers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   serial: 1
@@ -198,7 +198,7 @@
 
   tasks:
 
-    - name: Check if there is any pending actions
+    - name: Re-Check if there is any pending actions
       ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:

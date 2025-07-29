@@ -28,6 +28,8 @@
   ansible.builtin.command:
     cmd: "/tmp/check_python_version.sh"
   register: python_version_status
+  tags:
+    - skip_ansible_lint
 
 - name: Set fact if we have a valid python version
   ansible.builtin.set_fact:

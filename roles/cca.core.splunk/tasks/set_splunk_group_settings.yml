@@ -13,13 +13,13 @@
 # Release: 2024.1.2
 
 - name: Manage header line in splunk files, managed by ansible
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: "{{ item.path }}"
     section:
     option: '{{ file_managed_by_ansible }}'
     value: null
     state: present
-    allow_no_value: yes
+    allow_no_value: true
     mode: '0644'
   loop:
     "{{ splunk_conf_group_settings_flattened }}"
@@ -27,7 +27,7 @@
   no_log: '{{ hide_password }}'
 
 - name: Updates Splunk conf based on group settings
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: "{{ item.path }}"
     section: "{{ item.section }}"
     option: "{{ item.option | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
@@ -41,7 +41,7 @@
   register: cca_splunk_settings_update
 
 - name: Include task to notify restart or need to push group settings
-  include_tasks: notify_splunk.yml
+  ansible.builtin.include_tasks: notify_splunk.yml
   when:
     - cca_splunk_settings_update is defined
     - cca_splunk_settings_update.results is defined

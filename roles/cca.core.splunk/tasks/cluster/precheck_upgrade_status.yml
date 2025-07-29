@@ -38,3 +38,5 @@
       Please verify that the certificate is signed by a trusted CA and matches the expected hostname and chain.
     success_msg: >
       Splunk certificate successfully passed strict X.509 validation.
+  when:
+    - (splunk_enterprise_version | string) is version('9.4', '>=')

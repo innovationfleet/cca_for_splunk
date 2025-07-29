@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.2.1
 
 - name: Check if we have the cert file on the server
   ansible.builtin.stat:
@@ -59,12 +59,16 @@
 - name: Get private key signature from local key file
   ansible.builtin.shell:
     cmd: >
-      openssl rsa -noout -modulus
+      set -o pipefail && openssl rsa -noout -modulus
       -in {{ cca_splunk_certs_staging_path }}/{{ privkey_staging_file_name }}
       -passin pass:'{{ privkey_password }}' | sha256sum | cut -d" " -f1
+  args:
+    executable: /bin/bash
   register: status_privkey_sha256sum
   no_log: "{{ hide_password }}"
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Assert that no error is thrown when decrypting the private key
   ansible.builtin.assert:
@@ -83,12 +87,16 @@
 - name: Get private key signature from local cert file
   ansible.builtin.shell:
     cmd: >
-      openssl x509 -noout -modulus
+      set -o pipefail && openssl x509 -noout -modulus
       -in {{ cca_splunk_certs_staging_path }}/{{ cert_staging_file_name }} |
       sha256sum |
       awk '{ print $1 }'
+  args:
+    executable: /bin/bash
   register: status_cert_privkey_sha256sum
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Assert that private key is matching in the certificate
   ansible.builtin.assert:
@@ -114,12 +122,13 @@
       when:
         - cca_splunk_cert_enrollment_method == "manual" or cca_splunk_cert_enrollment_method == "api"
 
-    - name: "Perform a final {{ cert_type }} cert build"
+    - name: "Perform a final cert build for {{ cert_type }}"
       ansible.builtin.template:
-        src: ../templates/etc/auth/certs/build_final_cert.j2
+        src: etc/auth/certs/build_final_cert.j2
         dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
+        mode: "0644"
       notify: notify splunkd restart
 
-    - name: "Set fact if {{ cert_type }} cert is found and valid"
+    - name: "Set fact if cert is found and valid for {{ cert_type }}"
       ansible.builtin.set_fact:
         {"{{ facts_variable }}":true}

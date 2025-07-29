@@ -23,4 +23,4 @@
   no_log: "{{ hide_password }}"
 
 - name: Include task that includes common certificate tasks
-  include_tasks: certificates_main.yml
+  ansible.builtin.include_tasks: certificates_main.yml

@@ -7,7 +7,9 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.2.1
+# Release: 2025.2.1
+
+
 - name: Add admin user as local cli user
   ansible.builtin.lineinfile:
     path: '{{ splunk_path }}/etc/passwd'
@@ -23,8 +25,10 @@
     mode: '0600'
     create: true
   notify: notify splunkd restart
+  tags:
+    - skip_ansible_lint
 
-- name: General Setting - Add additional local users to Splunk
+- name: Core Control - Manage additional local users to Splunk
   ansible.builtin.lineinfile:
     path: '{{ splunk_path }}/etc/passwd'
     regex: '^:{{ user.name }}:'
@@ -34,11 +38,31 @@
   loop: '{{ cca_splunk_local_users | default([]) if cca_splunk_local_users | default([]) is iterable else [] }}'
   notify: notify splunkd restart
 
-- name: Group Setting - Add additional local users to Splunk
+- name: Group Vars - Remove local users from Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    state: absent
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users | default([]) if cca_splunk_local_users | default([]) is iterable else [] }}'
+  notify: notify splunkd restart
+
+- name: Group Vars - Manage additional local users to Splunk
   ansible.builtin.lineinfile:
     path: '{{ splunk_path }}/etc/passwd'
     regex: '^:{{ user.name }}:'
     line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
+  loop_control:
+    loop_var: user
+  loop: '{{ cca_splunk_local_users_group_settings | default([]) if cca_splunk_local_users_group_settings | default([]) is iterable else [] }}'
+  notify: notify splunkd restart
+
+- name: Group Vars - Remove local users from Splunk
+  ansible.builtin.lineinfile:
+    path: '{{ splunk_path }}/etc/passwd'
+    regex: '^:{{ user.name }}:'
+    state: absent
   loop_control:
     loop_var: user
   loop: '{{ cca_splunk_local_users_group_settings | default([]) if cca_splunk_local_users_group_settings | default([]) is iterable else [] }}'

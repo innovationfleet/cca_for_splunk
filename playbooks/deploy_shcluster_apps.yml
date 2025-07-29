@@ -10,64 +10,73 @@
   strategy: linear
   any_errors_fatal: true
   pre_tasks:
-    - include_role:
+    - name: Include initialize role
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           initialize.yml
       vars:
         target: "deploy_shcluster_apps"
 
-#Deploy shcluster/apps to Search head deployers
-- hosts: searchhead_deployers
+# Deploy shcluster/apps to Search head deployers
+- name: Deploy shcluster/apps to Search head deployers
+  hosts: searchhead_deployers
   become: true
-  become_method: sudo
+  become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   any_errors_fatal: true
   vars:
     deploy_scope: "shcluster_apps"
   pre_tasks:
-    - setup:
+    - name: Setup
+      ansible.builtin.setup:
         gather_subset: 'network'
-    - include_role:
+
+    - name: Include pre deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           pre_deployment_tasks.yml
 
     - name: Debug all vars
-      debug:
+      ansible.builtin.debug:
         msg: '{{ hostvars[inventory_hostname] }}'
         verbosity: 3
 
   tasks:
     - name: Include onboarding role for apps to search head deployer
-      include_role:
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
       vars:
         deploy_scope: "apps"
 
     - name: Include onboarding role for shcluster/apps to search head deployer
-      include_role:
+      ansible.builtin.include_role:
         name: cca.splunk.onboarding
       vars:
         deploy_scope: "shcluster_apps"
 
   post_tasks:
-    - include_role:
+    - name: Include apply shcluster bundle role
+      ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           apply_shcluster_bundle.yml
-    - include_role:
+    - name: Include post deployment tasks
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           post_deployment_tasks.yml
 
 # Finalize playbook run on manager server
-- hosts: manager
+- name: Finalize playbook run on manager server
+  hosts: manager
   connection: local
   strategy: linear
   pre_tasks:
-    - include_role:
+    - name: Include finalize role
+      ansible.builtin.include_role:
         name: cca.core.control
         tasks_from:
           finalize.yml

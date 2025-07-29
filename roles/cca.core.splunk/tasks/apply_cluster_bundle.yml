@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2025.2.1
 
 - name: Check if there is a pending config bundle to be pushed
   ansible.builtin.stat:
@@ -15,6 +15,9 @@
   register: stat_cluster_bundle_push_pending
 
 - name: Login and check bundle restart status
+  when:
+    - not ansible_check_mode
+    - stat_cluster_bundle_push_pending.stat.exists
   block:
     - name: Include tasks to login to splunk cli
       ansible.builtin.include_tasks:
@@ -22,17 +25,26 @@
 
     - name: Set fact of current epoc
       ansible.builtin.set_fact:
-        current_epoch: "{{ ansible_date_time.epoch | int -10 }}"
+        current_epoch: "{{ ansible_date_time.epoch | int - 10 }}"
 
     - name: Apply cluster in validate mode
-      ansible.builtin.shell:
+      ansible.builtin.command:
         cmd: "{{ splunk_path }}/bin/splunk validate cluster-bundle --check-restart"
       register: validate_bundle_check_restart_status
       changed_when: false
+      tags:
+        - skip_ansible_lint
 
     - name: Wait until last_validated_bundle is more recent than previous timestamp
       ansible.builtin.shell:
-        cmd: "{{ splunk_path }}/bin/splunk show cluster-bundle-status --check-restart | grep -A4 last_validated_bundle | grep timestamp | awk -F= '{ print $2}' | awk -F' ' '{ print $1 }'"
+        cmd: >
+          set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }}
+          {{ splunk_path }}/bin/splunk show cluster-bundle-status
+          --check-restart | grep -A4 last_validated_bundle
+          | grep timestamp | awk -F= '{ print $2}'
+          | awk -F' ' '{ print $1 }'
+      args:
+        executable: /bin/bash
       register: last_check_restart_bundle_epoch
       retries: "{{ cca_splunk_cluster_bundle_status_retries | default(40) | int }}"
       delay: 15
@@ -45,33 +57,49 @@
 
     - name: Check validation status
       ansible.builtin.shell:
-        cmd: "{{ splunk_path }}/bin/splunk show cluster-bundle-status --check-restart | grep cluster_status"
+        cmd: >
+          set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }}
+          {{ splunk_path }}/bin/splunk show cluster-bundle-status
+          --check-restart | grep cluster_status
+      args:
+        executable: /bin/bash
       register: cluster_bundle_validation_status
       retries: "{{ cca_splunk_cluster_bundle_status_retries | default(40) | int }}"
       delay: 15
       until: "'None' in cluster_bundle_validation_status.stdout"
       changed_when: false
+      tags:
+        - skip_ansible_lint
 
     - name: Wait for peer report of rolling restart status after validating cluster-bundle
-      ansible.builtin.shell:
+      ansible.builtin.command:
         cmd: "{{ splunk_path }}/bin/splunk show cluster-bundle-status"
       register: cluster_bundle_restart_status
       retries: "{{ cluster_bundle_status_command_retries | default(30) | int }}"
       delay: 60
       until: cluster_bundle_restart_status.stdout | default('') | regex_search('(cluster_status=None)')
-      check_mode: no
+      check_mode: false
       changed_when: false
+      tags:
+        - skip_ansible_lint
+
+    - name: Check if bundle validation has critical errors
+      ansible.builtin.set_fact:
+        has_bundle_validation_errors: "{{
+          (cluster_bundle_restart_status.stdout | default('')) is search('bundle_validation_errors')
+          and '[Critical]' in (cluster_bundle_restart_status.stdout | default(''))
+        }}"
 
     - name: Fail task if bundle validation errors are found
       ansible.builtin.debug:
         msg: "FATAL: Bundle validation errors found [Critical]"
-      failed_when: "cluster_bundle_restart_status.stdout | default('') | regex_search('bundle_validation_errors') and '[Critical]' in cluster_bundle_restart_status.stdout | default('')"
+      failed_when: has_bundle_validation_errors
       register: bundle_validation_result
       when:
-        - not accept_bundle_validation_errors | default(false)
+        - not (accept_bundle_validation_errors | default(false))
 
     - name: Save result for later printing (if [Not Critical])
-      set_fact:
+      ansible.builtin.set_fact:
         not_critical_result: "{{ cluster_bundle_restart_status.stdout | default('') }}"
       when: "'Not Critical' in cluster_bundle_restart_status.stdout | default('')"
 
@@ -79,6 +107,7 @@
       ansible.builtin.file:
         path: "{{ rolling_restart_pending }}"
         state: touch
+        mode: '0644'
       when:
         - cluster_bundle_restart_status.stdout | default('') | regex_search('last_check_restart_result=restart required')
 
@@ -99,19 +128,22 @@
       failed_when:
         - proceed_with_rolling_restart.user_input | default('no') != "yes"
         - prompt_rolling_restart | default(false)
+
+- name: Apply cluster-bundle
   when:
     - not ansible_check_mode
     - stat_cluster_bundle_push_pending.stat.exists
-
-- name: Apply cluster-bundle
   block:
     - name: Include tasks to login to splunk cli
       ansible.builtin.include_tasks:
         splunk_login.yml
 
     - name: Apply cluster-bundle on cluster manager
-      ansible.builtin.shell: "{{ splunk_path }}/bin/splunk apply cluster-bundle --answer-yes"
+      ansible.builtin.command:
+        cmd: "{{ splunk_path }}/bin/splunk apply cluster-bundle --answer-yes"
       changed_when: false
+      tags:
+        - skip_ansible_lint
 
     - name: Cleanup state file for rolling restart
       ansible.builtin.file:
@@ -130,6 +162,3 @@
         check_preflight_status.yml
       vars:
         command_retries: "{{ preflight_command_retries | default(30) }}"
-  when:
-    - not ansible_check_mode
-    - stat_cluster_bundle_push_pending.stat.exists

@@ -1,0 +1,68 @@
+---
+# tasks file for cca.common.setup-wizard
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist
+#
+# Release: 2024.1.2
+
+- name: DEMO - Set fact for environment dir
+  ansible.builtin.set_fact:
+    environment_dir: "{{ cca_environment.default_environment_dir }}"
+
+- name: DEMO - Set fact for cca splunk secrets path
+  ansible.builtin.set_fact:
+    cca_splunk_secret_path: "{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all"
+
+- name: DEMO - Set fact for cca splunk secrets file name
+  ansible.builtin.set_fact:
+    cca_splunk_secret_file: "{{ cca_splunk_secret_path }}/cca_splunk_secrets"
+
+- name: DEMO - Set fact for splunk secret
+  ansible.builtin.set_fact:
+    splunk_secret: "{{ cca_environment.default_random_splunk_secret }}"
+
+- name: DEMO - Assert length of Splunk secret
+  ansible.builtin.assert:
+    that:
+      - splunk_secret | length == 254
+    fail_msg: The provided splunk secret is not 254 characters, got ({{ splunk_secret | length }})
+
+- name: DEMO - Vault the splunk secret
+  ansible.builtin.set_fact:
+    vaulted_secret_value: >-
+      {{ splunk_secret | vault(lookup('ansible.builtin.file', ansible_env.ANSIBLE_VAULT_PASSWORD_FILE))
+      | split() | join('\r\n')
+      | regex_replace('1.2;AES256;filter_default', '1.1;AES256') }}
+
+- name: DEMO - Create necessary directory if they are missing
+  ansible.builtin.file:
+    path: '{{ item.path }}'
+    state: '{{ item.type }}'
+    mode: '0755'
+  loop:
+    - { type: 'directory', path: '{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all' }
+    - { type: 'directory', path: '{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all' }
+    - { type: 'touch', path: '{{ cca_environment.infrastructure_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets' }
+
+- name: DEMO - Save the clear text secret as an ansible vault in infra repo
+  ansible.builtin.lineinfile:
+    path: "{{ cca_splunk_secret_file }}"
+    line: 'cca_splunk_secret: !vault "{{ vaulted_secret_value }}"'
+    regex: '^cca_splunk_secret:'
+
+- name: DEMO - Get checksum of splunk secret
+  ansible.builtin.shell:
+    cmd: "echo -n {{ splunk_secret }} | sha256sum | awk '{ print $1 }'"
+  register: splunk_secret_checksum
+  tags:
+    - skip_ansible_lint
+
+- name: DEMO - Store checksum of the splunk.secret file
+  ansible.builtin.lineinfile:
+    path: "{{ vars.cca_splunk_secret_file }}"
+    line: "cca_splunk_secret_sha256: '{{ splunk_secret_checksum.stdout }}'"
+    regex: '^cca_splunk_secret_sha256:'

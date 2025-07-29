@@ -10,10 +10,10 @@
 # Release: 2025.1.1
 
 - name: Include task to get Splunk status
-  include_tasks: splunk_status.yml
+  ansible.builtin.include_tasks: splunk_status.yml
 
 - name: Include task to stage files
-  include_tasks: stage_install_files.yml
+  ansible.builtin.include_tasks: stage_install_files.yml
   when:
     - enterprise_upgrade | default(false)
 
@@ -24,6 +24,8 @@
     - stat_splunk_enterprise_bin.stat.exists
     - enterprise_upgrade | default(false)
     - inventory_hostname != groups.cluster_peers | default([])
+  tags:
+    - skip_ansible_lint
 
 - name: Find Splunk install file in tmp directory
   ansible.builtin.find:
@@ -55,7 +57,7 @@
       enterprise_upgrade | default(false)
 
 - name: Include task to get Splunk status
-  include_tasks: splunk_status.yml
+  ansible.builtin.include_tasks: splunk_status.yml
   when:
     - stat_splunk_enterprise_bin.stat.exists
     - not enterprise_upgrade | default(false)
@@ -74,7 +76,7 @@
     state: directory
     mode: '775'
 
-- name: If an Splunk upgrade is performed, cleanup files from older versions
+- name: If an Splunk <= 9.3 upgrade is performed, cleanup files from older versions
   ansible.builtin.command:
     cmd: >
       {{ cca_splunk_var_tmp }}/bin/splunk_upgrade_cleanup.sh
@@ -83,12 +85,30 @@
   when:
     - splunk_tar_extraction.changed
     - enterprise_upgrade | default(false)
+  tags:
+    - skip_ansible_lint
+
+
+- name: If an Splunk 9.4+ upgrade is performed, cleanup files from older versions
+  ansible.builtin.command:
+    cmd: >
+      {{ cca_splunk_var_tmp }}/bin/splunk_upgrade_cleanup.sh
+      {{ cca_splunk_var_tmp }}/dat/untracked_files_splunk_{{ splunk_enterprise_version }}_linux.diff
+      {{ splunk_path }}
+  when:
+    - splunk_tar_extraction.changed
+    - enterprise_upgrade | default(false)
+    - splunk_enterprise_version is version('9.4.0', '>=')
+  tags:
+    - skip_ansible_lint
 
 - name: Start splunk from command line
   ansible.builtin.command:
     cmd: '{{ start_command }}'
   when:
     - stat_splunk_enterprise_bin.stat.exists
+  tags:
+    - skip_ansible_lint
 
 - name: Wait until Splunk is started
   ansible.builtin.command:
@@ -101,8 +121,10 @@
   changed_when: false
   when:
     - stat_splunk_enterprise_bin.stat.exists
+  tags:
+    - skip_ansible_lint
 
 - name: Include task to check kvstore upgrade status
-  include_tasks: kvstore_upgrade_status.yml
+  ansible.builtin.include_tasks: kvstore_upgrade_status.yml
   when:
     - stat_splunk_enterprise_bin.stat.exists

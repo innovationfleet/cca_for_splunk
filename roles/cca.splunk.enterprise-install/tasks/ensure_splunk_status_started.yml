@@ -12,7 +12,7 @@
 
 - name: Start splunk on command line
   ansible.builtin.command:
-    cmd: "timeout 120 {{ start_command }}"
+    cmd: "timeout {{ cca_splunk_command_timeout | default('120') }} {{ start_command }}"
   when:
     - stat_splunk_enterprise_bin.stat.exists
     - stat_ansible_managed.stat.exists

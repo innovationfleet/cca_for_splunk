@@ -10,28 +10,28 @@
   any_errors_fatal: false
   pre_tasks:
     - name: Set CCA release version of readiness playbook
-      set_fact:
-        cca_release: "2025.1.1"
+      ansible.builtin.set_fact:
+        cca_release: "2025.2.2"
 
     - name: START - Set target readiness score for CCA manager
-      set_fact:
+      ansible.builtin.set_fact:
         max_readiness_score: "{{ 3000 if ansible_distribution == 'MacOSX' else 2700 }}"
 
     - name: Set start score for manager
-      set_fact:
+      ansible.builtin.set_fact:
         mgr_readiness_score: 0
 
     - name: Set playbook fact
-      set_fact:
+      ansible.builtin.set_fact:
         playbook_name: "{{ playbook_dir }}/automation_readiness_cca_manager.yml"
 
     - name: Collect stats of this file
-      stat:
+      ansible.builtin.stat:
         path: "{{ playbook_name }}"
       register: stat_ansible_playbook
 
     - name: Check if the CCA Manager has a OS version that is fully supported
-      assert:
+      ansible.builtin.assert:
         that:
           - ( ansible_distribution == 'RedHat' and
               ( ansible_distribution_major_version == '8' or
@@ -81,36 +81,36 @@
       register: assert_result
 
     - name: Increase score for successful task
-      set_fact:
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 600 }}"
       when:
         not assert_result.failed
 
     - name: Check ansible version
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
-          - ansible_version.full is version('2.14.12', '>=')
+          - ansible_version.full is version('2.18.6', '>=')
         fail_msg:
-          You need to have ansible-core version 2.14.12+ on your control host to use
+          You need to have ansible-core version 2.18.6+ on your control host to use
           the automation framework. Detected version {{ ansible_version.full }}
         success_msg: >-
           You are running an validated ansible version {{ ansible_version.full }}
           in {{ ansible_env.VIRTUAL_ENV | default('no VIRTUAL_ENV, a venv should be configured') }}
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - Ansible version
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
       when:
         not assert_result.failed
 
     - name: Check if virtual env is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.VIRTUAL_ENV is defined
         fail_msg: >-
@@ -118,28 +118,35 @@
           Create a virtual environment with python >= 3.11.1 and activate it
         success_msg: >-
           Virtual environment found, continue to validate it
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - VIRTUAL_ENV
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
       when:
         not assert_result.failed
 
     - name: Get Python3 version from virtual environment
       connection: local
-      shell:
-        cmd: "{{ ansible_env.VIRTUAL_ENV }}/bin/python3 --version | awk '{ print $2 }'"
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail &&
+          {{ ansible_env.VIRTUAL_ENV }}/bin/python3 --version
+          | awk '{ print $2 }'
+      args:
+        executable: /bin/bash
       register: cca_python3_version_status
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
     - name: Check that required Python version is used in the virtual ENV
-      assert:
+      ansible.builtin.assert:
         that:
           - cca_python3_version_status.stdout is version('3.11.1', '>=')
         fail_msg: >-
@@ -150,15 +157,15 @@
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - Python version
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
       when:
         not assert_result.failed
 
     - name: Check if ANSIBLE_PRIVATE_KEY_FILE is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_PRIVATE_KEY_FILE is defined
         fail_msg: >-
@@ -166,20 +173,20 @@
           Add you private key to this server and add the env variable in this users profile.
         success_msg: >-
           ENV variable found for ANSIBLE_PRIVATE_KEY_FILE
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - ANSIBLE_PRIVATE_KEY_FILE
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
         not assert_result.failed
 
     - name: Check if ANSIBLE_ROLES_PATH is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_ROLES_PATH is defined
         fail_msg: >-
@@ -187,20 +194,20 @@
           Add the env variable in this users profile and configure according to automation_readiness.md
         success_msg: >-
           ENV variable found for ANSIBLE_ROLES_PATH
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - ANSIBLE_ROLES_PATH
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 100 }}"
       when:
         not assert_result.failed
 
     - name: Check if ANSIBLE_VAULT_PASSWORD_FILE is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_VAULT_PASSWORD_FILE is defined
         fail_msg: >-
@@ -208,163 +215,197 @@
           Add the env variable in this users profile and configure according to automation_readiness.md
         success_msg: >-
           ENV variable found for ANSIBLE_VAULT_PASSWORD_FILE
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - ANSIBLE_VAULT_PASSWORD_FILE
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 200 }}"
       when:
         not assert_result.failed
 
     - name: Check if ANSIBLE_STRATEGY is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_STRATEGY is defined
         fail_msg: >-
           Missing recommended env variable to speed up playbook execution
         success_msg: >-
           ENV variable found for ANSIBLE_STRATEGY
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful recommended task
-      set_fact:
+    - name: Increase score for successful recommended task - ANSIBLE_STRATEGY_PLUGINS
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 99 }}"
       when:
         not assert_result.failed
 
     - name: Check if ANSIBLE_STRATEGY_PLUGINS is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_STRATEGY_PLUGINS is defined
         fail_msg: >-
           Missing recommended env variable, specify strategy plugin
         success_msg: >-
           ENV variable found for ANSIBLE_STRATEGY_PLUGINS
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful recommended task
-      set_fact:
+    - name: Increase score for successful recommended task - ANSIBLE_CALLBACKS_ENABLED
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 99 }}"
       when:
         not assert_result.failed
 
     - name: Check if ANSIBLE_CALLBACKS_ENABLED is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_CALLBACKS_ENABLED is defined
         fail_msg: >-
           Missing optional env variable to enable task profiling
         success_msg: >-
           ENV variable found for ANSIBLE_CALLBACKS_ENABLED
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful optional task
-      set_fact:
+    - name: Increase score for successful optional task - ANSIBLE_STDOUT_CALLBACK
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 50 }}"
       when:
         not assert_result.failed
 
-
     - name: Check if ANSIBLE_STDOUT_CALLBACK is defined
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_env.ANSIBLE_STDOUT_CALLBACK is defined
         fail_msg: >-
           Missing optional env variable to change task output.
         success_msg: >-
           ENV variable found for ANSIBLE_STDOUT_CALLBACK
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for optional successful task
-      set_fact:
+    - name: Increase score for optional successful task - cca directories for splunk infrastructure config
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 50 }}"
       when:
         not assert_result.failed
 
     - name: Check if we have a cca directories for splunk infrastructure config
-      shell:
-        cmd: 'find {{ playbook_dir }}/../../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail &&
+          find {{ playbook_dir }}/../../..
+          -name "settings"
+          -type f !
+          -path "*templates*" !
+          -path "*users*"
+          -exec grep "repo_type=infra" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
       register:
         cca_infrastructure_companion_directory
       failed_when: cca_infrastructure_companion_directory.rc > 1
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
     - name: Assert that a infrastructure directory exists
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - cca_infrastructure_companion_directory.rc == 0
         fail_msg: >-
           A companion directory for Splunk Infrastructure is missing
         success_msg: >-
          Found a CCA Splunk Infrastructure directory
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - cca directories for splunk infrastructure config
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
         not assert_result.failed
 
     - name: Check if we have a cca directories for splunk onboarding config
-      shell:
-        cmd: 'find {{ playbook_dir }}/../../.. -name "settings" -type f ! -path "*templates*" ! -path "*users*" -exec grep "repo_type=onboarding" {} \; -print | rev | cut -d"/" -f3 | rev | grep -v repo_type'
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail &&
+          find {{ playbook_dir }}/../../..
+          -name "settings"
+          -type f !
+          -path "*templates*" !
+          -path "*users*"
+          -exec grep "repo_type=onboarding" {} \;
+          -print
+          | rev
+          | cut
+          -d"/" -f3
+          | rev
+          | grep -v repo_type
+      args:
+        executable: /bin/bash
       register:
         cca_onboarding_companion_directory
       failed_when: cca_onboarding_companion_directory.rc > 1
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
     - name: Assert that a onboarding directory exists
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - cca_onboarding_companion_directory.rc == 0
         fail_msg: >-
           A companion directory for Splunk Onboarding is missing
         success_msg: >-
          Found a CCA Splunk Onboarding directory
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - CCA Onboarding repo
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
         not assert_result.failed
 
     - name: When setup wizard is completed, we should have access to an Splunk Enterprise tgz file in infrastructure repo
-      shell:
-        cmd: 'find {{ playbook_dir }}/../../../ -path "*{{ cca_infrastructure_companion_directory.stdout.splitlines() | first | default("~/cca_splunk_infrastructure") }}*" -name "splunk-[8|9]*-Linux-x86_64.tgz" -type f'
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail &&
+          find {{ playbook_dir }}/../../../
+          -path "*{{ cca_infrastructure_companion_directory.stdout.splitlines() | first | default("~/cca_splunk_infrastructure") }}*"
+          -name "splunk-[8|9]*-Linux-x86_64.tgz"
+          -type f
+      args:
+        executable: /bin/bash
       register: splunk_enterprise_tgz
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
     - name: Assert that a Splunk enterprise file exists in infrastructure repo
       connection: local
-      assert:
+      ansible.builtin.assert:
         that:
           - splunk_enterprise_tgz.rc == 0
           - splunk_enterprise_tgz.stdout != ""
@@ -372,22 +413,24 @@
           A Splunk enterprise tgz file is missing
         success_msg: >-
          Found a Splunk enterprise file
-      run_once: true
+      run_once: true # noqa: run-once[task]
       delegate_to: localhost
       ignore_errors: true
       register: assert_result
       when:
         - cca_infrastructure_companion_directory.rc == 0
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - Splunk Enterprise tgz file
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 202 }}"
       when:
         - not assert_result.failed | default(true)
         - cca_infrastructure_companion_directory.rc == 0
 
     - name: Test existence of commands on macOS
-      command: "which {{ item }}"
+      ansible.builtin.command: "which {{ item }}"
+      args:
+        executable: /bin/bash
       loop:
         - bash
         - basename
@@ -409,8 +452,8 @@
         - ansible_distribution == 'MacOSX'
 
     - name: Create list of command results
-      set_fact:
-        command_list: "{{ command_list | default([]) + [{ 'name': item.item, 'exists': item.rc == 0 }] }}"
+      ansible.builtin.set_fact:
+        command_list: "{{ command_list | default([]) + [{'name': item.item, 'exists': item.rc == 0}] }}"
       loop: "{{ command_results.results }}"
       loop_control:
         label: "{{ item.item }}"
@@ -419,7 +462,7 @@
         - ansible_distribution == 'MacOSX'
 
     - name: Assert command existence
-      assert:
+      ansible.builtin.assert:
         that:
           - command_list | map(attribute='exists') | list | difference([true]) == []
         fail_msg: >-
@@ -431,15 +474,15 @@
       when:
         - ansible_distribution == 'MacOSX'
 
-    - name: Increase score for successful task
-      set_fact:
+    - name: Increase score for successful task - Commands on MacOS
+      ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 300 }}"
       when:
         - not assert_result.failed | default(true)
         - ansible_distribution == 'MacOSX'
 
     - name: END - Evaluate automation readiness score
-      assert:
+      ansible.builtin.assert:
         that:
           - not mgr_readiness_score | int < max_readiness_score | int
         fail_msg: >-
@@ -456,5 +499,5 @@
       ignore_errors: true
 
     - name: Post this summary
-      debug:
+      ansible.builtin.debug:
         msg: "{{ readiness_score.msg }}"

@@ -45,4 +45,3 @@
   ansible.builtin.stat:
     path: "{{ server_reboot_pending | default('/tmp/server_reboot.pending') }}"
   register: stat_server_reboot_pending
-

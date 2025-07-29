@@ -20,3 +20,5 @@
     dest: '{{ cca_manager_cca_for_splunk_path }}'
   when:
     - not stat_cca_for_splunk.stat.exists
+  tags:
+    - skip_ansible_lint

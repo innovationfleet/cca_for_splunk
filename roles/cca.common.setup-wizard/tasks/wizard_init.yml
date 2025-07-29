@@ -9,10 +9,12 @@
 #
 # Release: 2023.1.1
 
-- ansible.builtin.set_fact:
+- name: Set fact for vault_path
+  ansible.builtin.set_fact:
     vault_path: "{{ user_home }}/secrets"
 
-- ansible.builtin.set_fact:
+- name: Set fact for vault_secret
+  ansible.builtin.set_fact:
     vault_secret: "{{ ansible_env.ANSIBLE_VAULT_PASSWORD_FILE }}"
 
 - name: Check for first run wizard
@@ -33,9 +35,12 @@
     path: "{{ cca_splunk_secret_file }}"
   register: stat_cca_splunk_secret_file
 
-- ansible.builtin.debug:
+- name: Debug cca_splunk_secret_file
+  ansible.builtin.debug:
     var: stat_cca_splunk_secret_file
     verbosity: 1
+  tags:
+    - skip_ansible_lint
 
 - name: Check for first run wizard
   ansible.builtin.stat:
@@ -46,13 +51,14 @@
   ansible.builtin.file:
     path: "{{ cca_splunk_secret_path }}"
     state: directory
-    recurse: yes
+    recurse: true
   when: not stat_cca_splunk_secret_path.stat.exists
 
 - name: Create the file, if it doesn't exist already
   ansible.builtin.file:
     path: "{{ cca_splunk_secret_file }}"
     state: touch
+    mode: '0600'
   when:
     - not stat_cca_splunk_secret_file.stat.exists
 
@@ -60,3 +66,4 @@
   ansible.builtin.file:
     path: "{{ cca_environment.onboarding_repo_dir }}/environments/{{ environment_dir }}/group_vars/all/cca_splunk_secrets"
     state: touch
+    mode: '0600'

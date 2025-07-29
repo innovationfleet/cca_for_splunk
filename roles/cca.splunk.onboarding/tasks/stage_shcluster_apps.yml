@@ -7,11 +7,11 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2025.2.1
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    shcluster_staging_dir: '/tmp/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}'
+    shcluster_staging_dir: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}'
 
 - name: Cleanup manager before staging apps
   become: false
@@ -30,7 +30,7 @@
   delegate_to: localhost
   connection: local
   ansible.builtin.file:
-    path: '{{ shcluster_staging_dir }}'
+    path: '{{ shcluster_staging_dir }}/apps/'
     state: directory
     mode: '0700'
   changed_when: false
@@ -40,20 +40,22 @@
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ absolute_file_store_path }}/etc/{{ shcluster_apps_sourcedir }}/"
+    "{{ shcluster_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + shcluster_apps_sourcedir) }}/"
     "{{ shcluster_staging_dir }}/apps/"
   delegate_to: localhost
   when:
     - shcluster_label is defined
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with shcluster selected apps
   become: false
   connection: local
   ansible.builtin.command: >
     rsync --delay-updates -F --compress --archive
-    "{{ absolute_file_store_path }}/etc/{{ selected_shcluster_apps_sourcedir }}/{{ item.source_app }}/"
+    "{{ selected_shcluster_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + selected_shcluster_apps_sourcedir) }}/{{ item.source_app }}/"
     "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:
@@ -63,6 +65,8 @@
   loop: '{{ selected_shcluster_apps | default([]) if selected_shcluster_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with versioned apps destined for search head cluster
   become: false
@@ -81,6 +85,8 @@
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Stage manager with selected apps destined for search head cluster
   become: false
@@ -99,6 +105,8 @@
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
+  tags:
+    - skip_ansible_lint
 
 - name: Include and run tasks from custom onboarding roles
   ansible.builtin.include_role:

@@ -10,4 +10,4 @@
 # META_VERSION
 
 - name: Include tasks to handle cgroup versions
-  include_tasks: systemd/manage_cgroup_version.yml
+  ansible.builtin.include_tasks: systemd/manage_cgroup_version.yml
