@@ -10,6 +10,9 @@
 # shc_upgrade_method(rolling|[offline]) \
 # shc_upgrade_kvstore_engine(false)
 
+# Use shc_upgrade_kvstore_engine to upgrade the kvstore engine to wiredtiger
+# valid for enterprise version 9.0 to 9.3. In 9.4 the kvstore enginge
+
 
 # https://patorjk.com/software/taag/#p=display&c=bash&f=Standard&t=SearchHeads
 # Index Cluster upgrade
@@ -95,6 +98,12 @@
       ansible.builtin.setup:
         gather_subset: 'network'
 
+    - name: Include role to store current splunk version
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          get_splunk_version.yml
+
     - name: Include role to get search head cluster status
       ansible.builtin.include_role:
         name: cca.core.splunk
@@ -104,7 +113,7 @@
         - inventory_hostname in ( groups.searchhead_members | default([]) )
         - upgrade_check | default(true)
 
-    - name: Include role to precheck upgrade status
+    - name: Include role to precheck upgrade status on search head members
       ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
@@ -131,14 +140,14 @@
         - inventory_hostname in ( groups.cluster_managers | default([]) )
         - upgrade_check | default(true)
 
-    - name: Include role to get splunk status peers and members
+    - name: Include role to get splunk status
       ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           get_splunk_status.yml
       when:
-        - inventory_hostname not in  ( groups.cluster_peers | default([]) ) or
-          inventory_hostname not in  ( groups.searchhead_members | default([]) )
+        - inventory_hostname not in ( groups.cluster_peers | default([]) ) or
+          inventory_hostname not in ( groups.searchhead_members | default([]) )
 
     - name: Include role to precheck upgrade status non peers and members
       ansible.builtin.include_role:
@@ -146,8 +155,8 @@
         tasks_from:
           precheck_upgrade_status.yml
       when:
-        - inventory_hostname not in  ( groups.cluster_peers | default([]) ) or
-          inventory_hostname not in  ( groups.searchhead_members | default([]) )
+        - inventory_hostname not in ( groups.cluster_peers | default([]) ) or
+          inventory_hostname not in ( groups.searchhead_members | default([]) )
 
 
 # Upgrade the manager node
@@ -195,7 +204,7 @@
 #   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|___/
 #
 
-- name: Upgrade Search Heads
+- name: Upgrade Data Collection Nodes and Monitoring Consoles
   hosts: data_collection_nodes:monitoring_consoles
   become: true
   become_method: ansible.builtin.sudo
@@ -232,7 +241,9 @@
 #   |____/ \___|\__,_|_|  \___|_| |_|_| |_|\___|\__,_|\__,_|\____|_|\__,_|___/\__\___|_|  |___/
 #
 
-- name: Upgrade Search Head Clusters
+# Offline upgrade of search head members, needs to be prepared in the inventory file.
+# Not the default upgrade method.
+- name: Upgrade Search Head Members - Offline Upgrade
   hosts: searchhead_members:&upgrade_shclusters_offline
   become: true
   become_method: ansible.builtin.sudo
@@ -247,6 +258,8 @@
       when:
         - shc_upgrade_method | default('rolling') == 'offline'
 
+# Offline upgrade of search head deployer, needs to be prepared in the inventory file.
+# Not the default upgrade method.
 - name: Upgrade Search Head Deployers
   hosts: searchhead_deployers:&upgrade_shclusters_offline
   become: true
@@ -270,8 +283,9 @@
       when:
         - shc_upgrade_method | default('rolling') == 'offline'
 
-- name: Upgrade Search Head Members
-  hosts: searchhead_members_shcluster_c1
+# The precheck task will create the dynamic shcluster_captain group.
+- name: Upgrade Search Head Members Cluster - Non Captain Members - SHC C1
+  hosts: searchhead_members_shcluster_c1:!shcluster_captain
   serial: 1
   become: true
   become_method: ansible.builtin.sudo
@@ -291,33 +305,49 @@
           shcluster/init_upgrade.yml
 
   tasks:
-    - name: Include role to install splunk enterprise on search head cluster members - non captain
+    - name: Include role to install splunk enterprise - Non Captain Members - SHC C1
       ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           shcluster_upgrade_handler.yml
       when:
         - shc_upgrade_method | default('rolling') == 'rolling'
-        - inventory_hostname != current_shcluster_captain
+        - inventory_hostname not in ( current_shcluster_captain | default([]) )
 
-  post_tasks:
-    - name: Include role to install splunk enterprise on search head members - captain
+# The precheck task will create the dynamic shcluster_captain group.
+- name: Upgrade Search Head Members Cluster - Remaining Member - SHC C1
+  hosts: searchhead_members_shcluster_c1:&shcluster_captain
+  serial: 1
+  become: true
+  become_method: ansible.builtin.sudo
+  become_user: "{{ splunk_user }}"
+  gather_facts: false
+  pre_tasks:
+    - name: Check if current search head member was captain when upgrade started
+      ansible.builtin.stat:
+        path: "{{ searchhead_captain }}"
+      register: searchhead_captain_stat
+
+  tasks:
+    - name: Include role to install splunk enterprise on search head members - remaining member
       ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
           shcluster_upgrade_handler.yml
+      vars:
+        check_kvstore_upgrade_status: true
       when:
         - shc_upgrade_method | default('rolling') == 'rolling'
-        - inventory_hostname == current_shcluster_captain
 
-- name: Upgrade Search Head Deployers Cluster C1
+
+- name: Upgrade Search Head Deployers Cluster - SHC C1
   hosts: searchhead_deployer_shcluster_c1
   become: true
   become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
   gather_facts: false
   tasks:
-    - name: Include role to install splunk enterprise on search head deployers
+    - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
 
@@ -328,7 +358,7 @@
           post_upgrade_tasks.yml
 
 
-- name: Upgrade Search Head Members Cluster C1
+- name: Finalize Upgrade Search Head Members Cluster - SHC C1
   hosts: searchhead_members_shcluster_c1
   serial: 1
   become: true
@@ -336,7 +366,7 @@
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - name: Include role to finalize splunk enterprise on search head members - non captain
+    - name: Include role to install splunk enterprise
       ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
@@ -347,7 +377,6 @@
         name: cca.core.control
         tasks_from:
           post_upgrade_tasks.yml
-
 
 # For SHC, perform the upgrade as per the documentation
 # Rolling upgrade
@@ -369,7 +398,7 @@
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - name: Include role to install splunk enterprise
+    - name: Include role to init upgrade splunk enterprise on cluster manager - C1
       ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
@@ -454,7 +483,7 @@
   become_user: "{{ splunk_user }}"
   gather_facts: false
   pre_tasks:
-    - name: Include role to install splunk enterprise
+    - name: Include role to finalize splunk enterprise on cluster manager - C1
       ansible.builtin.include_role:
         name: cca.splunk.enterprise-install
         tasks_from:
@@ -477,7 +506,7 @@
 # Run tasks on SHC to ensure that Kvstore engine and versions has been updgraded
 # https://docs.splunk.com/Documentation/Splunk/9.3.3/Admin/MigrateKVstore
 
-- name: Run post upgrade tasks on SHC
+- name: Run post upgrade tasks on SHC C1
   hosts: searchhead_members_shcluster_c1
   strategy: linear
   become: true
@@ -524,7 +553,7 @@
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.0.0', '>=')
         - current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '<')
 
-- name: Run post upgrade tasks on SHC
+- name: Run post upgrade tasks on SHC C1
   hosts: searchhead_members_shcluster_c1
   strategy: linear
   become: true
