@@ -2892,7 +2892,6 @@ splunk/etc/system/README/fshpasswords.conf.example
 splunk/etc/system/README/fshpasswords.conf.spec
 splunk/etc/system/bin/appinstall.py
 splunk/etc/system/bin/convert_auth_v1_v2.py
-splunk/etc/users/users.ini
 splunk/lib/libarchive.so.13.3.3
 splunk/lib/libarchive.so.13.4.3
 splunk/lib/libexslt.so.0.8.18
