@@ -11,6 +11,7 @@
     - ../roles/cca.setup.cca-manager/defaults/main.yml
   vars:
     venv_path: "{{ lookup('env', 'HOME') }}/tools/python-venv/ansible{{ cca_ansible_minor_version }}"
+    user_home_directory: "{{ lookup('env', 'HOME') }}"
     python_version: "{{ cca_python_minor_version }}"
     cca_ansible_version: "{{ cca_ansible_release }}"
     mitogen_repo: "{{ cca_manager_mitogen_repo_url }}"
@@ -64,14 +65,14 @@
 
     - name: Create mitogen versioned directory
       ansible.builtin.file:
-        path: "/opt/cca_manager/tools/mitogen_{{ mitogen_major_minor }}"
+        path: "{{ user_home_directory | default('/opt/cca_manger') }}/tools/mitogen_{{ mitogen_major_minor }}"
         state: directory
         mode: '0755'
 
     - name: Clone mitogen repo
       ansible.builtin.git:
         repo: "{{ mitogen_repo }}"
-        dest: "/opt/cca_manager/tools/mitogen_{{ mitogen_major_minor }}"
+        dest: "{{ user_home_directory | default('/opt/cca_manger') }}/tools/mitogen_{{ mitogen_major_minor }}"
         version: "{{ mitogen_tag }}"
 
     - name: Ensure .profile_local sources the new venv
