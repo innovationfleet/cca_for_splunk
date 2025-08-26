@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_env_specific_file_version: '2024.1.2'
+cca_infrastructure_env_specific_file_version: '2025.3.1'
 
 # Playbook tuning parameters
 # TUNE: Adapt settings to match performance or setup of your environment.
@@ -12,6 +12,14 @@ environment_name: "{{ inventory_dir_array[-1] }}"
 absolute_infrastructure_repo_path: '{{ inventory_dir }}/../..'
 parallel_execution_control: false
 cca_infrastructure_lock_wait_sec: 1800
+
+# Splunk Security Configuration
+# This variable controls the v1APIBlockGETSearchLaunch setting in restmap.conf
+# Default values by Splunk version:
+#   - Splunk 9.1 to 9.4: false (v1 API GET search requests allowed)
+#   - Splunk 10.0+: true (v1 API GET search requests blocked for security)
+# Override this value by setting it to true/false as needed
+block_splunk_search_over_http_get_request_v1_api: "{{ 'true' if (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('10.0.0', '>=') else 'false' }}"
 
 # License Information, it's highly recommended to use a DNS alias as
 # reference to the host that serves as the license manager
