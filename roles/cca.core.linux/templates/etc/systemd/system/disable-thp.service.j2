@@ -1,0 +1,15 @@
+[Unit]
+Description=Disable Transparent Huge Pages (THP) for Splunk performance
+Documentation=https://docs.splunk.com/Documentation/Splunk/latest/Installation/Systemrequirements
+After=sysinit.target local-fs.target
+Before=splunk.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'echo never | tee /sys/kernel/mm/transparent_hugepage/enabled'
+ExecStart=/bin/sh -c 'echo never | tee /sys/kernel/mm/transparent_hugepage/defrag'
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target 

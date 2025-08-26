@@ -1,0 +1,45 @@
+---
+# tasks file for cca.core.linux
+#
+# Description: Configure systemd service to disable Transparent Huge Pages (THP)
+#
+# Prerequisite: systemd-based Linux distribution
+#
+# Author: Saikrishna Gundeti (github.com/sgundeti)
+#
+# Release: 2025.3.1
+
+- name: Configure THP disable service in /etc/systemd/system/disable-thp.service
+  ansible.builtin.template:
+    src: "etc/systemd/system/disable-thp.service.j2"
+    dest: "/etc/systemd/system/disable-thp.service"
+    mode: '0644'
+  notify: notify reload systemd daemon
+  register: thp_systemd_service_result
+
+- name: Flush handlers to ensure systemd daemon reload runs immediately
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure disable-thp service is enabled and started
+  ansible.builtin.systemd:
+    name: disable-thp.service
+    enabled: true
+    state: started
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Check current THP status after systemd service
+  ansible.builtin.command:
+    cmd: cat /sys/kernel/mm/transparent_hugepage/enabled
+  register: thp_status_after_service
+  ignore_errors: true
+  changed_when: false
+
+- name: Verify THP is disabled by systemd service
+  ansible.builtin.fail:
+    msg: >
+      THP systemd service failed to disable THP.
+      Current status: {{ thp_status_after_service.stdout | default('Unable to read THP status') }}.
+      Expected status should contain '[never]'.
+  when:
+    - thp_status_after_service.stdout is defined
+    - "'[never]' not in thp_status_after_service.stdout"

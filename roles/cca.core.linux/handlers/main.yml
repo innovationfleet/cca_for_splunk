@@ -38,3 +38,8 @@
   listen: notify restart splunkd service
   check_mode: false
   changed_when: false
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen: notify reload systemd daemon

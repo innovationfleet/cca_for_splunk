@@ -7,39 +7,62 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2024.2.2
+# Release: 2025.3.1
 
 - name: Debugging exclude list
   ansible.builtin.debug:
     msg: "{{ cca_control.package.updates.exclude_packages }}"
 
-- name: "Excluding packages that should not be updated"
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  loop:
-    - ansible
-    - ansible-core
-    - splunk
+- name: Check which packages exist in apt cache (for graceful exclusion)
+  ansible.builtin.shell:
+    cmd: apt-cache show {{ item }} >/dev/null 2>&1 && echo {{ item }} || true
+  register: apt_package_exists
+  loop: "{{ cca_control.package.updates.exclude_packages }}"
+  changed_when: false
 
-- name: "DRY RUN: Get apt update status"
-  ansible.builtin.apt:
-    name: "{{ cca_control.package.updates.include_packages }}"
-    state: latest
-  register: apt_update_status
-  check_mode: true
+- name: Create list of existing packages to exclude
+  ansible.builtin.set_fact:
+    existing_exclude_packages: >-
+      {{ apt_package_exists.results
+         | selectattr('stdout', 'defined')
+         | selectattr('stdout', '!=', '')
+         | map(attribute='stdout')
+         | list }}
+
+- name: Temporarily hold existing exclude packages for upgrade simulation
+  ansible.builtin.command:
+    cmd: apt-mark hold {{ item }}
+  loop: "{{ existing_exclude_packages }}"
+  register: apt_mark_result
+  changed_when: "'was already set on hold' not in apt_mark_result.stdout"
+  failed_when: false
   tags:
     - skip_ansible_lint
 
-- name: Debugging exclude list
-  ansible.builtin.debug:
-    msg: "{{ apt_update_status }}"
+- name: "DRY RUN: Get apt update status using shell with exclude"
+  ansible.builtin.shell:
+    cmd: |
+      apt-get update -qq && apt-get dist-upgrade -s \
+      {% for pkg in existing_exclude_packages %}
+      -o 'APT::Get::Upgrade-Exclude={{ pkg }}' \
+      {% endfor %}
+      {{ cca_control.package.updates.include_packages | default('') }}
+  register: apt_update_status
+  changed_when: false
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Parse apt upgrade simulation output
+  ansible.builtin.set_fact:
+    apt_packages_to_upgrade: "{{ apt_update_status.stdout_lines | select('match', '^Inst ') | list }}"
 
 - name: Set fact if kernel update is detected
   ansible.builtin.set_fact:
     kernel_update_needed: true
-  when: item | regex_search('kernel')
-  with_items: "{{ apt_update_status.changes.updated | default('') | list }}"
+  when:
+    - apt_packages_to_upgrade | length > 0
+    - apt_packages_to_upgrade | join(' ') | regex_search('kernel')
 
 - name: Get pending actions
   ansible.builtin.include_role:
@@ -48,17 +71,23 @@
 
 - name: End play for this host due to this reason
   ansible.builtin.debug:
-    msg: "{{ apt_update_status.results }}"
+    msg: "No packages need to be updated"
   when:
-    - apt_update_status.results is defined
-    - apt_update_status.results | list | regex_search('Nothing to do here, all packages are up to date')
+    - apt_packages_to_upgrade | length == 0
     - not stat_server_reboot_pending.stat.exists | default(false)
     - not config_update | default(false)
 
 - name: End play for host if nothing needs to be done
   ansible.builtin.meta: end_host
   when:
-    - apt_update_status.results is defined
-    - apt_update_status.results | list | regex_search('Nothing to do here, all packages are up to date')
+    - apt_packages_to_upgrade | length == 0
     - not stat_server_reboot_pending.stat.exists | default(false)
     - not config_update | default(false)
+  check_mode: false
+
+- name: Unhold packages after check (cleanup)
+  ansible.builtin.command:
+    cmd: apt-mark unhold {{ item }}
+  loop: "{{ existing_exclude_packages }}"
+  changed_when: false
+  failed_when: false
