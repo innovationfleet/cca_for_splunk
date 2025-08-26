@@ -177,7 +177,7 @@
   ansible.builtin.file:
     path: "{{ splunk_path }}/.cca"
     state: directory
-    mode: '775'
+    mode: '0755'
 
 - name: Include task to set cluster-manager migrate state at initial install
   ansible.builtin.include_tasks:
