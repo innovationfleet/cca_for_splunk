@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 
 - name: Check Splunk binary
@@ -60,4 +60,3 @@
     get_certificate_status.yml
   when:
     - cca_splunk_enterprise_upgrade | default(false)
-    - inventory_hostname not in (groups.cluster_peers | default([]))

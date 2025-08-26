@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Check if we have the cert file on the server
   ansible.builtin.stat:
@@ -41,16 +41,16 @@
 - name: Copy Root CA cert
   ansible.builtin.copy:
     src: '{{ cca_splunk_extension_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
-    dest: '{{ cca_splunk_certs_path }}'
+    dest: '{{ cca_splunk_certs_staging_path }}'
     mode: '664'
   check_mode: false
   when:
     - cca_splunk_cert_enrollment_method == "manual"
 
-- name: Copy Root CA cert
+- name: Copy Root CA cert to final path
   ansible.builtin.copy:
     src: '{{ cca_splunk_extension_cert_rootca_fullpath }}'
-    dest: '{{ cca_splunk_certs_path }}'
+    dest: '{{ cca_splunk_certs_staging_path }}'
     mode: '664'
   check_mode: false
   when:
@@ -104,6 +104,36 @@
       - status_privkey_sha256sum.stdout == status_cert_privkey_sha256sum.stdout
     fail_msg: "The private key signature didn't match the certificate"
   check_mode: false
+
+- name: Build final root CA cert using copy approach
+  when:
+    - cca_splunk_cert_enrollment_method == "manual" or cca_splunk_cert_enrollment_method == "api"
+  block:
+    - name: Read the root CA certificate from remote
+      ansible.builtin.slurp:
+        src: '{{ cca_splunk_certs_staging_path }}/{{ cca_splunk_extension_cert_rootca }}'
+      register: rootca_raw
+
+    - name: Read the appsCA certificate from remote
+      ansible.builtin.slurp:
+        src: '{{ cca_splunk_extension_appsca_cert_absolute_path | default(splunk_path + "/etc/auth/appsCA.pem") }}'
+      register: appsca_raw
+
+    - name: Build concatenated content in-memory
+      ansible.builtin.set_fact:
+        concat_content: >-
+          {{ rootca_raw.content | b64decode
+             ~ "\n"
+             ~ appsca_raw.content | b64decode }}
+
+    - name: Write concatenated root CA certificate
+      ansible.builtin.copy:
+        dest: '{{ cca_splunk_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
+        owner: '{{ splunk_user }}'
+        group: '{{ splunk_user }}'
+        mode: "0644"
+        content: "{{ concat_content }}"
+      notify: notify splunkd restart
 
 - name: Copy private key from staging path and build final cert in block
   block:

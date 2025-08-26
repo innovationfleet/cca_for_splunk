@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.3.1
 
 - name: Upgrade precheck, validate that all statuses are as expected
   ansible.builtin.assert:
@@ -33,7 +33,9 @@
     that:
       - shcluster_splunk_version.stdout.split() | length == 1
     fail_msg: >
-      Review SHC status, {{ shcluster_splunk_version.stdout }} versions detected.
+      Review SHC status, {{ shcluster_splunk_version.stdout }} versions detected. If this is due to
+      a failed upgrade, please rerun the rolling upgrade playbook with the
+      extra vars "shcluster_precheck":false option.
   when:
     - shcluster_precheck | default(true)
   check_mode: false
@@ -45,7 +47,7 @@
   when: (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '<')
   check_mode: false
 
-- name: Assert MongoDB version matches expected KVStore engine version for Splunk >= 9.4.0
+- name: Assert MongoDB version matches expected KVStore engine version for Splunk >= 9.4.0 < 10.0.0
   ansible.builtin.assert:
     that:
       - "'db version v' ~ cca_splunk_kvstore_engine_version in mongod_version.stdout"
@@ -57,9 +59,10 @@
     success_msg: >
       MongoDB version in use matches expected KVStore engine version '{{ cca_splunk_kvstore_engine_version }}'.
   when:
-    - (splunk_enterprise_version | string) is version('9.4.0', '>=')
+    - (splunk_enterprise_version | string) is version('9.4.0', '>=') and (splunk_enterprise_version | string) is version('10.0.0', '<')
     - not force_splunk_enterprise_upgrade | default(false)
     - (current_splunk_enterprise_version | default(splunk_enterprise_version) | string) is version('9.4.0', '<')
+    - shcluster_precheck | default(true)
 
 - name: Ensure kvstore_upgrade directory exists
   ansible.builtin.file:
@@ -86,4 +89,5 @@
     success_msg: >
       Splunk certificate successfully passed strict X.509 validation.
   when:
-    - (splunk_enterprise_version | string) is version('9.4', '>=')
+    - (splunk_enterprise_version | string) is version('9.4.0', '>=') or
+       strict_x509_cert_validation_test | default(false)

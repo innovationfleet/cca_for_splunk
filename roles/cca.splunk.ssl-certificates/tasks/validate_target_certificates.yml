@@ -10,7 +10,7 @@
 #   (intermediate -> root) required to validate the server cert.
 #
 # Author: Roger Lindquist (github.com/rlinq)
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Run certificate validation in a block
   when:
@@ -91,6 +91,9 @@
       changed_when: false
       tags:
         - skip_ansible_lint
+      when:
+        - strict_x509_cert_validation_test | default(false) or
+          (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=')
 
     - name: "Show OpenSSL validation error if failed"
       delegate_to: localhost
@@ -98,7 +101,10 @@
       become: false
       ansible.builtin.debug:
         msg: "{{ openssl_verify_result.stderr }}"
-      when: openssl_verify_result.rc != 0
+      when:
+        - openssl_verify_result is defined
+        - openssl_verify_result.rc is defined
+        - openssl_verify_result.rc != 0
 
     - name: "Assert that the certificate chain is valid"
       delegate_to: localhost
@@ -118,7 +124,10 @@
 
           Manual validation:
             openssl verify -x509_strict -CAfile {{ ca_chain_path }} {{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}
-      when: cca_splunk_cert_enrollment_method != 'selfsigned'
+      when:
+        - cca_splunk_cert_enrollment_method != 'selfsigned'
+        - openssl_verify_result is defined
+        - openssl_verify_result.rc is defined
 
     - name: "Set fact for cert file names and concatenation order of cert of type {{ cert_type }}"
       ansible.builtin.set_fact:

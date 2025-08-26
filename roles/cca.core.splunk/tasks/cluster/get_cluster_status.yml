@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_role:
@@ -83,5 +83,4 @@
     name: cca.core.splunk
     tasks_from: get_certificate_status.yml
   when:
-    - inventory_hostname not in (groups.cluster_peers | default([]))
     - deploy_scope is not defined
