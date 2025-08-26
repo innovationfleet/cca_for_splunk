@@ -19,7 +19,7 @@
     path: "{{ splunk_path }}/.ansible_managed"
   register: stat_ansible_managed
 
-- name: Set fact if host is manged by ansible
+- name: Set fact if host is managed by ansible
   ansible.builtin.set_fact:
     cca_ansible_managed: true
   when:
