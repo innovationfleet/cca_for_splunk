@@ -95,7 +95,7 @@
                   is on a version that only supports cgroupv1.
                 * Fix issue when kvstore upgrade was incorrectly seen as completed on stepping stone upgrade
                   version.
-                * Fixed error in when condition, Splunkd service was always restared when running
+                * Fixed error in when condition, Splunkd service was always restarted when running
                   configure_linux_servers.yml playbook.
                 * Always finalize the upgrade in cluster manager, handle case where it has already been
                   completed.
