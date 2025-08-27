@@ -47,9 +47,17 @@
   when:
     - cca_splunk_cert_enrollment_method == "manual"
 
+- name: Assert that cca_splunk_extension_cert_rootca_fullpath is not empty for api enrollment method
+  ansible.builtin.assert:
+    that:
+      - cca_splunk_extension_cert_rootca_fullpath is defined
+    fail_msg: |
+      cca_splunk_extension_cert_rootca_fullpath is not defined for api enrollment method
+  when: cca_splunk_cert_enrollment_method == 'api'
+
 - name: Copy Root CA cert to final path
   ansible.builtin.copy:
-    src: '{{ cca_splunk_extension_cert_rootca_fullpath }}'
+    src: "{{ cca_splunk_extension_cert_rootca_fullpath | default('') }}"
     dest: '{{ cca_splunk_certs_staging_path }}'
     mode: '664'
   check_mode: false

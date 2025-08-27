@@ -68,11 +68,19 @@
         dest: '{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}'
         insertafter: 'EOF'
 
+    - name: Assert that cca_splunk_extension_cert_rootca_fullpath is not empty for api enrollment method
+      ansible.builtin.assert:
+        that:
+          - cca_splunk_extension_cert_rootca_fullpath is defined
+        fail_msg: |
+          cca_splunk_extension_cert_rootca_fullpath is not defined for api enrollment method
+      when: cca_splunk_cert_enrollment_method == 'api'
+
     - name: "Set fact for ca_chain_path based on enrollment method"
       ansible.builtin.set_fact:
         ca_chain_path: >-
           {{
-            cca_splunk_extension_cert_rootca_fullpath
+            cca_splunk_extension_cert_rootca_fullpath | default('')
             if cca_splunk_cert_enrollment_method == 'api'
             else cca_splunk_extension_certs_path + '/' + cca_splunk_extension_cert_rootca
           }}
@@ -81,7 +89,7 @@
       delegate_to: localhost
       connection: local
       become: false
-      check_mode: false  # Still runs during --check
+      check_mode: false
       ansible.builtin.command: >
         openssl verify -verbose -x509_strict
         -CAfile "{{ ca_chain_path }}"
@@ -117,7 +125,8 @@
           ❌ OpenSSL strict validation failed for the server certificate.
 
           Common causes:
-          - The configured CA file ({{ ca_chain_path }}) is missing required intermediate certificates.
+          - The configured CA file ({{ ca_chain_path }}) is missing required intermediate certificates or has expired. See debug
+            output above for details.
           - The server certificate is not properly signed by the CA chain.
 
           Ensure the CA file contains ALL intermediate and root certificates in the correct order (intermediate -> root).
@@ -128,6 +137,43 @@
         - cca_splunk_cert_enrollment_method != 'selfsigned'
         - openssl_verify_result is defined
         - openssl_verify_result.rc is defined
+
+    - name: "Get certificate information and validate expiration"
+      delegate_to: localhost
+      connection: local
+      become: false
+      community.crypto.x509_certificate_info:
+        path: "{{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}"
+        valid_at:
+          renewal_notice_period: "+{{ cca_splunk_cert_min_validity_days | default(30) }}d"
+      register: cert_info_result
+      no_log: "{{ hide_password }}"
+      when:
+        - cca_splunk_cert_enrollment_method != 'selfsigned'
+        - openssl_verify_result is defined
+        - openssl_verify_result.rc == 0
+
+    - name: "Assert certificate has sufficient validity period"
+      delegate_to: localhost
+      connection: local
+      become: false
+      ansible.builtin.assert:
+        that:
+          - cert_info_result.valid_at.renewal_notice_period
+        fail_msg: >-
+          ❌ Certificate expiration validation failed! Certificate does not have sufficient validity period.
+          Minimum required validity period: {{ cca_splunk_cert_min_validity_days | default(30) }} days.
+          Subject: {{ cert_info_result.subject.commonName | default('N/A') }},
+          Issuer: {{ cert_info_result.issuer.commonName | default('N/A') }},
+          Valid from: {{ cert_info_result.not_before }},
+          Valid until: {{ cert_info_result.not_after }},
+          Days until expiry:
+          {{ ((cert_info_result.not_after | to_datetime('%Y%m%d%H%M%S%z')) - (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S%z'))).days }}.
+          Please ensure the certificate is valid for at least {{ cca_splunk_cert_min_validity_days | default(30) }} days. Use cca_splunk_cert_min_validity_days
+          to override the default.
+      when:
+        - cca_splunk_cert_enrollment_method != 'selfsigned'
+        - cert_info_result is defined
 
     - name: "Set fact for cert file names and concatenation order of cert of type {{ cert_type }}"
       ansible.builtin.set_fact:
