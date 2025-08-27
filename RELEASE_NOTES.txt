@@ -62,6 +62,7 @@
                 required as preparation for Splunk 10.0+ upgrade, setting block_splunk_search_over_http_get_request_v1_api to true.
               - Splunk appsCA.pem must be part of the sslRootCAPath cert for Splunk App Management to work, this is mow ensured
                 in all manage playbooks, by appending the appsCA.pem to the Root CA cert.
+              - Added certificate validity period check (default: 30 days, configurable via cca_splunk_cert_min_validity_days)
 
               Role: cca.core.linux:
                 - Simplified and enhanced Transparent Huge Pages (THP) configuration across different Linux distributions:
@@ -94,6 +95,8 @@
                   is on a version that only supports cgroupv1.
                 * Fix issue when kvstore upgrade was incorrectly seen as completed on stepping stone upgrade
                   version.
+                * Fixed error in when condition, Splunkd service was always restared when running
+                  configure_linux_servers.yml playbook.
                 * Always finalize the upgrade in cluster manager, handle case where it has already been
                   completed.
 
