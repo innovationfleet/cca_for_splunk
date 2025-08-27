@@ -47,6 +47,7 @@
     owner: "{{ splunk_user }}"
     group: "{{ splunk_user_group_name }}"
     mode: '0644'
+  changed_when: false
 
 - name: Collect full Index Cluster status
   ansible.builtin.command:

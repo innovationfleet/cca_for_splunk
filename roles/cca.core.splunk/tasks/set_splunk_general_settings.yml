@@ -27,7 +27,7 @@
     src: "{{ item.path }}"
     dest: "{{ item.path }}.bak-{{ ansible_date_time.iso8601 }}"
     remote_src: true
-    mode: '0644'
+    mode: '0600'
   loop: "{{ find_splunk_local_conf.files }}"
   when:
     - accept_cca_management | default(false)
@@ -49,7 +49,7 @@
     value: null
     state: present
     allow_no_value: true
-    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0644') }}"
+    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0600') }}"
   loop: "{{ splunk_conf_general_settings_flattened }}"
   no_log: '{{ hide_password }}'
   changed_when: false
@@ -62,7 +62,7 @@
     value: "{{ item.value | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
     state: "{{ 'present' if item.state | default('present') == 'present' else 'absent' }}"
     allow_no_value: "{{ 'yes' if (not item.value) else 'no' }}"
-    mode: '0644'
+    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0600') }}"
   loop: "{{ splunk_conf_general_settings_flattened }}"
   loop_control:
     label: "{{ item.section }} - {{ item.option }}"

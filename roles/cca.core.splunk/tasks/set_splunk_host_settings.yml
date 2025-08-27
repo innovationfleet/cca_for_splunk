@@ -10,7 +10,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.2
+# Release: 2025.3.1
 
 - name: Manage header line in splunk files, managed by ansible
   community.general.ini_file:
@@ -26,6 +26,14 @@
   changed_when: false
   no_log: '{{ hide_password }}'
 
+- name: Get current file stats
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  register: file_stat
+  loop: "{{ splunk_conf_host_settings_flattened }}"
+  loop_control:
+    label: "{{ item.path }}"
+
 - name: Updates Splunk conf based on host settings
   community.general.ini_file:
     path: "{{ item.path }}"
@@ -34,7 +42,7 @@
     value: "{{ item.value | default(null) if item.state | default('present') != 'AbsentSection' else '' }}"
     state: "{{ 'present' if item.state | default('present') == 'present' else 'absent' }}"
     allow_no_value: "{{ 'yes' if (not item.value) else 'no' }}"
-    mode: '0644'
+    mode: "{{ (file_stat.results | selectattr('item.path', 'equalto', item.path) | first).stat.mode | default('0600') }}"
   loop: "{{ splunk_conf_host_settings_flattened }}"
   loop_control:
     label: "{{ item.section }} - {{ item.option }}"

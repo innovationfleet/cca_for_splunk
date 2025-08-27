@@ -49,6 +49,7 @@
     owner: "{{ splunk_user }}"
     group: "{{ splunk_user_group_name }}"
     mode: '0644'
+  changed_when: false
 
 - name: Get info of kvstore engine
   ansible.builtin.shell:
