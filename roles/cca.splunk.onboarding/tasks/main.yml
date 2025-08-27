@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 # tasks file for cca.splunk.onboarding
 
@@ -40,13 +40,44 @@
     - deploy_scope | default('') == "manager-apps"
 
 - name: Check and fail if cluster is not preflight ready
-  ansible.builtin.assert:
-    that:
-      - cluster_preflight_status_flag | default(false)
-    fail_msg: "Pre-Flight check failed, cluster status is not ready"
-  when:
-    - cluster_label is defined
-    - deploy_scope | default('') == "manager-apps"
+  block:
+    - name: Normalize preflight output
+      ansible.builtin.set_fact:
+        pf_stdout_lines: >-
+          {{ (verbose_cluster_status.stdout | default('') | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
+        pf_stderr_lines: >-
+          {{ (verbose_cluster_status.stderr | default('') | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
+      no_log: true
+      when:
+        - not skip_deployment_preflight_check | default(false)
+        - cluster_label is defined
+        - deploy_scope | default('') == "manager-apps"
+
+    - name: Check and fail if cluster is not preflight ready (short message)
+      ansible.builtin.assert:
+        that:
+          - cluster_preflight_status_flag | default(false)
+        fail_msg: >-
+          Preflight failed.
+          Showing a short summary; detailed stdout/stderr will follow below.
+      when:
+        - not skip_deployment_preflight_check | default(false)
+        - cluster_label is defined
+        - deploy_scope | default('') == "manager-apps"
+
+  rescue:
+    - name: Detailed preflight output (only printed on failure)
+      ansible.builtin.debug:
+        msg: |
+          === stdout (first 200 lines) ===
+          {{ (pf_stdout_lines[:200] | join('\n')) if pf_stdout_lines | length > 0 else '<<no stdout>>' }}
+
+          === stderr (first 100 lines) ===
+          {{ (pf_stderr_lines[:100] | join('\n')) if pf_stderr_lines | length > 0 else '<<no stderr>>' }}
+
+    - name: Stop play after showing details
+      ansible.builtin.fail:
+        msg: "Preflight failed — see detailed output above."
 
 - name: Include task for master apps staging
   ansible.builtin.include_tasks: stage_manager_apps.yml
@@ -88,5 +119,6 @@
     path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}"
     state: absent
   changed_when: false
+  failed_when: false
   when:
     - hide_password | default(true)

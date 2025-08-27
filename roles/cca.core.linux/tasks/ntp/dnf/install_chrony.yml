@@ -7,7 +7,7 @@
 #
 # Author: Robin Blomdahl
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Ensure Chrony is installed and updated (using dnf module)
   ansible.builtin.dnf:
@@ -17,7 +17,7 @@
   no_log: "{{ ansible_verbosity < 3 }}"
 
 - name: Ensure Chrony is installed and updated (using shell)
-  ansible.builtin.command: |
+  ansible.builtin.shell: |
     if ! rpm -q chrony >/dev/null 2>&1; then
       dnf install -y chrony
     else

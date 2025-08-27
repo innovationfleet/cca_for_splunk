@@ -1352,7 +1352,6 @@ splunk/etc/apps/splunk_secure_gateway/static/phone_lock.png
 splunk/etc/apps/splunk_secure_gateway/static/scene_background.png
 splunk/etc/regid.2001-12.com.splunk-Splunk-Enterprise.swidtag
 splunk/etc/system/bin/appinstall.py
-splunk/etc/users/users.ini
 splunk/lib/libarchive.so.13.3.3
 splunk/lib/libexslt.so.0.8.18
 splunk/lib/libxml2.so.2.9.9

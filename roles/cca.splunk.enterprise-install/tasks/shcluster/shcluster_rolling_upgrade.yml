@@ -30,8 +30,8 @@
       | grep "active"
   args:
     executable: /bin/bash
-  register: shcluster_member_info_status
-  until: "'active_historical_search_count:0' in shcluster_member_info_status.stdout | default('')"
+  register: shcluster_historical_search_status
+  until: "shcluster_historical_search_status.stdout | regex_search('active_historical_search_count:0')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false
@@ -49,8 +49,8 @@
       | grep "active"
   args:
     executable: /bin/bash
-  register: shcluster_member_info_status
-  until: "active_realtime_search_count:0' in shcluster_member_info_status.stdout | default('')"
+  register: shcluster_realtime_search_status
+  until: "shcluster_realtime_search_status.stdout | regex_search('active_realtime_search_count:0')"
   retries: "{{ shc_sync_retry_num | default('30') }}"
   delay: "{{ retry_delay | default('30') }}"
   failed_when: false

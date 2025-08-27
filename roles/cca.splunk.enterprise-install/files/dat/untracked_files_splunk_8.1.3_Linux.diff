@@ -153,7 +153,6 @@ splunk/etc/apps/splunk_monitoring_console/appserver/static/build/pages/lite/9.js
 splunk/etc/apps/splunk_monitoring_console/default/data/ui/views/license_usage_30days.xml
 splunk/etc/regid.2001-12.com.splunk-Splunk-Enterprise.swidtag
 splunk/etc/system/bin/appinstall.py
-splunk/etc/users/users.ini
 splunk/lib/libarchive.so.13.3.3
 splunk/lib/libexslt.so.0.8.18
 splunk/lib/libxml2.so.2.9.9

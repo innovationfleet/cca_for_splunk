@@ -79,8 +79,8 @@
     state: restarted
     enabled: true
   when:
-    - stat_splunk_service_restart_pending.stat.exists | default(false) or
-      stat_splunkd_service_started.stat.exists | default(false)
+    - stat_splunk_service_restart_pending.stat.exists | default(false)
+    - stat_splunkd_service_started.stat.exists | default(false)
     - ansible_facts.services[systemd_enterprise_name] is defined
     - splunk_enterprise_is_installed | default(false)
 
@@ -92,3 +92,4 @@
     - "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     - "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
   check_mode: false
+  changed_when: false

@@ -8,29 +8,35 @@
 # Usage:
 # splunk_upgrade_cleanup.sh <path_to_diff_file>/untracked_files_splunk_<version>_Linux.diff <splunk_path>
 
-
 splunk_path=$2
 
 if [[ -f ${1} ]] ; then
 
   if [[ -d ${splunk_path} ]] ; then
 
-     while IFS= read -r line; do
-
-       file=$(echo ${line} | cut -d"/" -f2-)
-       rm -f ${splunk_path}/${file}
-
-    done < "${1}"
+     # Check if xargs is available for efficient processing
+     if command -v xargs >/dev/null 2>&1; then
+       # Use xargs for efficient parallel processing
+       # -P 20: Process up to 20 files in parallel
+       # -I {}: Replace {} with each line from the file
+       cat "${1}" | cut -d"/" -f2- | xargs -P 20 -I {} rm -f "${splunk_path}/{}"
+     else
+       # Fallback to original line-by-line processing
+       while IFS= read -r line; do
+         file=$(echo ${line} | cut -d"/" -f2-)
+         rm -f ${splunk_path}/${file}
+       done < "${1}"
+     fi
 
   else
 
-    echo "Splunk path doesn't exist, script will exit"
+    echo "Argument 2 is missing or is not a valid Splunk path, script will exit"
     exit 1
 
   fi
 
 else
 
-  echo "Untracked diff file don't exist. Skipping cleanup"
+  echo "Untracked diff file doesn't exist. Skipping cleanup"
 
 fi

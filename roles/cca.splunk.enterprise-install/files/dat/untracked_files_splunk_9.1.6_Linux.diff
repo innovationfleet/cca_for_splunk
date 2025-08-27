@@ -3100,7 +3100,6 @@ splunk/etc/system/bin/convert_auth_v1_v2.py
 splunk/etc/system/bin/surrounding_events.py
 splunk/etc/system/static/addeventtype.html
 splunk/etc/system/static/addeventtype_done.html
-splunk/etc/users/users.ini
 splunk/include/python2.7/pyconfig.h
 splunk/lib/libarchive.so.13.3.3
 splunk/lib/libarchive.so.13.4.3

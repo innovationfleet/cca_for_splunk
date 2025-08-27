@@ -7,40 +7,28 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 
 - name: Clean up temporary files
   ansible.builtin.file:
     path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}"
     state: absent
-
-- name: Find old temporary files owned by current user and older than 2 hours
-  ansible.builtin.find:
-    paths: "{{ cca_local_tmp_dir | default('/tmp') }}"
-    age: "{{ cca_cleanup_tmp_files_age | default('2h') }}"
-    age_stamp: mtime
-    file_type: file
-    recurse: true
-    patterns: '*'
-    use_regex: false
-    contains: ''
-  register: old_tmp_files
-  no_log: "{{ hide_password | default(false) }}"
+  changed_when: false
 
 - name: Set facts about the current user
   ansible.builtin.set_fact:
     current_user: "{{ lookup('env', 'USER') }}"
 
-- name: Filter files to only those owned by the current user
-  ansible.builtin.set_fact:
-    user_old_tmp_files: "{{ old_tmp_files.files | selectattr('pw_name', 'equalto', current_user) | map(attribute='path') | list }}"
-  when: old_tmp_files is defined
-
-- name: Delete old temporary files owned by current user
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: absent
-  loop: "{{ user_old_tmp_files }}"
-  when:
-    - user_old_tmp_files | length > 0
+- name: Find and delete old temporary files owned by current user
+  ansible.builtin.shell: |
+    find {{ cca_local_tmp_dir | default('/tmp') | quote }} \
+         -xdev -type f -user {{ current_user | quote }} \
+         -mmin +{{ cca_cleanup_tmp_files_age | default('240') }} \
+         -delete 2> /dev/null || true
+  args:
+    executable: /bin/bash
+  register: cleanup_run
+  changed_when: false
+  tags:
+    - skip_ansible_lint

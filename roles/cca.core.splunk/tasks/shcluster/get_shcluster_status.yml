@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
@@ -49,6 +49,7 @@
     owner: "{{ splunk_user }}"
     group: "{{ splunk_user_group_name }}"
     mode: '0644'
+  changed_when: false
 
 - name: Get info of kvstore engine
   ansible.builtin.shell:
@@ -83,9 +84,7 @@
   ansible.builtin.shell:
     cmd: >
       set -o pipefail && timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show shcluster-status
-      | head -9
-      | grep "label"
-      | awk -F"label : " "{ print $2 }"
+      | awk '/^ Captain:/,/^ Members:/ { if ($1 == "label" && $2 == ":") print $3 }'
   args:
     executable: /bin/bash
   register: shcluster_captain
@@ -165,6 +164,20 @@
     mode: '664'
   when:
     - current_shcluster_captain == inventory_hostname
+  changed_when: false
+
+- name: Add current shcluster captain to a dynamic shcluster_captain group
+  ansible.builtin.group_by:
+    key: "shcluster_captain"
+  when:
+    - current_shcluster_captain == inventory_hostname
+
+- name: Clean up search head cluster captain file
+  ansible.builtin.file:
+    path: "{{ searchhead_captain }}"
+    state: absent
+  when:
+    - current_shcluster_captain != inventory_hostname
   changed_when: false
 
 - name: Include task to get certificate status

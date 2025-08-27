@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_general_settings_file_version: '2024.2.1'
+cca_infrastructure_general_settings_file_version: '2025.3.1'
 
 # General settings for Splunk.
 # Group and host settings should be configured in
@@ -134,6 +134,48 @@ splunk_conf_general_settings:
                         configure_inputs_ssl | default(false)
                     else
                       'absent' }}"
+          - option: 'sslVersions'
+            value: 'tls1.2'
+            state: "{{ 'present'
+                    if
+                       cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                     and
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '>=')
+                     and
+                        enforce_global_inputs_ssl_versiontls12 | default(true)
+                    else
+                      'absent' }}"
+            comment: >-
+              Enforce TLS 1.2 for Splunk Enterprise 9.4.0 and above. Default is true, to override
+              set enforce_global_inputs_ssl_versiontls12 to false in the env_specific file.
+              Make your system compliant with Splunk Enterprise 10.0+ security requirements.
+
+
+  - name: Splunk httpinput app inputs.conf
+    filename: inputs.conf
+    filepath: '{{ splunk_path }}/etc/apps/splunk_httpinput/local'
+    sections:
+      - section: 'http'
+        options:
+          - option: 'sslVersions'
+            value: 'tls1.2'
+            state: "{{ 'present'
+                    if
+                       cca_splunk_inputs_ssl | default(false)
+                     and
+                        configure_inputs_ssl | default(false)
+                     and
+                        current_splunk_enterprise_version | default(splunk_enterprise_version) is version('9.4.0', '>=')
+                     and
+                        enforce_http_input_ssl_versiontls12 | default(true)
+                    else
+                      'absent' }}"
+            comment: >-
+              Enforce TLS 1.2 for Splunk Enterprise 9.4.0 and above. Default is true, to override
+              set enforce_http_input_ssl_versiontls12 to false in the env_specific file.
+              Make your system compliant with Splunk Enterprise 10.0+ security requirements.
 
   - name: Splunk limits.conf
     filename: limits.conf
@@ -225,6 +267,33 @@ splunk_conf_general_settings:
                      configure_outputs_ssl | default(false) | bool
                    else
                     'absent'}}"
+
+
+  - name: Splunk restmap.conf
+    filename: restmap.conf
+    filepath: '{{ splunk_path }}/etc/system/local'
+    sections:
+      - section: 'global'
+        options:
+          - option: 'v1APIBlockGETSearchLaunch'
+            value: "{{ block_splunk_search_over_http_get_request_v1_api | default('true'
+                     if
+                       (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('10.0.0', '>=')
+                     else
+                        'false') }}"
+            state: "{{ 'present'
+                    if
+                       (block_splunk_search_over_http_get_request_v1_api | default('true'
+                    if
+                       (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('10.0.0', '>=') else 'false')) | bool
+                    else
+                      'absent' }}"
+            comment: >-
+              Control v1APIBlockGETSearchLaunch setting for security compliance.
+              Default values by Splunk version:
+              - Splunk 9.1 to 9.4: false (v1 API GET search requests allowed)
+              - Splunk 10.0+: true (v1 API GET search requests blocked for security)
+              Override by setting block_splunk_search_over_http_get_request_v1_api in env_specific file.
 
 
   - name: Splunk server.conf

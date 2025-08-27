@@ -1112,7 +1112,6 @@ splunk/etc/apps/splunk_secure_gateway/lib/zipp-3.4.1.dist-info/WHEEL
 splunk/etc/apps/splunk_secure_gateway/lib/zipp-3.4.1.dist-info/top_level.txt
 splunk/etc/regid.2001-12.com.splunk-Splunk-Enterprise.swidtag
 splunk/etc/system/bin/appinstall.py
-splunk/etc/users/users.ini
 splunk/lib/libarchive.so.13.3.3
 splunk/lib/libexslt.so.0.8.18
 splunk/lib/libxml2.so.2.9.9

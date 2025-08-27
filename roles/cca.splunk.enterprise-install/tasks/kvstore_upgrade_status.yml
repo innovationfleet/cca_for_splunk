@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_role:
@@ -15,6 +15,22 @@
     tasks_from: splunk_login.yml
   when:
     - enterprise_upgrade | default(false)
+
+- name: Read stored Splunk version before upgrade
+  ansible.builtin.slurp:
+    src: "{{ splunk_version_file | default(splunk_path ~ '/.cca/splunk_version') }}"
+  register: stored_splunk_version
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+
+- name: Set stored version variable
+  ansible.builtin.set_fact:
+    stored_splunk_version: "{{ stored_splunk_version.content | b64decode | trim }}"
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - stored_splunk_version is defined
 
 - name: Check if kvstore is enabled
   ansible.builtin.command:
@@ -41,6 +57,49 @@
   tags:
     - skip_ansible_lint
 
+- name: Set KVStore upgrade needed flag
+  ansible.builtin.set_fact:
+    kvstore_upgrade_needed: "{{ stored_splunk_version is version('9.4.0', '<') and splunk_enterprise_version is version('9.4.0', '>=') }}"
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - stored_splunk_version is defined
+    - splunk_enterprise_version is defined
+
+- name: Debug KVStore upgrade decision
+  ansible.builtin.debug:
+    msg: |
+      KVStore Upgrade Decision:
+      Stored Splunk Version: {{ stored_splunk_version | default('Not available') }}
+      Target Splunk Version: {{ splunk_enterprise_version | default('Not available') }}
+      KVStore Upgrade Needed: {{ kvstore_upgrade_needed | default('Not determined') }}
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - ansible_verbosity > 0
+
+- name: Wait for KVStore upgrade to start
+  ansible.builtin.shell: "set -o pipefail && timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
+  args:
+    executable: /bin/bash
+  register: kv_status_started
+  until: >
+    kv_status_started.stdout is search('Upgrade Status:\s+1')
+  retries: "{{ cca_splunk_kvstore_upgrade_retries | default(30) | int }}"
+  delay: "{{ cca_splunk_kvstore_upgrade_delay | default(30) | int }}"
+  changed_when: false
+  failed_when:
+    false
+  when:
+    - enterprise_upgrade | default(false)
+    - not ansible_check_mode
+    - kv_command_check is defined
+    - kv_command_check.rc | default(0) == 0
+    - kv_command_check.stdout | default('') != ""
+    - kvstore_status.stdout is search('status :')
+    - kvstore_upgrade_needed | default(false)
+  tags:
+    - skip_ansible_lint
 
 - name: Wait for KVStore upgrade to complete
   ansible.builtin.shell: "set -o pipefail && timeout 30 {{ splunk_path }}/bin/splunk show standalone-kvupgrade-status"
@@ -49,8 +108,8 @@
   register: kv_status
   until: >
     kv_status.stdout is search('Upgrade Status:\s+0')
-  retries: "{{ cca_splunk_kvstore_upgrade_retries | default(75) | int }}"
-  delay: "{{ cca_splunk_kvstore_upgrade_delay | default(60) | int }}"
+  retries: "{{ cca_splunk_kvstore_upgrade_retries | default(150) | int }}"
+  delay: "{{ cca_splunk_kvstore_upgrade_delay | default(30) | int }}"
   changed_when: false
   failed_when:
     - kv_status.stdout is not search('Upgrade Status:\s+0')
@@ -62,6 +121,7 @@
     - kv_command_check.rc | default(0) == 0
     - kv_command_check.stdout | default('') != ""
     - kvstore_status.stdout is search('status :')
+    - kvstore_upgrade_needed | default(false)
   tags:
     - skip_ansible_lint
 
@@ -76,6 +136,7 @@
     - kv_command_check.stdout | default('') != ""
     - ansible_verbosity > 1
     - kvstore_status.stdout is search('status :')
+    - kvstore_upgrade_needed | default(false)
 
 - name: Include tasks to logout on splunk cli
   ansible.builtin.include_role:

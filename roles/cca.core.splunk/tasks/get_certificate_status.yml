@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Include task to get general settings
   ansible.builtin.include_tasks:
@@ -33,6 +33,52 @@
     openssl_server_cert_path: "{{ splunk_ssl_server_cert | regex_replace('\\$SPLUNK_HOME', splunk_path) }}"
     openssl_ca_chain_path: "{{ splunk_ssl_root_ca_path | regex_replace('\\$SPLUNK_HOME', splunk_path) if splunk_ssl_root_ca_path is defined else '' }}"
 
+- name: "DRY RUN: Validate sslRootCAPath, required for splunk enterprise version 9.4.0 and above"
+  community.general.ini_file:
+    path: "{{ splunk_path }}/etc/system/local/server.conf"
+    section: "sslConfig"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    create: false
+  check_mode: true
+  loop:
+    - {
+      option: "sslRootCAPath",
+      value: "{{ splunk_ssl_root_ca_path }}"
+    }
+    - {
+      option: "serverCert",
+      value: "{{ splunk_ssl_server_cert }}"
+    }
+    - {
+      option: "sslPassword",
+      value: "{{ runtime_cca_splunk_server_ssl_password_hash | default(cca_splunk_certs_server_sslpassword_hash) }}"
+    }
+  loop_control:
+    loop_var: item
+  register: validate_ssl_config_settings
+  when:
+    - strict_x509_cert_validation_test | default(false) or
+      (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=') or
+      (splunk_enterprise_version is version('9.4.0', '>=') and cca_splunk_enterprise_upgrade | default(false))
+
+- name: Assert that sslConfig settings are set
+  ansible.builtin.assert:
+    that:
+      - not validate_ssl_config_settings.changed
+    fail_msg: >
+      Verification failed, sslConfig settings are not set or some are empty in {{ splunk_path }}/etc/system/local/server.conf.
+      To fix this:
+      1. Update your group_vars/all/general_settings file to match your CCA template version
+      2. Run the manage playbook to apply the new SSL configuration
+      The sslConfig settings are required for certificate validation in Splunk Enterprise 9.4.0+.
+      See task output on previous tasks for details.
+    success_msg: "sslConfig settings are set"
+  when:
+    - strict_x509_cert_validation_test | default(false) or
+      (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=') or
+      (splunk_enterprise_version is version('9.4.0', '>=') and cca_splunk_enterprise_upgrade | default(false))
+
 - name: Run strict OpenSSL X.509 validation
   ansible.builtin.command: >
     openssl verify -verbose -x509_strict
@@ -44,7 +90,14 @@
   failed_when: false
   changed_when: false
   check_mode: false
+  when:
+    - strict_x509_cert_validation_test | default(false) or
+      (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=') or
+      (splunk_enterprise_version is version('9.4.0', '>=') and cca_splunk_enterprise_upgrade | default(false))
 
 - name: Set fact for certificate validation status
   ansible.builtin.set_fact:
-    splunk_cert_strict_x509_validation: "{{ openssl_verify_result.rc == 0 }}"
+    splunk_cert_strict_x509_validation: >-
+      {{ openssl_verify_result.rc == 0
+         if openssl_verify_result is defined and openssl_verify_result.rc is defined
+         else false }}

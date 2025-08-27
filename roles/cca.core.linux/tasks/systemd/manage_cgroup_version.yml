@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Get Splunk Enterprise version
   ansible.builtin.include_role:
@@ -77,6 +77,19 @@
     - name: Configure cgroup v1 because current Splunk version does not support v2
       when:
         - running_kernel_cgroup_version == 'cgroupv1'
+        - supported_kernel_cgroup_version == 'cgroupv2'
+        - not splunk_supports_cgroupv2
+      block:
+        - name: Include tasks for configuring cgroup v1
+          ansible.builtin.include_tasks: systemd/manage_cgroup_v1.yml
+
+        - name: Set fact that cgroups has been configured
+          ansible.builtin.set_fact:
+            cgroups_configured: true
+
+    - name: Configure cgroup v1 because current Splunk version does not support v2
+      when:
+        - running_kernel_cgroup_version == 'cgroupv2'
         - supported_kernel_cgroup_version == 'cgroupv2'
         - not splunk_supports_cgroupv2
       block:

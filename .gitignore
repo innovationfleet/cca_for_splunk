@@ -19,4 +19,5 @@
 ._*
 *.pyc
 __pycache__
+dry_run_results.txt
 

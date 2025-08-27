@@ -1,82 +1,32 @@
 ---
 # tasks file for cca.core.linux
 #
-# Description:
+# Description: Configure Transparent Huge Pages (THP) to be disabled for Splunk performance
 #
-# Prerequisite:
+# Prerequisite: systemd-based Linux distribution
 #
-# Author: Roger Lindquist (github.com/rlinq)
+# Authors: Roger Lindquist (github.com/rlinq), Saikrishna Gundeti (github.com/sgundeti)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
-- name: Strip out any existing transparent_hugepage settings from GRUB_CMD_LINE
-  ansible.builtin.shell:
-    cmd: >
-      set -o pipefail && grep GRUB_CMDLINE_LINUX /etc/default/grub
-      | awk -F'"' '{ print $2 }'
-      | sed -E 's:transparent_hugepage=[[:alpha:]]+[[:space:]]*::'
-      | xargs
-  args:
-    executable: /bin/bash
-  register: grub_cmdline_linux_result
+# Configure systemd service to disable THP (reliable across all systemd-based distributions)
+- name: Configure systemd service to disable THP
+  ansible.builtin.include_tasks: systemd/thp_service.yml
+
+# Final verification that THP is disabled
+- name: Verify THP is disabled after configuration
+  ansible.builtin.command:
+    cmd: cat /sys/kernel/mm/transparent_hugepage/enabled
+  register: final_thp_check
   changed_when: false
 
-- name: Update the grub file if needed based on regexp and new line
-  ansible.builtin.lineinfile:
-    path: /etc/default/grub
-    state: present
-    regexp: '^GRUB_CMDLINE_LINUX="({{ grub_cmdline_linux_result.stdout }}|{{ grub_cmdline_linux_result.stdout }} transparent_hugepage=never)"$'
-    backrefs: true
-    line: 'GRUB_CMDLINE_LINUX="{{ grub_cmdline_linux_result.stdout }} transparent_hugepage=never"'
-  register: grub_file_status
-  notify: notify server reboot
-
-- name: Get stat from the custom /boot/grub/grub.cfg file
-  ansible.builtin.stat:
-    path: "/boot/grub/grub.cfg"
-  register: stat_grub_grubcfg
-
-- name: Get stat from the custom /boot/grub2/grub.cfg file
-  ansible.builtin.stat:
-    path: "/boot/grub2/grub.cfg"
-  register: stat_grub2_grubcfg
-
-- name: Block for grub
+- name: Fail if THP is still enabled after all configuration attempts
+  ansible.builtin.fail:
+    msg: |
+      Failed to disable Transparent Huge Pages (THP).
+      Current status: {{ final_thp_check.stdout }}
+      Expected: [never] or *[never]*
+      Please check system compatibility and permissions.
   when:
-    - stat_grub_grubcfg.stat.exists
-    - not stat_grub2_grubcfg.stat.exists
-    - grub_file_status.changed
-  block:
-    - name: Take backup of existing grub.cfg, with timestamp
-      ansible.builtin.copy:
-        src: '/boot/grub/grub.cfg'
-        dest: "/root/grub_backup-{{ ansible_date_time.date }}.cfg"
-        remote_src: true
-        mode: '0644'
-
-    - name: Rebuild grub conf
-      ansible.builtin.command:
-        cmd: 'grub-mkconfig -o /boot/grub/grub.cfg'
-      register: grub_mkconfig
-      tags:
-        - skip_ansible_lint
-
-- name: Block for grub2
-  when:
-    - not stat_grub_grubcfg.stat.exists
-    - stat_grub2_grubcfg.stat.exists
-    - grub_file_status.changed
-  block:
-    - name: Take backup of existing grub.cfg, with timestamp
-      ansible.builtin.copy:
-        src: '/boot/grub2/grub.cfg'
-        dest: "/root/grub_backup-{{ ansible_date_time.date }}.cfg"
-        mode: '0644'
-        remote_src: true
-
-    - name: Rebuild grub conf
-      ansible.builtin.command:
-        cmd: 'grub2-mkconfig -o /boot/grub2/grub.cfg'
-      register: grub_mkconfig
-      tags:
-        - skip_ansible_lint
+    - final_thp_check.rc == 0
+    - "'[never]' not in final_thp_check.stdout"

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1
 
 - name: Upgrade precheck
   ansible.builtin.assert:
@@ -28,6 +28,6 @@
     success_msg: >
       Splunk certificate successfully passed strict X.509 validation.
   when:
-    - inventory_hostname not in (groups.cluster_peers | default([]))
     - cca_splunk_enterprise_upgrade | default(false)
-    - (splunk_enterprise_version | string) is version('9.4', '>=')
+    - (splunk_enterprise_version | string) is version('9.4.0', '>=') or
+      strict_x509_cert_validation_test | default(false)

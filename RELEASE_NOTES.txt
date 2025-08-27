@@ -31,6 +31,79 @@
 
     Release notes:
 
+    2025.3.1
+              - Bumped Splunk Enterprise version to 9.4.4, Splunk 9.4.x track is recommended for production usage.
+              - Improved index cluster preflight status when running deploy_manager_apps.yml playbook, fail fast
+                if preflight status is not ok. Set 'skip_deployment_preflight_check' to true to override preflight
+                checks in the beginning.
+              - Improved kvstore upgrade logic, kvstore upgrade starts after the last Search Head Cluster Member
+                is upgraded. Kvstore upgrades only run for upgrades from version 9.3.
+              - Improved speed during upgrade, if pigz tool is available the new 10.0 package extraction saves
+                up to 90 seconds per host. Install pigz with your package manager or configure_linux.yml playbook.
+                Update group_vars/all/linux and add pigz in the cca_baseline_software list.
+              - Improved speed of temp file cleanup in manager temp directory.
+              - Updated the upgrade playbook upgrade_non_clustered_splunk_servers to start with Cluster Managers,
+                especially important when there are standalone searchheads in the infrastructure. Option to skip
+                CM upgrade with extra vars, by setting upgrade_cca_manager to false if there are no standalone
+                searchheads.
+              - Replaced rolling_upgrade_splunk_clusters.yml with rolling_upgrade_splunk_clusters_multi_shc.yml
+                to add support for multiple search head clusters as the default option.
+              - Improved validation logic for mandatory settings, prior to 9.4.x upgrade. Strict x509 validation now
+                checks that the required variables are set in server.conf. Required settings come from
+                group_vars/all/general_settings, ensure you have at least the
+                cca_infrastructure_general_settings_file_version: '2025.3.1' version in the file and the settings
+                are applied on all hosts prior to a 9.4.+ upgrade, apply using the managed_* playbooks.
+              - To be fully compliant with Splunk Enterprise v10.0, set block_splunk_search_over_http_get_request_v1_api
+                to true and test your integrations. Switch back if there are any issues. There is a v2 version of the
+                REST API that should be used.
+              - Improved kvstore upgrade detection and handling, especially on Search Head Members.
+              - Applied configuration settings to harden Splunk Inputs sslVersions.
+              - Using latest templates for CCA, the managed infrastructure will pass all infrastructure related health checks
+                required as preparation for Splunk 10.0+ upgrade, setting block_splunk_search_over_http_get_request_v1_api to true.
+              - Splunk appsCA.pem must be part of the sslRootCAPath cert for Splunk App Management to work, this is mow ensured
+                in all manage playbooks, by appending the appsCA.pem to the Root CA cert.
+              - Added certificate validity period check (default: 30 days, configurable via cca_splunk_cert_min_validity_days)
+
+              Role: cca.core.linux:
+                - Simplified and enhanced Transparent Huge Pages (THP) configuration across different Linux distributions:
+                  * Reliable systemd service approach replacing complex multi-method fallbacks
+                  * Created disable-thp.service that runs early at boot (after sysinit.target)
+                  * Immediate THP disabling without requiring system reboot
+                  * Direct THP control via /sys filesystem for universal compatibility
+                  * Enhanced error handling with final verification and clear failure messages
+                  * Simplified maintenance while improving reliability across all systemd-based distributions
+                  * Improved task reliability and debugging capabilities for THP configuration
+
+                - Enhanced APT package update handling and exclusion logic:
+                  * Replaced dpkg_selections with package existence checking using apt-cache
+                  * Dynamic package exclusion based on cca_control.package.updates.exclude_packages variable
+                  * Improved apt update method using apt-get dist-upgrade simulation with dynamic exclude options
+                  * Enhanced parsing of apt upgrade simulation output for better package detection
+                  * Added proper cleanup step to unhold packages after checks
+                  * Prevents errors when exclude packages don't exist in the dpkg database
+                  * Better error handling and conditional logic for determining when updates are needed
+
+              Bug fixes:
+                * Corrected logic to handle strict x509 certificate validation. Mandatory for Splunk Enterprise
+                  version 9.4+. Validation added during upgrade pre-check to version 9.4+. Verify your certificates
+                  using the extra-vars, strict_x509_cert_validation_test set to true. Run any manage playbook to
+                  run the validation.
+                * Fix task install_chrony.yml to use shell instead of command module when using executable
+                  argument.
+                * Fixed validation check for strict x509 results.
+                * Fixed cgroup issue when the running kernel and supported kernel version uses cgroupv2 but Splunk
+                  is on a version that only supports cgroupv1.
+                * Fix issue when kvstore upgrade was incorrectly seen as completed on stepping stone upgrade
+                  version.
+                * Fixed error in when condition, Splunkd service was always restarted when running
+                  configure_linux_servers.yml playbook.
+                * Always finalize the upgrade in cluster manager, handle case where it has already been
+                  completed.
+
+              Beta:
+                * Support for Splunk Enterprise 10.0.0, not ready for production usage.
+
+
     2025.2.2
               - ⚠️ REQUIRED ANSIBLE UPDATE ⚠️
                 Ansible 2.18.6+ is required to run CCA from this release and onwards.
