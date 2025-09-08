@@ -17,7 +17,7 @@
       when:
         - not post_docker_setup is defined
 
-    - name: Post confgiuration of CCA Manager if running in docker instance
+    - name: Post configuration of CCA Manager if running in docker instance
       ansible.builtin.include_role:
         name: ./roles/cca.setup.cca-manager
         tasks_from:

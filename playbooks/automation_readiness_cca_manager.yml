@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       ansible.builtin.set_fact:
-        cca_release: "2025.3.1"
+        cca_release: "2025.3.1.2"
 
     - name: START - Set target readiness score for CCA manager
       ansible.builtin.set_fact:
@@ -240,7 +240,7 @@
       ignore_errors: true
       register: assert_result
 
-    - name: Increase score for successful recommended task - ANSIBLE_STRATEGY_PLUGINS
+    - name: Increase score for successful recommended task - ANSIBLE_STRATEGY
       ansible.builtin.set_fact:
         mgr_readiness_score: "{{ mgr_readiness_score | int + 99 }}"
       when:
