@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2025.3.1.2
 
 
 - name: Set fact for ds inventory name
@@ -35,7 +35,7 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}"
     state: directory
     mode: '0755'
   changed_when: false
@@ -54,7 +54,7 @@
   become: false
   ansible.builtin.copy:
     src: "{{ role_path }}/files/bin/compare_serverclass_data.py"
-    dest: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/compare_serverclass_data.py"
+    dest: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/compare_serverclass_data.py"
     mode: '0755'
   delegate_to: localhost
   changed_when: false
@@ -64,7 +64,7 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost"
     state: 'directory'
     mode: '0755'
     recurse: true
@@ -89,9 +89,9 @@
   ansible.builtin.command: >
     {{ ansible_python_interpreter }} {{ role_path }}/files/bin/sc_parser.py
     {{ local_directory }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost', 'serverclass_data_local.json'] | path_join }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost', 'duplicates_data_local.json'] | path_join }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', 'serverclass_data_local.json'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', 'duplicates_data_local.json'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost'] | path_join }}
   delegate_to: localhost
   register: local_result
   changed_when: false
@@ -102,7 +102,7 @@
   become: false
   delegate_to: localhost
   ansible.builtin.slurp:
-    src: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/duplicates_data_local.json"
+    src: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/duplicates_data_local.json"
   register: duplicates_data
 
 - name: Check if duplicates data is present
@@ -118,8 +118,12 @@
 
 - name: Set remote and local base path
   ansible.builtin.set_fact:
-    remote_base_path: "{{ [cca_remote_tmp_dir | default('/tmp'), cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}"
-    local_base_path: "{{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}"
+    remote_base_path: >-
+      {{ [cca_remote_tmp_dir | default('/tmp'),
+         cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}
+    local_base_path: >-
+      {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'),
+         cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}
 
 - name: Set intermediate variable
   ansible.builtin.set_fact:
@@ -127,7 +131,7 @@
     remote_duplicates_json: "{{ [remote_base_path, 'duplicates_data_remote.json'] | path_join }}"
     local_serverclass_json: "{{ [local_base_path, 'serverclass_data_remote.json'] | path_join }}"
     local_duplicates_json: "{{ [local_base_path, 'duplicates_data_remote.json'] | path_join }}"
-    compare_script_path: "{{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'compare_serverclass_data.py'] | path_join }}"
+    compare_script_path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'compare_serverclass_data.py'] | path_join }}"
 
 - name: Run sc_parser.py on remote host
   ansible.builtin.command: >
@@ -162,7 +166,7 @@
   become: false
   ansible.builtin.command: >
     {{ ansible_python_interpreter }} {{ compare_script_path }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost', 'serverclass_data_local.json'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', 'serverclass_data_local.json'] | path_join }}
     {{ local_serverclass_json }}
   delegate_to: localhost
   changed_when: false

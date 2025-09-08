@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1.2
 
 - name: Perform a splunkd restart in a block
   block:
@@ -35,6 +35,16 @@
       tags:
         - skip_ansible_lint
 
+    - name: Perform a cleanup of deployment server reload state file
+      ansible.builtin.file:
+        path: "{{ deployment_server_reload_pending }}"
+        state: absent
+      when:
+        - splunk_restart_result.changed | default(false)
+        - inventory_hostname in ( groups.deployment_servers | default([]) )
+      tags:
+        - skip_ansible_lint
+
   rescue:
     - name: Check if restart failed due to web interface unavailability
       ansible.builtin.fail:
@@ -59,5 +69,15 @@
         state: absent
       when:
         - splunk_restart_result.changed | default(false)
+      tags:
+        - skip_ansible_lint
+
+    - name: Perform a cleanup of deployment server reload state file after recovery
+      ansible.builtin.file:
+        path: "{{ deployment_server_reload_pending }}"
+        state: absent
+      when:
+        - splunk_restart_result.changed | default(false)
+        - inventory_hostname in ( groups.deployment_servers | default([]) )
       tags:
         - skip_ansible_lint
