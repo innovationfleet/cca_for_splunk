@@ -7,13 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
-
+# Release: 2025.3.1.2
 
 - name: Deploy apps from the staging directory to the deployment server apps directory
   become: false
   ansible.posix.synchronize:
-    src: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/localhost/'
+    src: '{{ (cca_local_tmp_dir | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/localhost/'
     dest: '{{ splunk_path }}/etc/apps/'
     copy_links: true
     recursive: true

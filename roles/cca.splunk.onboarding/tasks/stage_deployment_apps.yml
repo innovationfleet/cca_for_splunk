@@ -7,19 +7,30 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1.2
 
 - name: Set staging directory
   ansible.builtin.set_fact:
     deployment_server_apps_staging_dir: >-
      {{ (cca_local_tmp_dir
-        | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ environment_name }}
+        | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ environment_name }}
     selected_apps_source_dir: >-
+      {{
+        selected_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + selected_apps_sourcedir)
+      }}
+    selected_deployment_apps_source_dir: >-
       {{
         selected_deployment_apps_absolute_sourcedir
         | default(absolute_file_store_path + '/etc/' + selected_deployment_apps_sourcedir)
       }}
-- name: Cleanup manager before staging apps§
+    deployment_apps_absolute_source_dir: >-
+      {{
+        deployment_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir + '/' + environment_name)
+      }}
+
+- name: Cleanup manager before staging apps
   become: false
   connection: local
   ansible.builtin.file:
@@ -44,7 +55,7 @@
   become: false
   connection: local
   ansible.builtin.stat:
-    path: "{{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir) }}"
+    path: "{{ selected_deployment_apps_source_dir }}"
   register: stat_environment_specific_path
   delegate_to: localhost
   check_mode: false
@@ -54,15 +65,15 @@
     that:
       - stat_environment_specific_path.stat.exists
     fail_msg: >-
-      The directory {{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir) }} is missing
+      The directory {{ selected_deployment_apps_source_dir }} is missing
       correct and rerun the playbook.
 
 - name: Stage manager with deployment apps from environment directory
   become: false
   connection: local
-  ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir) }}/"
+  ansible.builtin.command: >-
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ deployment_apps_absolute_source_dir }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/"
   delegate_to: localhost
   changed_when: false
@@ -74,8 +85,8 @@
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ selected_apps_source_dir }}/{{ item.source_app }}/"
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ selected_deployment_apps_source_dir }}/{{ item.source_app }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
   when:
@@ -92,7 +103,7 @@
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
     "{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
   delegate_to: localhost
@@ -111,10 +122,11 @@
 - name: Stage manager with selected apps
   become: false
   connection: local
-  ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ (item.source_path | default(selected_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
-    "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
+  ansible.builtin.command: >-
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    {{ (item.source_path | default(selected_apps_source_dir) ))
+    ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/
+    {{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/
   delegate_to: localhost
   when:
     - item.dest_dir is defined
