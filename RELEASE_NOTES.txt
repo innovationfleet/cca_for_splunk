@@ -31,6 +31,32 @@
 
     Release notes:
 
+    2025.3.1.2
+              - Enhanced deployment server reload state file cleanup during Splunk restarts and server reboots.
+                Ensures both restart and reload state files are properly cleaned up on deployment servers.
+              - Updated deprecated ansible environment variable ANSIBLE_STDOUT_CALLBACK=yaml. Use these variables
+                instead, set them in your ~/.profile_local file on your manager server.
+                    export ANSIBLE_STDOUT_CALLBACK=ansible.builtin.default
+                    export ANSIBLE_CALLBACK_RESULT_FORMAT=yaml
+                    export ANSIBLE_CALLBACK_FORMAT_PRETTY=true
+
+              Bug fixes:
+                * Corrected an issue with onboarding groups that use the dest_dir option. Incorrect variable used
+                  in directory references.
+                * Include jq in the list of cca_baseline_software, defined in group_vars/all/linux. Copy settings from
+                  the infrastructure group_vars/all/linux template file.
+                * Improved robustness of rsync status classification filters to handle empty lists and invalid input.
+                * Fixed certificate validation error handling with proper default values for undefined variables.
+                * Corrected onboarding task variable references and improved ansible-lint compliance across multiple files.
+
+
+    2025.3.1.1
+              - Added configurable temporary directory option for rsync operations during app staging.
+                Set cca_local_tmp_dir to override default /tmp/cca_tmp directory location, update
+                your local settings from the updated file in templates directory
+                onboarding_templates/environment/ENVIRONMENT_NAME/group_vars/all/onboarding
+
+
     2025.3.1
               - Bumped Splunk Enterprise version to 9.4.4, Splunk 9.4.x track is recommended for production usage.
               - Improved index cluster preflight status when running deploy_manager_apps.yml playbook, fail fast
