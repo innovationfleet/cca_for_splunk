@@ -10,7 +10,7 @@
 #   (intermediate -> root) required to validate the server cert.
 #
 # Author: Roger Lindquist (github.com/rlinq)
-# Release: 2025.3.1
+# Release: 2025.3.1.2
 
 - name: Run certificate validation in a block
   when:
@@ -135,7 +135,7 @@
             openssl verify -x509_strict -CAfile {{ ca_chain_path }} {{ cca_splunk_extension_certs_path }}/{{ cert_staging_file_name }}
       when:
         - cca_splunk_cert_enrollment_method != 'selfsigned'
-        - openssl_verify_result is defined
+        - openssl_verify_result.rc is defined
         - openssl_verify_result.rc is defined
 
     - name: "Get certificate information and validate expiration"
@@ -150,7 +150,7 @@
       no_log: "{{ hide_password }}"
       when:
         - cca_splunk_cert_enrollment_method != 'selfsigned'
-        - openssl_verify_result is defined
+        - openssl_verify_result.rc is defined
         - openssl_verify_result.rc == 0
 
     - name: "Assert certificate has sufficient validity period"
@@ -165,15 +165,20 @@
           Minimum required validity period: {{ cca_splunk_cert_min_validity_days | default(30) }} days.
           Subject: {{ cert_info_result.subject.commonName | default('N/A') }},
           Issuer: {{ cert_info_result.issuer.commonName | default('N/A') }},
-          Valid from: {{ cert_info_result.not_before }},
-          Valid until: {{ cert_info_result.not_after }},
+          Valid from: {{ cert_info_result.not_before | default('N/A') }},
+          Valid until: {{ cert_info_result.not_after | default('N/A') }},
           Days until expiry:
-          {{ ((cert_info_result.not_after | to_datetime('%Y%m%d%H%M%S%z')) - (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S%z'))).days }}.
+          {{
+            ((cert_info_result.not_after | default('') | to_datetime('%Y%m%d%H%M%S%z')) -
+             (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%S%z'))).days |
+            default('N/A')
+          }}.
           Please ensure the certificate is valid for at least {{ cca_splunk_cert_min_validity_days | default(30) }} days. Use cca_splunk_cert_min_validity_days
           to override the default.
       when:
         - cca_splunk_cert_enrollment_method != 'selfsigned'
         - cert_info_result is defined
+        - cert_info_result.valid_at is defined
 
     - name: "Set fact for cert file names and concatenation order of cert of type {{ cert_type }}"
       ansible.builtin.set_fact:
