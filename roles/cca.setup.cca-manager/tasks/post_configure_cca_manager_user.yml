@@ -70,8 +70,9 @@
     - { regex: 'ANSIBLE_PRIVATE_KEY_FILE', value: 'export ANSIBLE_PRIVATE_KEY_FILE={{ cca_ansible_private_key_file }}' }
     - { regex: 'ANSIBLE_HOST_KEY_CHECKING', value: 'export ANSIBLE_HOST_KEY_CHECKING=false' }
     - { regex: 'ANSIBLE_CALLBACKS_ENABLED', value: 'export ANSIBLE_CALLBACKS_ENABLED=ansible.posix.profile_tasks' }
-    - { regex: 'ANSIBLE_CALLBACK_ENABLED', value: 'export ANSIBLE_CALLBACK_ENABLED=profile_tasks' }
-    - { regex: 'ANSIBLE_STDOUT_CALLBACK', value: 'export ANSIBLE_STDOUT_CALLBACK=yaml' }
+    - { regex: 'ANSIBLE_STDOUT_CALLBACK', value: 'export ANSIBLE_STDOUT_CALLBACK=ansible.builtin.default' }
+    - { regex: 'ANSIBLE_CALLBACK_RESULT_FORMAT', value: 'export ANSIBLE_CALLBACK_RESULT_FORMAT=yaml' }
+    - { regex: 'ANSIBLE_CALLBACK_FORMAT_PRETTY', value: 'export ANSIBLE_CALLBACK_FORMAT_PRETTY=true' }
     - { regex: "python='/usr/bin/python'", value: "alias python='{{ result_python_path.stdout }}'" }
     - { regex: 'source ~/tools/python-venv/ansible', value: 'source ~/tools/python-venv/ansible{{ cca_ansible_minor_version }}/bin/activate' }
     - { regex: 'export CCA_INFRASTRUCTURE_REPO_DIR', value: 'export CCA_INFRASTRUCTURE_REPO_DIR=~/main/cca_splunk_infrastructure' }

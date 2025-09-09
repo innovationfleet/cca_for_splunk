@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.3.1.2
 
 
 - name: Gather facts about configured services
@@ -64,6 +64,15 @@
         - server_reboot_status.rebooted
       check_mode: false
 
+    - name: Delete deployment server reload statefile based on reboot status
+      ansible.builtin.file:
+        path: "{{ deployment_server_reload_pending | default('/opt/splunk/var/run/splunk_deployment_server_reload.pending') }}"
+        state: 'absent'
+      when:
+        - server_reboot_status.rebooted
+        - inventory_hostname in ( groups.deployment_servers | default([]) )
+      check_mode: false
+
     - name: Set fact that cgroups has been configured
       ansible.builtin.set_fact:
         cgroups_configured: true
@@ -91,5 +100,14 @@
   loop:
     - "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     - "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
+  check_mode: false
+  changed_when: false
+
+- name: Cleanup deployment server reload state file
+  ansible.builtin.file:
+    path: "{{ deployment_server_reload_pending | default('/opt/splunk/var/run/splunk_deployment_server_reload.pending') }}"
+    state: absent
+  when:
+    - inventory_hostname in ( groups.deployment_servers | default([]) )
   check_mode: false
   changed_when: false

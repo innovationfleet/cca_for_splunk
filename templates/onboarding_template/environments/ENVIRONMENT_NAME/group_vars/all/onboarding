@@ -14,6 +14,8 @@ selected_shcluster_apps_sourcedir: 'shcluster/selectable'
 manager_apps_sourcedir: '{{ cluster_manager_config_bundle_dir }}/{{ environment_name }}/{{ cluster_label }}'
 selected_manager_apps_sourcedir: '{{ cluster_manager_config_bundle_dir }}/selectable'
 
+cca_local_tmp_dir: '{{ lookup("env", "HOME", default="/tmp") }}/cca_tmp'
+
 # Optional variables for customizing source directory paths
 # Uncomment and update with absolute paths
 # manager_apps_absolute_sourcedir:

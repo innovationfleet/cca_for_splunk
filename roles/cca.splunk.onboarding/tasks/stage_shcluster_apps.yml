@@ -7,11 +7,27 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.1.2
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    shcluster_staging_dir: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}'
+    shcluster_staging_dir: >-
+      '{{ (cca_local_tmp_dir | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}'
+    selected_apps_source_dir: >-
+      {{
+        selected_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + selected_apps_sourcedir)
+      }}
+    selected_shcluster_apps_source_dir: >-
+      {{
+        selected_shcluster_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + selected_shcluster_apps_sourcedir)
+      }}
+    shcluster_apps_absolute_source_dir: >-
+      {{
+        shcluster_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + shcluster_apps_sourcedir)
+      }}
 
 - name: Cleanup manager before staging apps
   become: false
@@ -34,13 +50,14 @@
     state: directory
     mode: '0700'
   changed_when: false
+  check_mode: false
 
 - name: Stage manager with shcluster apps from shcluster directory
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ shcluster_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + shcluster_apps_sourcedir) }}/"
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ shcluster_apps_absolute_source_dir }}/"
     "{{ shcluster_staging_dir }}/apps/"
   delegate_to: localhost
   when:
@@ -53,9 +70,9 @@
 - name: Stage manager with shcluster selected apps
   become: false
   connection: local
-  ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ selected_shcluster_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + selected_shcluster_apps_sourcedir) }}/{{ item.source_app }}/"
+  ansible.builtin.command: >-
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ selected_apps_source_dir | default(absolute_file_store_path + '/etc/' + selected_shcluster_apps_sourcedir) }}/{{ item.source_app }}/"
     "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:
@@ -71,8 +88,8 @@
 - name: Stage manager with versioned apps destined for search head cluster
   become: false
   connection: local
-  ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
+  ansible.builtin.command: >-
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
     "{{ (item.source_path | default(versioned_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
     "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
@@ -91,9 +108,9 @@
 - name: Stage manager with selected apps destined for search head cluster
   become: false
   connection: local
-  ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ (item.source_path | default(selected_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
+  ansible.builtin.command: >-
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ (item.source_path | default(selected_apps_source_dir)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
     "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:

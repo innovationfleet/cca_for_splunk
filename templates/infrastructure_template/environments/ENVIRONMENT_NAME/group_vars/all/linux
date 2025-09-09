@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_linux_file_version: '2025.3.1'
+cca_infrastructure_linux_file_version: '2025.3.1.2'
 
 external_bootstrap_pre_roles:
 external_bootstrap_roles:
@@ -20,6 +20,7 @@ cca_baseline_software:
   - '{{"openssh-client" if package_manager == "apt" else None }}'
   - '{{"dnsutils" if package_manager == "apt" else "bind-utils" }}'
   - '{{"acl" if package_manager == "apt" else None }}'
+  - 'jq'
 control:
   linux_configuration:
     splunk_user: true

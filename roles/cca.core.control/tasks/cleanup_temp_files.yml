@@ -7,12 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2025.3.1.1
 
 
 - name: Clean up temporary files
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}"
     state: absent
   changed_when: false
 
@@ -22,7 +22,7 @@
 
 - name: Find and delete old temporary files owned by current user
   ansible.builtin.shell: |
-    find {{ cca_local_tmp_dir | default('/tmp') | quote }} \
+    find {{ cca_local_tmp_dir | default('/tmp/cca_tmp') | quote }} \
          -xdev -type f -user {{ current_user | quote }} \
          -mmin +{{ cca_cleanup_tmp_files_age | default('240') }} \
          -delete 2> /dev/null || true
