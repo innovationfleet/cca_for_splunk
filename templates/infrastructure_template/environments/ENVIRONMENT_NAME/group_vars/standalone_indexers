@@ -1,6 +1,18 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
 cca_infrastructure_standalone_indexers_file_version: '2023.1.1'
+# List of additional local users in Splunk passwd file.
+#cca_splunk_local_users_group_settings:
+#  - name: 'service_user'
+#    role: 'admin'
+#    passwd_hash: '<bcrypt_passwd_hash>'
+#    description: 'Local rest user needed for remote monitoring'
+#    email: 'admin@server.local'
+#    id: '<user_id>'
+#    state: 'present'
+#
+# Use state: 'absent' to remove a user from Splunk.
+
 
 # This group_vars file holds a skeleton to custom Splunk configuration
 # CCA already have the essential configuration covered in

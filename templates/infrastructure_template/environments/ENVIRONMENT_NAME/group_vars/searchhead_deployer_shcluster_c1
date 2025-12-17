@@ -1,6 +1,18 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
 cca_infrastructure_searchhead_deployer_shcluster_c1_file_version: '2025.3.1'
+# List of additional local users in Splunk passwd file.
+#cca_splunk_local_users_group_settings:
+#  - name: 'service_user'
+#    role: 'admin'
+#    passwd_hash: '<bcrypt_passwd_hash>'
+#    description: 'Local rest user needed for remote monitoring'
+#    email: 'admin@server.local'
+#    id: '<user_id>'
+#    state: 'present'
+#
+# Use state: 'absent' to remove a user from Splunk.
+
 
 splunk_conf_group_settings:
 

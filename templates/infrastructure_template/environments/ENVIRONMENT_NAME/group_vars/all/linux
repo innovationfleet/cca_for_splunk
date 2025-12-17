@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_linux_file_version: '2025.3.1'
+cca_infrastructure_linux_file_version: '2025.3.1.2'
 
 external_bootstrap_pre_roles:
 external_bootstrap_roles:
@@ -20,6 +20,7 @@ cca_baseline_software:
   - '{{"openssh-client" if package_manager == "apt" else None }}'
   - '{{"dnsutils" if package_manager == "apt" else "bind-utils" }}'
   - '{{"acl" if package_manager == "apt" else None }}'
+  - 'jq'
 control:
   linux_configuration:
     splunk_user: true
@@ -37,6 +38,17 @@ control:
     user_profile: true
     configure_ntp: false
     configure_backup: false
+
+# Extra systemd parameters for Splunk service, enable at your discretion after talking to Splunk support.
+#cca_extra_systemd_params:
+#  - option: 'LimitNPROC'
+#    value: 'infinity'
+#  - option: 'LimitDATA'
+#    value: '8589934592'
+#  - option: 'LimitFSIZE'
+#    value: 'infinity'
+#  - option: 'TasksMax'
+#    value: 'infinity'
 
 # Set the desired SELinux state for Splunk operations.
 # Default is 'disabled' for optimal performance, as SELinux
