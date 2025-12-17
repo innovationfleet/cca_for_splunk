@@ -7,11 +7,11 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2025.3.2.1
 
 - name: Delete lock file to manage multi user execution
   ansible.builtin.file:
-    path: "/tmp/.cca_data_onboarding_lock-{{ environment_name }}"
+    path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_data_onboarding_lock-' ~ environment_name] | path_join }}"
     state: 'absent'
   when:
     - target is defined
@@ -22,7 +22,7 @@
 
 - name: Delete lock file to manage multi user execution
   ansible.builtin.file:
-    path: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
+    path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_infrastructure_lock-' ~ environment_name] | path_join }}"
     state: 'absent'
   when:
     - target is defined

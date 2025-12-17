@@ -7,12 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2025.3.2
 
 
-- name: Clean up temporary files
+- name: Clean up temporary files for current playbook run
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}"
     state: absent
   changed_when: false
 
@@ -20,12 +20,12 @@
   ansible.builtin.set_fact:
     current_user: "{{ lookup('env', 'USER') }}"
 
-- name: Find and delete old temporary files owned by current user
+- name: Find orphan temporary files and directories owned by current user and delete them
   ansible.builtin.shell: |
-    find {{ cca_local_tmp_dir | default('/tmp') | quote }} \
-         -xdev -type f -user {{ current_user | quote }} \
-         -mmin +{{ cca_cleanup_tmp_files_age | default('240') }} \
-         -delete 2> /dev/null || true
+    find {{ cca_local_tmp_dir | default('/tmp/cca_tmp') | quote }} \
+         -maxdepth 1 -type d -user {{ current_user | quote }} \
+         -mtime +4 \
+         -exec rm -rf {} \; 2> /dev/null || true
   args:
     executable: /bin/bash
   register: cleanup_run
