@@ -47,6 +47,6 @@
     daemon_reload: true
     name: polkit
   when: polkit_template_status.changed
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
   tags:
     - skip_ansible_lint

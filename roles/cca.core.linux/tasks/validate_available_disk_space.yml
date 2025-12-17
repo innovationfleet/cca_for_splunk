@@ -1,0 +1,48 @@
+---
+# tasks file for cca.core.linux
+#
+# Description:
+#
+#   This task will validate if there is enough disk space to perform the os update.
+#   If not, the task will fail and the os update will not be performed.
+#
+# Prerequisite:
+#   The server must have a filesystem mounted on the splunk path.
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.3.2
+
+- name: Extract root (/) mount information from ansible_facts
+  ansible.builtin.set_fact:
+    root_mount: >-
+      {{ ansible_facts['mounts']
+         | selectattr('mount', 'equalto', '/')
+         | first
+      }}
+
+- name: Ensure root mount fact was found
+  ansible.builtin.assert:
+    that:
+      - root_mount is defined
+    fail_msg: "Could not find root filesystem (/) in ansible_facts['mounts']."
+    success_msg: "Root filesystem detected: {{ root_mount.device }} mounted on {{ root_mount.mount }}"
+
+- name: Calculate free space on / in GB
+  ansible.builtin.set_fact:
+    root_free_gb: "{{ (root_mount.size_available | float / 1024 / 1024 / 1024) | round(2) | float }}"
+
+- name: Show current free space on /
+  ansible.builtin.debug:
+    msg: "Free space on / is {{ root_free_gb }} GB (minimum required: {{ min_root_free_gb | default(5) }} GB)"
+
+- name: Validate minimum free space on / for OS upgrade
+  ansible.builtin.assert:
+    that:
+      - root_free_gb | float >= (min_root_free_gb | default(5) | float)
+    fail_msg: >-
+      Not enough free space on root (/) filesystem. Required: {{ min_root_free_gb | default(5) }} GB,
+      available: {{ root_free_gb }} GB. OS upgrade should NOT be attempted.
+    success_msg: >-
+      Sufficient free space on root (/) filesystem. Available: {{ root_free_gb }} GB
+      (minimum required: {{ min_root_free_gb | default(5) }} GB).

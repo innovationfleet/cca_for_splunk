@@ -14,7 +14,7 @@
     name: "cronie"
     state: present
   when: not use_shell_fallback | default(false)
-  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) and (hide_password | default(true)) }}"
 
 - name: Ensure cron functionality is kept while systemd.timer is present (using shell)
   ansible.builtin.shell: |
@@ -24,7 +24,7 @@
   args:
     executable: /bin/bash
   when: use_shell_fallback | default(false)
-  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) and (hide_password | default(true)) }}"
   tags:
     - skip_ansible_lint
 
@@ -34,7 +34,7 @@
     enabled: true
     state: started
   when: not use_shell_fallback | default(false)
-  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) and (hide_password | default(true)) }}"
 
 - name: Enable and start cron service (using shell)
   ansible.builtin.shell: |
@@ -43,7 +43,7 @@
   args:
     executable: /bin/bash
   when: use_shell_fallback | default(false)
-  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) and (hide_password | default(true)) }}"
   tags:
     - skip_ansible_lint
 
@@ -55,7 +55,7 @@
     loop_var: ensure_baseline_software
   loop: '{{ cca_baseline_software | default([]) if cca_baseline_software | default([]) is iterable else [] }}'
   when: not use_shell_fallback | default(false)
-  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) and (hide_password | default(true)) }}"
 
 - name: Install wanted baseline software on server (using shell)
   ansible.builtin.shell: |
@@ -69,6 +69,6 @@
   args:
     executable: /bin/bash
   when: use_shell_fallback | default(false)
-  no_log: "{{ (ansible_verbosity < 3) and (hide_password | default(true)) }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) and (hide_password | default(true)) }}"
   tags:
     - skip_ansible_lint

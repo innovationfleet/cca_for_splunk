@@ -7,16 +7,19 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.3.2
 
 - name: Stop cgroup_daemon service and disable it
   ansible.builtin.systemd:
     name: cca_cgroup_version_daemon.service
     state: stopped
     enabled: false
+  register: stop_cgroup_v2_daemon_result
   when:
     - ansible_facts.services['cca_cgroup_version_daemon.service'] is defined
-  no_log: "{{ ansible_verbosity < 3 }}"
+  failed_when: >
+    stop_cgroup_v2_daemon_result.failed and
+    'Could not find the requested service' not in (stop_cgroup_v2_daemon_result.msg | default(''))
 
 - name: Remove cgroup-daemon service from /etc/systemd/system/cca_cgroup_version_daemon.service
   ansible.builtin.file:

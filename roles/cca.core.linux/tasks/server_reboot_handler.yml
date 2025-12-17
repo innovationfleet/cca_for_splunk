@@ -7,12 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.3.2
 
 
 - name: Gather facts about configured services
   ansible.builtin.service_facts:
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Include tasks to handle cgroup versions, secondary reboot if needed
   ansible.builtin.include_tasks: systemd/manage_cgroup_version.yml
@@ -31,7 +31,7 @@
         enabled: false
       when:
         - ansible_facts.services['Splunkd.service'] is defined
-      no_log: "{{ ansible_verbosity < 3 }}"
+      no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
     - name: Stop cgroup_daemon service and disable it
       ansible.builtin.systemd:
@@ -40,7 +40,11 @@
         enabled: false
       when:
         - ansible_facts.services['cca_cgroup_version_daemon.service'] is defined
-      no_log: "{{ ansible_verbosity < 3 }}"
+      register: stop_cgroup_daemon_result
+      failed_when: >
+        stop_cgroup_daemon_result.failed and
+        'Could not find the requested service' not in (stop_cgroup_daemon_result.msg | default(''))
+      #no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
     - name: Reboot the server based on notification state and wait for it to come back
       ansible.builtin.reboot:
@@ -64,6 +68,15 @@
         - server_reboot_status.rebooted
       check_mode: false
 
+    - name: Delete deployment server reload statefile based on reboot status
+      ansible.builtin.file:
+        path: "{{ deployment_server_reload_pending | default('/opt/splunk/var/run/splunk_deployment_server_reload.pending') }}"
+        state: 'absent'
+      when:
+        - server_reboot_status.rebooted
+        - inventory_hostname in ( groups.deployment_servers | default([]) )
+      check_mode: false
+
     - name: Set fact that cgroups has been configured
       ansible.builtin.set_fact:
         cgroups_configured: true
@@ -71,7 +84,7 @@
 
 - name: Gather facts about configured services
   ansible.builtin.service_facts:
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Restart Splunkd service if it was started and require restart
   ansible.builtin.systemd:
@@ -91,5 +104,14 @@
   loop:
     - "{{ splunk_service_restart_pending | default('/tmp/splunk_service_restart.pending') }}"
     - "{{ splunk_service_status | default('/var/tmp/splunkd_service_started') }}"
+  check_mode: false
+  changed_when: false
+
+- name: Cleanup deployment server reload state file
+  ansible.builtin.file:
+    path: "{{ deployment_server_reload_pending | default('/opt/splunk/var/run/splunk_deployment_server_reload.pending') }}"
+    state: absent
+  when:
+    - inventory_hostname in ( groups.deployment_servers | default([]) )
   check_mode: false
   changed_when: false

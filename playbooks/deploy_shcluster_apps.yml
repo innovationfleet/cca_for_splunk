@@ -57,12 +57,27 @@
       vars:
         deploy_scope: "shcluster_apps"
 
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
   post_tasks:
     - name: Include apply shcluster bundle role
       ansible.builtin.include_role:
         name: cca.core.splunk
         tasks_from:
           apply_shcluster_bundle.yml
+
     - name: Include post deployment tasks
       ansible.builtin.include_role:
         name: cca.core.control
