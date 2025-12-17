@@ -7,11 +7,30 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.3
 
 - name: Set staging directory
   ansible.builtin.set_fact:
-    manager_apps_staging_dir: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ cluster_label }}'
+    manager_apps_staging_dir: >-
+      {{
+        (cca_local_tmp_dir | default("/tmp/cca_tmp")) + '/' + cca_runid + '/' +
+        environment_name + '/' + inventory_hostname + '/' + cluster_label
+      }}
+    selected_apps_source_dir: >-
+      {{
+        selected_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + selected_apps_sourcedir)
+      }}
+    selected_manager_apps_source_dir: >-
+      {{
+        selected_manager_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + selected_manager_apps_sourcedir)
+      }}
+    manager_apps_absolute_source_dir: >-
+      {{
+        manager_apps_absolute_sourcedir
+        | default(absolute_file_store_path + '/etc/' + manager_apps_sourcedir)
+      }}
 
 - name: Cleanup manager before staging apps
   become: false
@@ -40,8 +59,8 @@
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ manager_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + manager_apps_sourcedir) }}/"
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ manager_apps_absolute_source_dir }}/"
     "{{ manager_apps_staging_dir }}/"
   delegate_to: localhost
   when:
@@ -55,7 +74,7 @@
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
     "{{ selected_manager_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + selected_manager_apps_sourcedir) }}/{{ item.source_app }}/"
     "{{ manager_apps_staging_dir }}/{{ item.name }}/"
   delegate_to: localhost
@@ -63,6 +82,8 @@
     - selected_manager_apps_sourcedir is defined
     - item.state is defined
     - item.state != 'absent'
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
   loop: '{{ selected_manager_apps | default([]) if selected_manager_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
@@ -73,7 +94,7 @@
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
     "{{ (item.source_path | default(versioned_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
     "{{ manager_apps_staging_dir }}/{{ item.name }}/"
   delegate_to: localhost
@@ -84,6 +105,8 @@
       item.dest_dir == 'master-apps'
     - item.state is defined
     - item.state != 'absent'
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
@@ -94,17 +117,18 @@
   become: false
   connection: local
   ansible.builtin.command: >
-    rsync --delay-updates -F --compress --archive
-    "{{ (item.source_path | default(selected_apps_source_path)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
+    rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
+    "{{ (item.source_path | default(selected_apps_source_dir)) ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/"
     "{{ manager_apps_staging_dir }}/{{ item.name }}/"
   delegate_to: localhost
   when:
-    - selected_apps_source_path is defined
     - item.dest_dir is defined
     - item.dest_dir == 'manager-apps' or
       item.dest_dir == 'master-apps'
     - item.state is defined
     - item.state != 'absent'
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false

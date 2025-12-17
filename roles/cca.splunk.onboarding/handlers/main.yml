@@ -21,11 +21,10 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.2.3
+# Release: 2025.3.3
 
 
 - name: Splunkd restart handler on Splunk Servers
-  run_once: true
   ansible.builtin.file:
     path: "{{ splunkd_restart_pending }}"
     state: touch

@@ -7,13 +7,13 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
+# Release: 2025.3.2.1
 
 
-- name: Deploy apps from the staging directory to the deployment server apps directory
+- name: Deploy merged serverclass apps from the staging directory to the deployment server apps directory
   become: false
   ansible.posix.synchronize:
-    src: '{{ (cca_local_tmp_dir | default("/tmp")) }}/{{ cca_runid }}/{{ environment_name }}/localhost/'
+    src: '{{ (cca_local_tmp_dir | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}/'
     dest: '{{ splunk_path }}/etc/apps/'
     copy_links: true
     recursive: true
@@ -25,11 +25,13 @@
     archive: false
     use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
     rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
-    rsync_opts: "{{ deployment_servers_apps_rsync_opts }}"
-  register: deploy_serverclass_apps_status
+    rsync_opts: >-
+      {{ ['--include=cca_merged_serverclass_*', '--include=/cca_merged_serverclass_*/**']
+         + (deployment_servers_apps_rsync_opts | default([])) }}
+  register: deploy_merged_serverclass_apps_status
   changed_when: >
-    deploy_serverclass_apps_status.stdout_lines | length > 0 and
+    deploy_merged_serverclass_apps_status.stdout_lines | length > 0 and
     (
-      deploy_serverclass_apps_status.stdout_lines | select('match', '^((?!cca_merged_serverclass_).)*$') | length > 0
+      deploy_merged_serverclass_apps_status.stdout_lines | select('match', '^((?!cca_merged_serverclass_).)*$') | length > 0
     )
   notify: notify standalone splunkd restart
