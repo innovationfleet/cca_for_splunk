@@ -95,6 +95,35 @@
       (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=') or
       (splunk_enterprise_version is version('9.4.0', '>=') and cca_splunk_enterprise_upgrade | default(false))
 
+- name: Check certificate purposes (SSL client capability)
+  ansible.builtin.command: >
+    openssl x509 -noout -in {{ openssl_server_cert_path }} -purpose
+  register: openssl_purpose_result
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  when:
+    - strict_x509_cert_validation_test | default(false) or
+      (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=') or
+      (splunk_enterprise_version is version('9.4.0', '>=') and cca_splunk_enterprise_upgrade | default(false))
+
+- name: Assert certificate has SSL client capability
+  ansible.builtin.assert:
+    that:
+      - openssl_purpose_result.stdout is defined
+      - "'SSL client : Yes' in openssl_purpose_result.stdout"
+    fail_msg: >
+      Certificate validation failed: The server certificate does not have 'SSL client : Yes' capability.
+      Certificate purposes found:
+      {{ openssl_purpose_result.stdout | default('N/A') }}
+
+      To fix this, regenerate the certificate with the clientAuth extended key usage.
+    success_msg: "Certificate has required SSL client capability"
+  when:
+    - strict_x509_cert_validation_test | default(false) or
+      (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('9.4.0', '>=') or
+      (splunk_enterprise_version is version('9.4.0', '>=') and cca_splunk_enterprise_upgrade | default(false))
+
 - name: Set fact for certificate validation status
   ansible.builtin.set_fact:
     splunk_cert_strict_x509_validation: >-

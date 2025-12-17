@@ -17,4 +17,4 @@
     name: '{{ systemd_enterprise_name }}'
     state: started
     enabled: true
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"

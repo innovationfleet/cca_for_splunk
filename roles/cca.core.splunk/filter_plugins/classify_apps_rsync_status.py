@@ -9,6 +9,14 @@ def classify_apps(rsync_output):
     if not isinstance(rsync_output, list):
         raise AnsibleFilterError("The input should be a list of strings representing rsync output lines.")
 
+    # Handle empty list case
+    if not rsync_output:
+        return json.dumps({
+            'Removed': [],
+            'Added': [],
+            'Modified': []
+        }, indent=2)
+
     apps = {
         'Removed': set(),
         'Added': set(),
@@ -22,6 +30,10 @@ def classify_apps(rsync_output):
     existing_apps = set()
 
     for line in rsync_output:
+        # Skip empty lines or None values
+        if not line or not isinstance(line, str):
+            continue
+
         add_match = add_pattern.search(line)
         delete_match = delete_pattern.search(line)
         modify_match = modify_pattern.search(line)

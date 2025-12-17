@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2025.3.2
 
 
 - name: Set fact for ds inventory name
@@ -35,7 +35,7 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}"
     state: directory
     mode: '0755'
   changed_when: false
@@ -54,7 +54,7 @@
   become: false
   ansible.builtin.copy:
     src: "{{ role_path }}/files/bin/compare_serverclass_data.py"
-    dest: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/compare_serverclass_data.py"
+    dest: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/compare_serverclass_data.py"
     mode: '0755'
   delegate_to: localhost
   changed_when: false
@@ -64,7 +64,7 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}"
     state: 'directory'
     mode: '0755'
     recurse: true
@@ -89,9 +89,9 @@
   ansible.builtin.command: >
     {{ ansible_python_interpreter }} {{ role_path }}/files/bin/sc_parser.py
     {{ local_directory }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost', 'serverclass_data_local.json'] | path_join }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost', 'duplicates_data_local.json'] | path_join }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', inventory_hostname, 'serverclass_data_local.json'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', inventory_hostname, 'duplicates_data_local.json'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', inventory_hostname] | path_join }}
   delegate_to: localhost
   register: local_result
   changed_when: false
@@ -102,7 +102,7 @@
   become: false
   delegate_to: localhost
   ansible.builtin.slurp:
-    src: "{{ (cca_local_tmp_dir | default('/tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/duplicates_data_local.json"
+    src: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}/duplicates_data_local.json"
   register: duplicates_data
 
 - name: Check if duplicates data is present
@@ -116,10 +116,76 @@
     duplicates_present.duplicate_keys | length > 0 or
     duplicates_present.duplicate_sections | length > 0
 
+- name: Set deployment apps source directory for validation
+  ansible.builtin.set_fact:
+    deployment_apps_source_dir_for_validation: >-
+      {{ deployment_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir + '/' + environment_name) }}
+  when:
+    - ansible_check_mode | default(false) or cca_validate_serverclass_apps | default(false)
+
+- name: Read local serverclass data for app validation
+  connection: local
+  become: false
+  delegate_to: localhost
+  ansible.builtin.slurp:
+    src: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}/serverclass_data_local.json"
+  register: local_serverclass_data
+  when:
+    - ansible_check_mode | default(false) or cca_validate_serverclass_apps | default(false)
+  no_log: true
+
+- name: Validate serverclass app references against deployment-apps source directory
+  connection: local
+  become: false
+  delegate_to: localhost
+  ansible.builtin.set_fact:
+    serverclass_validation_result: >-
+      {{ (local_serverclass_data.content | b64decode) |
+         cca_validate_serverclass_apps(deployment_apps_source_dir_for_validation | default('')) }}
+  when:
+    - ansible_check_mode | default(false) or cca_validate_serverclass_apps | default(false)
+    - local_serverclass_data.content is defined
+  no_log: true
+
+- name: Display serverclass app validation summary
+  ansible.builtin.debug:
+    msg: |
+      ServerClass App Validation: {{ 'PASSED' if serverclass_validation_result.valid | default(true) else 'FAILED' }}
+      Referenced: {{ serverclass_validation_result.total_referenced | default(0) }} | Missing: {{ serverclass_validation_result.total_missing | default(0) }}
+  when:
+    - serverclass_validation_result is defined
+    - ansible_check_mode | default(false) or cca_validate_serverclass_apps | default(false)
+
+- name: Fail if serverclass references missing apps (check mode only)
+  ansible.builtin.fail:
+    msg: |
+      ServerClass validation FAILED: {{ serverclass_validation_result.total_missing | default(0) }} missing apps detected
+      Missing apps: {{ serverclass_validation_result.missing_apps | default([]) | join(', ') }}
+      Source: {{ deployment_apps_source_dir_for_validation }}
+  when:
+    - ansible_check_mode | default(false)
+    - serverclass_validation_result is defined
+    - not serverclass_validation_result.valid | default(true)
+
+- name: Warn if serverclass references missing apps (live mode with validation flag)
+  ansible.builtin.debug:
+    msg: |
+      WARNING: ServerClass validation detected {{ serverclass_validation_result.total_missing | default(0) }} missing apps in LIVE MODE
+      Missing apps: {{ serverclass_validation_result.missing_apps | default([]) | join(', ') }}
+  when:
+    - not ansible_check_mode | default(false)
+    - cca_validate_serverclass_apps | default(false)
+    - serverclass_validation_result is defined
+    - not serverclass_validation_result.valid | default(true)
+
 - name: Set remote and local base path
   ansible.builtin.set_fact:
-    remote_base_path: "{{ [cca_remote_tmp_dir | default('/tmp'), cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}"
-    local_base_path: "{{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}"
+    remote_base_path: >-
+      {{ [cca_remote_tmp_dir | default('/tmp'),
+         cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}
+    local_base_path: >-
+      {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'),
+         cca_runid, environment_name, 'localhost',hostvars['localhost']['ds_inventory_hostname']] | path_join }}
 
 - name: Set intermediate variable
   ansible.builtin.set_fact:
@@ -127,7 +193,7 @@
     remote_duplicates_json: "{{ [remote_base_path, 'duplicates_data_remote.json'] | path_join }}"
     local_serverclass_json: "{{ [local_base_path, 'serverclass_data_remote.json'] | path_join }}"
     local_duplicates_json: "{{ [local_base_path, 'duplicates_data_remote.json'] | path_join }}"
-    compare_script_path: "{{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'compare_serverclass_data.py'] | path_join }}"
+    compare_script_path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'compare_serverclass_data.py'] | path_join }}"
 
 - name: Run sc_parser.py on remote host
   ansible.builtin.command: >
@@ -162,7 +228,7 @@
   become: false
   ansible.builtin.command: >
     {{ ansible_python_interpreter }} {{ compare_script_path }}
-    {{ [cca_local_tmp_dir | default('/tmp'), cca_runid, environment_name, 'localhost', 'serverclass_data_local.json'] | path_join }}
+    {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost', inventory_hostname, 'serverclass_data_local.json'] | path_join }}
     {{ local_serverclass_json }}
   delegate_to: localhost
   changed_when: false

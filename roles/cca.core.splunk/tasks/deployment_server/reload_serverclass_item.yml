@@ -1,0 +1,45 @@
+---
+# tasks file for cca.core.splunk
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2025.3.2
+
+- name: Reload serverclass item
+  when:
+    - not stat_splunkd_restart_pending.stat.exists | default(false)
+
+  block:
+    - name: Include tasks to login to splunk cli
+      ansible.builtin.include_tasks:
+        file: splunk_login.yml
+
+    - name: Reload deploy-server serverclass to notify clients of new apps
+      ansible.builtin.command:
+        cmd: >
+          timeout {{ reload_deploy_server_timeout | default('900') | int + 60 }}
+          {{ splunk_path }}/bin/splunk reload deploy-server
+          -timeout {{ reload_deploy_server_timeout | default(900) }}
+          {% if item is defined and item %} -class {{ item }}
+          {% endif %}
+      tags:
+        - skip_ansible_lint
+
+  rescue:
+    - name: Notify splunkd restart on reload failure
+      ansible.builtin.debug:
+        msg: "Reload failed, notifying splunkd restart handler"
+      notify: notify splunkd restart
+      changed_when: true
+
+    - name: Flush handlers to create restart pending statefile
+      ansible.builtin.meta: flush_handlers
+
+    - name: Check if a splunkd restart is pending
+      ansible.builtin.stat:
+        path: "{{ splunkd_restart_pending }}"
+      register: stat_splunkd_restart_pending

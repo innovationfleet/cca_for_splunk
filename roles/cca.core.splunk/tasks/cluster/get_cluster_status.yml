@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2025.3.2
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_role:
@@ -25,12 +25,16 @@
   retries: "{{ cca_splunkd_cli_peer_version_retries | default(10) | int }}"
   delay: 10
   until: cluster_peer_splunk_version.rc == 0
+  when:
+    - not skip_splunk_status_check | default(false)
   changed_when: false
   check_mode: false
 
 - name: Store splunk current_splunk_enterprise_version
   ansible.builtin.set_fact:
     current_splunk_enterprise_version: "{{ cluster_peer_splunk_version.stdout_lines[0] | trim }}"
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Create directory for splunk version file if it doesn't exist
   ansible.builtin.file:
@@ -48,6 +52,8 @@
     group: "{{ splunk_user_group_name }}"
     mode: '0644'
   changed_when: false
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Collect full Index Cluster status
   ansible.builtin.command:
@@ -58,6 +64,8 @@
   until: verbose_cluster_status.rc ==  0
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
   tags:
     - skip_ansible_lint
 
@@ -65,19 +73,22 @@
   ansible.builtin.set_fact:
     cluster_preflight_status_flag: true
   when:
-    - verbose_cluster_status.stdout | regex_search(('Pre-flight.*YES'))
+    - verbose_cluster_status.stdout | default('') | regex_search(('Pre-flight.*YES'))
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for searchable rolling restart
   ansible.builtin.set_fact:
     searchable_rolling_restart_flag: true
   when:
-    - verbose_cluster_status.stdout | regex_search(('Ready for searchable rolling restart*.YES'))
+    - verbose_cluster_status.stdout | default('') | regex_search(('Ready for searchable rolling restart*.YES'))
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for rolling upgrade status
   ansible.builtin.set_fact:
     index_cluster_rolling_upgrade_started: true
   when:
-    - verbose_cluster_status.stdout | regex_search('(Searchable rolling upgrade is in progress)')
+    - verbose_cluster_status.stdout | default('') | regex_search('(Searchable rolling upgrade is in progress)')
+    - not skip_splunk_status_check | default(false)
 
 - name: Include task to get certificate status
   ansible.builtin.include_role:
@@ -85,3 +96,4 @@
     tasks_from: get_certificate_status.yml
   when:
     - deploy_scope is not defined
+    - not skip_splunk_status_check | default(false)

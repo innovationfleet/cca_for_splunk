@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.2
 
 - name: Classify apps based on rsync output
   ansible.builtin.set_fact:
@@ -20,7 +20,7 @@
   ansible.builtin.set_fact:
     serverclass_data:
       "{{ lookup('file',
-      (cca_local_tmp_dir | default('/tmp')) ~ '/' ~ cca_runid ~ '/'  ~ environment_name ~ '/' ~ 'localhost' ~ '/serverclass_data_local.json') }}"
+      (cca_local_tmp_dir | default('/tmp/cca_tmp')) ~ '/' ~ cca_runid ~ '/'  ~ environment_name ~ '/'  ~ 'localhost'~ '/' ~ inventory_hostname ~ '/serverclass_data_local.json') }}"
   no_log: "{{ hide_password }}"
 
 - name: Perform lookup for classified apps
@@ -42,7 +42,7 @@
   ansible.builtin.set_fact:
     serverclass: "{{ clean_serverclass | union(serverclass_compare_result.Modified | default([])) }}"
 
-- name: Determine if deployment server reload is needed
+- name: Determine if deployment server restart is needed
   ansible.builtin.set_fact:
     restart_needed: "{{ (serverclass_compare_result.Deleted | length > 0) or
                       (serverclass_compare_result.Added | length > 0) or

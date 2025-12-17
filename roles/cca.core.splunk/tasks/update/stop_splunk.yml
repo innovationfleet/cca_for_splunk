@@ -17,5 +17,5 @@
     name: '{{ systemd_enterprise_name }}'
     state: stopped
     enabled: false
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
   failed_when: false

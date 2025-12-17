@@ -19,7 +19,7 @@
     state: started
     enabled: true
   failed_when: false
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Disable maintenance mode for cluster peers in Cluster C1
   ansible.builtin.include_tasks: update/disable_maintenance_mode.yml
