@@ -31,6 +31,79 @@
 
     Release notes:
 
+      2025.3.3
+              - Added shcluster label to search head members, update you local searchhead_members_shcluster_c*
+                files from templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/ and shcluster_label
+                to your [searchhead_members_shcluster_c*:vars] section in your hosts file.
+              - Added target attribute for all deployment groups and app lists.
+              - Enhanced the default rsync logic to avoid deleting files on Deployment Servers if rsync opts are
+                misconfigured.
+
+
+              Bug fixes:
+                * Corrected deploy_shcluster_apps.yml playbook so it includes check of pending actions to
+                  restart the deployer server if needed.
+                * Corrected deploy_manager_apps.yml playbook so it includes check of pending actions to
+                  restart the manager server if needed.
+                * Added directory creation of tmp directory path.
+                * Removed incorrect run_once in Splunkd restart handler.
+                * Corrected path logic for merged serverclass app deployment to use the correct staging directory.
+                * Corrected cca_local_tmp_dir path joining for git tag lookup files using path_join filter.
+
+
+    2025.3.2
+              - Bumped Splunk Enterprise version to 9.4.7, Splunk 9.4.x track is recommended for production usage.
+              - Added improved error handling for dnf update status checks to ensure accurate detection of kernel updates.
+              - Enhanced conditions for setting facts related to kernel updates, ensuring more robust logic in the playbook.
+              - Improved handling of serverclass reloads when executing in large environments.
+              - Added option to validate consistency of serverclass configuration, available in check mode
+                and can output debug warning when 'cca_validate_serverclass_apps' is set to true.
+              - Introduced additional SSL cert validation that ensures capability of 'SSL Client: Yes' is available
+                in the certificates used in Splunk.
+              - Added option to configure extra parameters for systemd, copy settings from the infrastructure
+                'group_vars/all/linux' template file to your infrastructure directory. Deploy them with the rolling update
+                playbook, rolling_update_linux_servers.yml.
+
+              Bug fixes:
+               * Corrected when condition for clean up of staged files for deployment apps
+               * Corrected filter logic for temporary directory and file cleanups, no longer sensitive for race conditions.
+               * Corrected warning about non existing directory, a directory was incorrectly created as file in
+                 caa.splunk.enterprise-install.
+               * Corrected add local_users logic as it deleted users that should have been added.
+
+              Role: cca.core.linux
+                  - Corrected dnf kernel upgrade detection issue.
+                  - Added validation that there is disk space available prior to OS upgrade.
+                  - Corrected systemd service enablement for Splunkd service after upgrade.
+                  - Improved Error handling of rolling upgrades and cgroup service handling during reboot.
+
+
+    2025.3.1.2
+              - Enhanced deployment server reload state file cleanup during Splunk restarts and server reboots.
+                Ensures both restart and reload state files are properly cleaned up on deployment servers.
+              - Updated deprecated ansible environment variable ANSIBLE_STDOUT_CALLBACK=yaml. Use these variables
+                instead, set them in your ~/.profile_local file on your manager server.
+                    export ANSIBLE_STDOUT_CALLBACK=ansible.builtin.default
+                    export ANSIBLE_CALLBACK_RESULT_FORMAT=yaml
+                    export ANSIBLE_CALLBACK_FORMAT_PRETTY=true
+
+              Bug fixes:
+                * Corrected an issue with onboarding groups that use the dest_dir option. Incorrect variable used
+                  in directory references.
+                * Include jq in the list of cca_baseline_software, defined in group_vars/all/linux. Copy settings from
+                  the infrastructure group_vars/all/linux template file.
+                * Improved robustness of rsync status classification filters to handle empty lists and invalid input.
+                * Fixed certificate validation error handling with proper default values for undefined variables.
+                * Corrected onboarding task variable references and improved ansible-lint compliance across multiple files.
+
+
+    2025.3.1.1
+              - Added configurable temporary directory option for rsync operations during app staging.
+                Set cca_local_tmp_dir to override default /tmp/cca_tmp directory location, update
+                your local settings from the updated file in templates directory
+                onboarding_templates/environment/ENVIRONMENT_NAME/group_vars/all/onboarding
+
+
     2025.3.1
               - Bumped Splunk Enterprise version to 9.4.4, Splunk 9.4.x track is recommended for production usage.
               - Improved index cluster preflight status when running deploy_manager_apps.yml playbook, fail fast
