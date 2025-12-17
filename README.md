@@ -1,6 +1,7 @@
 ![alt text](/media/CCAforSplunk_orange.png)
 <br>
 <img align="right" src="https://badgen.net/badge/Latest%20Premium%20Version/2025.3.3/green?icon=github"><img align="right" src="https://badgen.net/badge/Latest%20Release/2025.3.3/green?icon=github"><img align="right" src="https://badgen.net/badge/License/MIT/blue">
+
 <br>
 ### A full lifecycle management interface for Splunk
 
