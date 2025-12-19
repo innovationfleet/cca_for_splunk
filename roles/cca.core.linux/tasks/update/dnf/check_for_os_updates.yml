@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.2
 
 - name: Check release update for specific Amazon ansible_distributions
   ansible.builtin.shell:
@@ -21,6 +21,8 @@
     - ansible_architecture == "x86_64"
   check_mode: false
   changed_when: false
+  tags:
+    - skip_ansible_lint
 
 - name: Set fact for Amazon releasever
   ansible.builtin.set_fact:
@@ -50,17 +52,23 @@
     - skip_ansible_lint
 
 - name: "DRY RUN: Get dnf update status with releasever (using shell fallback)"
+  vars:
+    include_str: "{{ (cca_control.package.updates.include_packages | default([])) | map('quote') | join(' ') }}"
+    exclude_str: "{{ (cca_control.package.updates.exclude_packages | default([])) | join(',') }}"
   ansible.builtin.shell: |
-    dnf update --assumeno --releasever="{{ cca_dnf_releasever }}" \
-    {{ cca_control.package.updates.include_packages | default('') }} \
-    --exclude="{{ cca_control.package.updates.exclude_packages | default('') }}"
-  register: dnf_update_status_releasever
+    dnf update --assumeno --releasever="{{ cca_dnf_releasever }}" {{ include_str }} --exclude="{{ exclude_str }}"
+  register: dnf_update_status_releasever_shell
   when:
     - cca_dnf_releasever is defined
     - use_shell_fallback | default(false)
-  check_mode: true
+  failed_when: >
+    not (
+      dnf_update_status_releasever_shell.rc == 0 or
+      (dnf_update_status_releasever_shell.rc == 1 and 'Operation aborted.' in (dnf_update_status_releasever_shell.stderr | default('')))
+    )
+  check_mode: false
   changed_when: false
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: "DRY RUN: Get dnf update status"
   ansible.builtin.dnf:
@@ -76,35 +84,67 @@
     - skip_ansible_lint
 
 - name: "DRY RUN: Get dnf update status (using shell fallback)"
+  vars:
+    include_str: "{{ (cca_control.package.updates.include_packages | default([])) | map('quote') | join(' ') }}"
+    exclude_str: "{{ (cca_control.package.updates.exclude_packages | default([])) | join(',') }}"
   ansible.builtin.shell: |
-    dnf update --assumeno {{ cca_control.package.updates.include_packages | default('') }} \
-    --exclude="{{ cca_control.package.updates.exclude_packages | default('') }}"
-  register: dnf_update_status
+    dnf update --assumeno {{ include_str }} --exclude="{{ exclude_str }}"
+  register: dnf_update_status_shell
   when:
     - cca_dnf_releasever is not defined
     - use_shell_fallback | default(false)
-  check_mode: true
+  failed_when: >
+    not (
+      dnf_update_status_shell.rc == 0 or
+      (dnf_update_status_shell.rc == 1 and 'Operation aborted.' in (dnf_update_status_shell.stderr | default('')))
+    )
+  check_mode: false
   changed_when: false
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Set fact if kernel update is detected (dnf module)
   ansible.builtin.set_fact:
     kernel_update_needed: true
-  with_items:
-    - "{{ dnf_update_status_releasever.results | default('') | list }}"
-    - "{{ dnf_update_status.results | default('') | list }}"
+  when: >-
+    not use_shell_fallback | default(false) and
+    (
+      (
+        dnf_update_status_releasever is defined and
+        not dnf_update_status_releasever.skipped | default(false) and
+        (
+          (dnf_update_status_releasever.results | default([]) | join(' ') | regex_search('[Kk]ernel')) or
+          (dnf_update_status_releasever.msg | default('') == 'Nothing to do' and false)
+        )
+      )
+      or
+      (
+        dnf_update_status is defined and
+        not dnf_update_status.skipped | default(false) and
+        (dnf_update_status.results | default([]) | join(' ') | regex_search('[Kk]ernel'))
+      )
+    )
   check_mode: false
-  when:
-    - item | regex_search('kernel')
-    - not use_shell_fallback | default(false)
 
 - name: Set fact if kernel update is detected (shell fallback)
   ansible.builtin.set_fact:
     kernel_update_needed: true
-  when:
-    - (dnf_update_status_releasever.stdout is defined and (dnf_update_status_releasever.stdout | regex_search('kernel')))
-    - (dnf_update_status.stdout is defined and (dnf_update_status.stdout | regex_search('kernel')))
-    - use_shell_fallback | default(false)
+  when: >-
+    use_shell_fallback | default(false) and
+    (
+      (
+        dnf_update_status_releasever_shell is defined and
+        not dnf_update_status_releasever_shell.skipped | default(false) and
+        dnf_update_status_releasever_shell.stdout is defined and
+        (dnf_update_status_releasever_shell.stdout | regex_search('[Kk]ernel'))
+      )
+      or
+      (
+        dnf_update_status_shell is defined and
+        not dnf_update_status_shell.skipped | default(false) and
+        dnf_update_status_shell.stdout is defined and
+        (dnf_update_status_shell.stdout | regex_search('[Kk]ernel'))
+      )
+    )
   check_mode: false
 
 - name: Get pending actions
@@ -129,18 +169,27 @@
 
 - name: End play for this host due to this reason (shell fallback)
   ansible.builtin.debug:
-    msg: "{{ dnf_update_status.stdout | default('') }}{{ dnf_update_status_releasever.stdout | default('') }}"
+    msg: "{{ (dnf_update_status.stdout | default('')) ~ (dnf_update_status_releasever.stdout | default('')) }}"
   when:
     - use_shell_fallback | default(false)
-    - (
-        ( dnf_update_status.stdout is defined and (dnf_update_status.stdout | regex_search('Nothing to do')) )
-        or
-        ( dnf_update_status_releasever.stdout is defined and (dnf_update_status_releasever.stdout | regex_search('Nothing to do')) )
+    - >
+      (
+        dnf_update_status.stdout is defined and
+        (
+          (dnf_update_status.stdout | regex_search('Nothing to do')) or
+          (dnf_update_status.stdout | regex_search('No packages marked for upgrade'))
+        )
       )
-      and
-      not stat_server_reboot_pending.stat.exists | default(false)
-      and
-      not config_update | default(false)
+      or
+      (
+        dnf_update_status_releasever.stdout is defined and
+        (
+          (dnf_update_status_releasever.stdout | regex_search('Nothing to do')) or
+          (dnf_update_status_releasever.stdout | regex_search('No packages marked for upgrade'))
+        )
+      )
+    - not stat_server_reboot_pending.stat.exists | default(false)
+    - not config_update | default(false)
 
 - name: End play for host if nothing needs to be done (dnf module)
   ansible.builtin.meta: end_host
@@ -161,13 +210,22 @@
   ansible.builtin.meta: end_host
   when:
     - use_shell_fallback | default(false)
-    - (
-        ( dnf_update_status.stdout is defined and (dnf_update_status.stdout | regex_search('Nothing to do')) )
-        or
-        ( dnf_update_status_releasever.stdout is defined and (dnf_update_status_releasever.stdout | regex_search('Nothing to do')) )
+    - >
+      (
+        dnf_update_status.stdout is defined and
+        (
+          (dnf_update_status.stdout | regex_search('Nothing to do')) or
+          (dnf_update_status.stdout | regex_search('No packages marked for upgrade'))
+        )
       )
-      and
-      not stat_server_reboot_pending.stat.exists | default(false)
-      and
-      not config_update | default(false)
+      or
+      (
+        dnf_update_status_releasever.stdout is defined and
+        (
+          (dnf_update_status_releasever.stdout | regex_search('Nothing to do')) or
+          (dnf_update_status_releasever.stdout | regex_search('No packages marked for upgrade'))
+        )
+      )
+    - not stat_server_reboot_pending.stat.exists | default(false)
+    - not config_update | default(false)
   check_mode: false

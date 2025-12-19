@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2025.3.2
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_tasks:
@@ -26,6 +26,8 @@
   delay: 10
   until: shcluster_splunk_version.rc == 0
   changed_when: false
+  when:
+    - not skip_splunk_status_check | default(false)
   check_mode: false
   tags:
     - skip_ansible_lint
@@ -33,6 +35,8 @@
 - name: Store splunk current_splunk_enterprise_version
   ansible.builtin.set_fact:
     current_splunk_enterprise_version: "{{ shcluster_splunk_version.stdout }}"
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Create directory for splunk version file if it doesn't exist
   ansible.builtin.file:
@@ -50,6 +54,8 @@
     group: "{{ splunk_user_group_name }}"
     mode: '0644'
   changed_when: false
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Get info of kvstore engine
   ansible.builtin.shell:
@@ -65,6 +71,8 @@
   until: kvstore_engine.rc == 0
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
   tags:
     - skip_ansible_lint
 
@@ -77,6 +85,8 @@
   until: verbose_shcluster_status.rc == 0
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
   tags:
     - skip_ansible_lint
 
@@ -90,6 +100,8 @@
   register: shcluster_captain
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
   tags:
     - skip_ansible_lint
 
@@ -102,6 +114,8 @@
   until: shcluster_kvstore_status.rc == 0
   changed_when: false
   check_mode: false
+  when:
+    - not skip_splunk_status_check | default(false)
   tags:
     - skip_ansible_lint
 
@@ -110,52 +124,62 @@
     shcluster_kvstore_status_flag: true
   when:
     - "'status : ready' in shcluster_kvstore_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for dynamic captain
   ansible.builtin.set_fact:
     shcluster_dynamic_captain_flag: true
   when:
     - "'dynamic_captain : 1' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for initialized status
   ansible.builtin.set_fact:
     shcluster_initialized_flag: true
   when:
     - "'initialized_flag : 1' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for rolling restart status
   ansible.builtin.set_fact:
     shcluster_rolling_restart_flag: false
   when:
     - "'rolling_restart_flag : 0' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for rolling upgrade status
   ansible.builtin.set_fact:
     shcluster_rolling_upgrade_flag: false
   when:
     - "'rolling_upgrade_flag : 0' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for service ready status
   ansible.builtin.set_fact:
     shcluster_service_ready_flag: true
   when:
     - "'service_ready_flag : 1' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for captain status
   ansible.builtin.set_fact:
     shcluster_stable_captain_flag: true
   when:
     - "'stable_captain : 1' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact for manual detention status
   ansible.builtin.set_fact:
     shcluster_manual_detention_flag: false
   when:
     - "'manual_detention : off' in verbose_shcluster_status.stdout"
+    - not skip_splunk_status_check | default(false)
 
 - name: Set fact of current captain
   ansible.builtin.set_fact:
     current_shcluster_captain: "{{ shcluster_captain.stdout }}"
+  when:
+    - not skip_splunk_status_check | default(false)
 
 - name: Store file on search head cluster captain
   ansible.builtin.file:
@@ -164,6 +188,7 @@
     mode: '664'
   when:
     - current_shcluster_captain == inventory_hostname
+    - not skip_splunk_status_check | default(false)
   changed_when: false
 
 - name: Add current shcluster captain to a dynamic shcluster_captain group
@@ -171,6 +196,7 @@
     key: "shcluster_captain"
   when:
     - current_shcluster_captain == inventory_hostname
+    - not skip_splunk_status_check | default(false)
 
 - name: Clean up search head cluster captain file
   ansible.builtin.file:
@@ -178,6 +204,7 @@
     state: absent
   when:
     - current_shcluster_captain != inventory_hostname
+    - not skip_splunk_status_check | default(false)
   changed_when: false
 
 - name: Include task to get certificate status

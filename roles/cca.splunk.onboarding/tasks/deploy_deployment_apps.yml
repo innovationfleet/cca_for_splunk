@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.2.1
+# Release: 2025.3.2
 
 - name: Extract deleted apps from rsync output during dry run
   ansible.builtin.set_fact:
@@ -52,7 +52,7 @@
     )
   notify: notify deployment server reload
 
-- name: Cleanup manager server after staging apps are completed
+- name: Cleanup deployment server after staging apps are completed
   become: false
   connection: local
   ansible.builtin.file:
@@ -60,7 +60,6 @@
     state: absent
   delegate_to: localhost
   when:
-    - cluster_label is defined
     - cleanup_staging_apps | default(true)
   changed_when: false
   check_mode: false

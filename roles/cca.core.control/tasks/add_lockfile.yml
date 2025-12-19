@@ -7,21 +7,27 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2022.3.1
+# Release: 2025.3.3
 
 - name: Calculate number of retries based on seconds to wait
   ansible.builtin.set_fact:
     cca_data_onboarding_lock_retries: "{{ cca_data_onboarding_lock_wait_sec | default(1800) / cca_data_onboarding_lock_retry_delay | default(15) | int }}"
     cca_infrastructure_lock_retries: "{{ cca_infrastructure_lock_wait_sec | default(1800) / cca_infrastructure_lock_retry_delay | default(15) | int }}"
 
+- name: Ensure that the local tmp directory exists
+  ansible.builtin.file:
+    path: "{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}"
+    state: directory
+    mode: '0755'
+
 - name: Check if a look file exists for cca infrastructure
   ansible.builtin.stat:
-    path: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
+    path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_infrastructure_lock-' ~ environment_name] | path_join }}"
   register: stat_dot_infrastructure_lock
 
 - name: Get runid from infrastructure lock file
   ansible.builtin.set_fact:
-    runid_in_lockfile: "{{ lookup('file', '/tmp/.cca_infrastructure_lock-' + environment_name) }}"
+    runid_in_lockfile: "{{ lookup('file', [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_infrastructure_lock-' ~ environment_name] | path_join) }}"
   when:
     - stat_dot_infrastructure_lock.stat.exists
     - cca_runid is defined
@@ -37,7 +43,7 @@
 
 - name: Wait for data onboarding lock file to be deleted by other process. If unexpected then delete /tmp/.cca_data_onboarding_lock-ENV_NAME
   ansible.builtin.stat:
-    path: "/tmp/.cca_data_onboarding_lock-{{ environment_name }}"
+    path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_data_onboarding_lock-' ~ environment_name] | path_join }}"
   register: stat_dot_data_onboarding_lock
   until: not stat_dot_data_onboarding_lock.stat.exists
   retries: "{{ cca_data_onboarding_lock_retries | default(120) | int }}"
@@ -53,7 +59,7 @@
 
 - name: Create lock file to manage multi user execution
   ansible.builtin.copy:
-    dest: "/tmp/.cca_data_onboarding_lock-{{ environment_name }}"
+    dest: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_data_onboarding_lock-' ~ environment_name] | path_join }}"
     content: |
       {{ cca_runid | default('20380119') }}
     mode: '0644'
@@ -70,7 +76,7 @@
 
 - name: Wait for data infrastructure lock file to be deleted by other process. If unexpected then delete /tmp/.cca_infrastructure_lock-ENV_NAME
   ansible.builtin.stat:
-    path: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
+    path: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_infrastructure_lock-' ~ environment_name] | path_join }}"
   register: stat_dot_infrastructure_lock
   until: not stat_dot_infrastructure_lock.stat.exists
   retries: "{{ cca_infrastructure_lock_retries | default(120) | int }}"
@@ -90,7 +96,7 @@
 
 - name: Create lock file to manage multi user execution
   ansible.builtin.copy:
-    dest: "/tmp/.cca_infrastructure_lock-{{ environment_name }}"
+    dest: "{{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), 'cca_infrastructure_lock-' ~ environment_name] | path_join }}"
     content: |
       {{ cca_runid | default('20380119') }}
     mode: '0644'

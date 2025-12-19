@@ -22,7 +22,7 @@
 
 - name: Gather facts about configured services
   ansible.builtin.service_facts:
-  no_log: "{{ ansible_verbosity < 3 }}"
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Store splunk service status in a file
   ansible.builtin.file:

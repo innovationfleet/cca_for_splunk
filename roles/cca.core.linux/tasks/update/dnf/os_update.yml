@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.2
 
 
 - name: Get dnf update status with releasever
@@ -24,16 +24,22 @@
     - skip_ansible_lint
 
 - name: Get dnf update status with releasever (using shell fallback)
+  vars:
+    include_str: "{{ (cca_control.package.updates.include_packages | default([])) | map('quote') | join(' ') }}"
+    exclude_str: "{{ (cca_control.package.updates.exclude_packages | default([])) | join(',') }}"
   ansible.builtin.shell: |
-    dnf update --assumeno --releasever="{{ cca_dnf_releasever }}" \
-    {{ cca_control.package.updates.include_packages | default('') }} \
-    --exclude="{{ cca_control.package.updates.exclude_packages | default('') }}"
+    dnf update -y --releasever="{{ cca_dnf_releasever }}" {{ include_str }} --exclude="{{ exclude_str }}"
   register: dnf_update_status_releasever
   when:
     - cca_dnf_releasever is defined
     - use_shell_fallback | default(false)
   changed_when: false
-  no_log: "{{ ansible_verbosity < 3 }}"
+  failed_when: >
+    not (
+      dnf_update_status_releasever.rc == 0 or
+      (dnf_update_status_releasever.rc == 1 and 'Operation aborted.' in (dnf_update_status_releasever.stderr | default('')))
+    )
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Get dnf update status
   ansible.builtin.dnf:
@@ -48,15 +54,22 @@
     - skip_ansible_lint
 
 - name: Get dnf update status (using shell fallback)
+  vars:
+    include_str: "{{ (cca_control.package.updates.include_packages | default([])) | map('quote') | join(' ') }}"
+    exclude_str: "{{ (cca_control.package.updates.exclude_packages | default([])) | join(',') }}"
   ansible.builtin.shell: |
-    dnf update --assumeno {{ cca_control.package.updates.include_packages | default('') }} \
-    --exclude="{{ cca_control.package.updates.exclude_packages | default('') }}"
+    dnf update -y {{ include_str }} --exclude="{{ exclude_str }}"
   register: dnf_update_status
   when:
     - cca_dnf_releasever is not defined
     - use_shell_fallback | default(false)
   changed_when: false
-  no_log: "{{ ansible_verbosity < 3 }}"
+  failed_when: >
+    not (
+      dnf_update_status.rc == 0 or
+      (dnf_update_status.rc == 1 and 'Operation aborted.' in (dnf_update_status.stderr | default('')))
+    )
+  no_log: "{{ ((cca_verbosity | default(1)) < 3) | bool }}"
 
 - name: Set fact if kernel update is detected (dnf module)
   ansible.builtin.set_fact:

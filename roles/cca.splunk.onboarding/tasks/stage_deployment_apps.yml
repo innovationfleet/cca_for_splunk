@@ -7,13 +7,13 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1.2
+# Release: 2025.3.3
 
 - name: Set staging directory
   ansible.builtin.set_fact:
     deployment_server_apps_staging_dir: >-
      {{ (cca_local_tmp_dir
-        | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ environment_name }}
+        | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}
     selected_apps_source_dir: >-
       {{
         selected_apps_absolute_sourcedir
@@ -27,7 +27,7 @@
     deployment_apps_absolute_source_dir: >-
       {{
         deployment_apps_absolute_sourcedir
-        | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir + '/' + environment_name)
+        | default(absolute_file_store_path + '/etc/' + deployment_apps_sourcedir)
       }}
 
 - name: Cleanup manager before staging apps
@@ -84,7 +84,7 @@
 - name: Stage manager with deployment server selected apps
   become: false
   connection: local
-  ansible.builtin.command: >
+  ansible.builtin.command: >-
     rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
     "{{ selected_deployment_apps_source_dir }}/{{ item.source_app }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
@@ -93,6 +93,8 @@
     - selected_deployment_apps_sourcedir is defined
     - item.state is defined
     - item.state != 'absent'
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
   loop: '{{ selected_deployment_apps | default([]) if selected_deployment_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
@@ -102,7 +104,7 @@
 - name: Stage manager with versioned apps
   become: false
   connection: local
-  ansible.builtin.command: >
+  ansible.builtin.command: >-
     rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
     "{{ versioned_apps_source_path if item.source_path is not defined else item.source_path }}/{{ item.source_app }}/"
     "{{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/"
@@ -113,6 +115,8 @@
     - item.dest_dir == 'deployment-apps'
     - item.state is defined
     - item.state != 'absent'
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false
@@ -124,7 +128,7 @@
   connection: local
   ansible.builtin.command: >-
     rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
-    {{ (item.source_path | default(selected_apps_source_dir) ))
+    {{ (item.source_path | default(selected_apps_source_path | default(selected_apps_source_dir) ))
     ~ ('/' ~ item.source_app if item.source_app is defined else '') }}/
     {{ deployment_server_apps_staging_dir }}/deployment_server/{{ item.name }}/
   delegate_to: localhost
@@ -133,6 +137,8 @@
     - item.dest_dir == 'deployment-apps'
     - item.state is defined
     - item.state != 'absent'
+    - item.target is defined and item.target == inventory_hostname or
+      item.target is not defined
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   changed_when: false
   check_mode: false

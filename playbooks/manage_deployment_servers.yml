@@ -20,7 +20,7 @@
 
 
 - name: Verify that connection to all servers are ok before we start
-  hosts: deployment_servers
+  hosts: ~.*deployment_servers
   become: true
   become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"
@@ -42,7 +42,7 @@
 
 
 - name: Configure the Splunk instances
-  hosts: deployment_servers
+  hosts: ~.*deployment_servers
   become: true
   become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"

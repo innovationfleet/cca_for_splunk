@@ -39,6 +39,17 @@ control:
     configure_ntp: false
     configure_backup: false
 
+# Extra systemd parameters for Splunk service, enable at your discretion after talking to Splunk support.
+#cca_extra_systemd_params:
+#  - option: 'LimitNPROC'
+#    value: 'infinity'
+#  - option: 'LimitDATA'
+#    value: '8589934592'
+#  - option: 'LimitFSIZE'
+#    value: 'infinity'
+#  - option: 'TasksMax'
+#    value: 'infinity'
+
 # Set the desired SELinux state for Splunk operations.
 # Default is 'disabled' for optimal performance, as SELinux
 # in permissive or enabled mode can negatively impact Splunk performance.

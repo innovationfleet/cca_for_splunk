@@ -7,34 +7,20 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2025.3.2
 
 - name: Include task to check pending actions
   ansible.builtin.include_tasks: check_pending_actions.yml
 
-- name: Reload Deployment Server
+- name: Reload Deployment Server - Standard mode
   when:
     - stat_deployment_server_reload_pending.stat.exists
     - not stat_splunkd_restart_pending.stat.exists
+    - not use_serverclass_mode | default(false)
   block:
     - name: Include tasks to login to splunk cli
       ansible.builtin.include_tasks:
         file: splunk_login.yml
-
-    - name: Reload deploy-server serverclass to notify clients of new apps
-      ansible.builtin.command:
-        cmd: >
-          timeout {{ reload_deploy_server_timeout | default('900') | int + 60 }}
-          {{ splunk_path }}/bin/splunk reload deploy-server
-          -timeout {{ reload_deploy_server_timeout | default(900) }}
-          {% if item is defined and item %} -class {{ item }}
-          {% endif %}
-      loop: "{{ serverclass }}"
-      when:
-        - not skip_ds_reload_handler | default(false) | bool
-        - serverclass | default([]) | length > 0
-      tags:
-        - skip_ansible_lint
 
     - name: Reload deploy-server to notify clients of new apps
       ansible.builtin.command:
@@ -44,20 +30,31 @@
           -timeout {{ reload_deploy_server_timeout | default(900) }}
       when:
         - not skip_ds_reload_handler | default(false) | bool
-        - serverclass | default([]) | length == 0
       tags:
         - skip_ansible_lint
 
-    - name: Cleanup state file for deployment apps push
-      ansible.builtin.file:
-        path: "{{ deployment_server_reload_pending }}"
-        state: absent
+- name: Set fact to control reload of deployment server
+  ansible.builtin.set_fact:
+    reload_deployment_server: true
+  when:
+    - use_serverclass_mode | default(false)
+    - serverclass | default([]) | length > 0
+    - serverclass | default([]) | length <= cca_max_reload_serverclass_items | default(50)
+    - not stat_splunkd_restart_pending.stat.exists | default(false)
 
-    - name: Include tasks to logout of splunk cli
-      ansible.builtin.include_tasks:
-        file: splunk_logout.yml
+- name: Reload Deployment Server - Serverclass mode
+  ansible.builtin.include_tasks: deployment_server/reload_serverclass_item.yml
+  loop: "{{ serverclass | default([]) }}"
+  loop_control:
+    loop_var: item
+  when:
+    - use_serverclass_mode | default(false)
+    - reload_deployment_server | default(false)
 
 - name: Restart Deployment Server
   ansible.builtin.include_tasks: restart_splunkd.yml
   when:
-    - stat_splunkd_restart_pending.stat.exists
+    - stat_splunkd_restart_pending.stat.exists or
+      (use_serverclass_mode | default(false) and
+       serverclass | default([]) | length > cca_max_reload_serverclass_items | default(50) and
+       not reload_deployment_server | default(false))

@@ -2,15 +2,6 @@
   "versions": [
   {
     "product": "splunk",
-    "version": "10.0.0",
-    "build": "e8eb0c4654f8",
-    "platform": "linux",
-    "arch": "amd64",
-    "filename": "splunk-10.0.0-e8eb0c4654f8-linux-amd64.tgz",
-    "url": "https://download.splunk.com/products/splunk/releases/10.0.0/linux/splunk-10.0.0-e8eb0c4654f8-linux-amd64.tgz"
-  },
-  {
-    "product": "splunk",
     "version": "9.1.0",
     "build": "1c86ca0bacc3",
     "platform": "linux",
@@ -44,15 +35,6 @@
     "arch": "x86_64",
     "filename": "splunk-9.1.1-64e843ea36b1-Linux-x86_64.tgz",
     "url": "https://download.splunk.com/products/splunk/releases/9.1.1/linux/splunk-9.1.1-64e843ea36b1-Linux-x86_64.tgz"
-  },
-  {
-    "product": "splunk",
-    "version": "9.1.10",
-    "build": "a6ea9b30f817",
-    "platform": "linux",
-    "arch": "x86_64",
-    "filename": "splunk-9.1.10-a6ea9b30f817-Linux-x86_64.tgz",
-    "url": "https://download.splunk.com/products/splunk/releases/9.1.10/linux/splunk-9.1.10-a6ea9b30f817-Linux-x86_64.tgz"
   },
   {
     "product": "splunk",
@@ -125,6 +107,15 @@
     "arch": "x86_64",
     "filename": "splunk-9.1.9-11decc33b1eb-Linux-x86_64.tgz",
     "url": "https://download.splunk.com/products/splunk/releases/9.1.9/linux/splunk-9.1.9-11decc33b1eb-Linux-x86_64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.1.10",
+    "build": "a6ea9b30f817",
+    "platform": "linux",
+    "arch": "x86_64",
+    "filename": "splunk-9.1.10-a6ea9b30f817-Linux-x86_64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.1.10/linux/splunk-9.1.10-a6ea9b30f817-Linux-x86_64.tgz"
   },
   {
     "product": "splunk",
@@ -218,6 +209,33 @@
   },
   {
     "product": "splunk",
+    "version": "9.2.9",
+    "build": "809c28ff0945",
+    "platform": "linux",
+    "arch": "x86_64",
+    "filename": "splunk-9.2.9-809c28ff0945-Linux-x86_64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.2.9/linux/splunk-9.2.9-809c28ff0945-Linux-x86_64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.2.10",
+    "build": "37c0a7e2ccbd",
+    "platform": "linux",
+    "arch": "x86_64",
+    "filename": "splunk-9.2.10-37c0a7e2ccbd-Linux-x86_64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.2.10/linux/splunk-9.2.10-37c0a7e2ccbd-Linux-x86_64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.2.11",
+    "build": "45e7d4c09780",
+    "platform": "linux",
+    "arch": "x86_64",
+    "filename": "splunk-9.2.11-45e7d4c09780-Linux-x86_64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.2.11/linux/splunk-9.2.11-45e7d4c09780-Linux-x86_64.tgz"
+  },
+  {
+    "product": "splunk",
     "version": "9.3.0",
     "build": "51ccf43db5bd",
     "platform": "linux",
@@ -281,6 +299,24 @@
   },
   {
     "product": "splunk",
+    "version": "9.3.7",
+    "build": "d3040138454b",
+    "platform": "linux",
+    "arch": "x86_64",
+    "filename": "splunk-9.3.7-d3040138454b-Linux-x86_64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.3.7/linux/splunk-9.3.7-d3040138454b-Linux-x86_64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.3.8",
+    "build": "fbf0510dff69",
+    "platform": "linux",
+    "arch": "x86_64",
+    "filename": "splunk-9.3.8-fbf0510dff69-Linux-x86_64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.3.8/linux/splunk-9.3.8-fbf0510dff69-Linux-x86_64.tgz"
+  },
+  {
+    "product": "splunk",
     "version": "9.4.0",
     "build": "6b4ebe426ca6",
     "platform": "linux",
@@ -323,11 +359,65 @@
     "arch": "amd64",
     "filename": "splunk-9.4.4-f627d88b766b-linux-amd64.tgz",
     "url": "https://download.splunk.com/products/splunk/releases/9.4.4/linux/splunk-9.4.4-f627d88b766b-linux-amd64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.4.5",
+    "build": "8fb2a6c586a5",
+    "platform": "linux",
+    "arch": "amd64",
+    "filename": "splunk-9.4.5-8fb2a6c586a5-linux-amd64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.4.5/linux/splunk-9.4.5-8fb2a6c586a5-linux-amd64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.4.6",
+    "build": "60284236e579",
+    "platform": "linux",
+    "arch": "amd64",
+    "filename": "splunk-9.4.6-60284236e579-linux-amd64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.4.6/linux/splunk-9.4.6-60284236e579-linux-amd64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "9.4.7",
+    "build": "2a9293b80994",
+    "platform": "linux",
+    "arch": "amd64",
+    "filename": "splunk-9.4.7-2a9293b80994-linux-amd64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/9.4.7/linux/splunk-9.4.7-2a9293b80994-linux-amd64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "10.0.0",
+    "build": "e8eb0c4654f8",
+    "platform": "linux",
+    "arch": "amd64",
+    "filename": "splunk-10.0.0-e8eb0c4654f8-linux-amd64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/10.0.0/linux/splunk-10.0.0-e8eb0c4654f8-linux-amd64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "10.0.1",
+    "build": "c486717c322b",
+    "platform": "linux",
+    "arch": "amd64",
+    "filename": "splunk-10.0.1-c486717c322b-linux-amd64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/10.0.1/linux/splunk-10.0.1-c486717c322b-linux-amd64.tgz"
+  },
+  {
+    "product": "splunk",
+    "version": "10.0.2",
+    "build": "e2d18b4767e9",
+    "platform": "linux",
+    "arch": "amd64",
+    "filename": "splunk-10.0.2-e2d18b4767e9-linux-amd64.tgz",
+    "url": "https://download.splunk.com/products/splunk/releases/10.0.2/linux/splunk-10.0.2-e2d18b4767e9-linux-amd64.tgz"
   }
 ],
   "metadata": {
-    "last_updated": "2025-08-05T09:27:22Z",
-    "total_versions": 36,
+    "last_updated": "2025-12-01T02:52:24Z",
+    "total_versions": 46,
     "generated_by": "version_chronicle.sh"
   }
 }

@@ -64,6 +64,20 @@
         tasks_from:
           apply_cluster_bundle.yml
 
+    - name: Check if there is any pending actions
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          check_pending_actions.yml
+
+    - name: Restart splunkd if needed
+      ansible.builtin.include_role:
+        name: cca.core.splunk
+        tasks_from:
+          restart_splunkd.yml
+      when:
+        - stat_splunkd_restart_pending.stat.exists
+
     - name: Include post deployment tasks
       ansible.builtin.include_role:
         name: cca.core.control

@@ -19,6 +19,13 @@ KillSignal=SIGINT
 TimeoutStopSec=300
 LimitNOFILE=65536
 LimitRTPRIO=99
+{% if cca_extra_systemd_params is defined %}
+# Extra systemd parameters for Splunk service, see group_vars/all/linux
+{% for param in cca_extra_systemd_params %}
+{{ param.option }}={{ param.value }}
+{% endfor %}
+# End of extra systemd parameters
+{% endif %}
 SuccessExitStatus=51 52
 RestartPreventExitStatus=51
 RestartForceExitStatus=52

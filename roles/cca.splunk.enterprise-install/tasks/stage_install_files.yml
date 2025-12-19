@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1
+# Release: 2025.3.2
 
 - name: Find Splunk install file in repo directory
   become: false
@@ -17,6 +17,14 @@
     paths: "{{ absolute_infrastructure_repo_path }}/splunk/var/images/"
     patterns: "splunk-{{ splunk_enterprise_version }}-*64.tgz"
   register: find_cca_splunk_tgz
+
+- name: Ensure cca_splunk_var_tmp directory exists
+  ansible.builtin.file:
+    path: "{{ cca_splunk_var_tmp }}"
+    state: directory
+    owner: "{{ splunk_user }}"
+    group: "{{ splunk_user }}"
+    mode: '0755'
 
 - name: Find all Splunk tgz files in the tmp directory
   ansible.builtin.find:

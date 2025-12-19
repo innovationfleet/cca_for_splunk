@@ -21,7 +21,7 @@
 
 # Deploy deployment-apps to Splunk servers
 - name: Deploy deployment-apps to Splunk servers
-  hosts: deployment_servers
+  hosts: ~.*deployment_servers
   become: true
   become_method: ansible.builtin.sudo
   become_user: "{{ splunk_user }}"

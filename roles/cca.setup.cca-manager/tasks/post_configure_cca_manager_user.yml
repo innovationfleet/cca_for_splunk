@@ -87,6 +87,14 @@
   when:
     - manage_settings_in_profile_local | default(true)
 
+- name: Remove settings to .profile_local for CCA usage
+  ansible.builtin.lineinfile:
+    dest: "{{ cca_manager_user_dir }}/.profile_local"
+    regex: "{{ item.regex }}"
+    state: 'absent'
+  with_items:
+    - { regex: 'ANSIBLE_STDOUT_CALLBACK' }
+
 - name: Add settings to .bash_profile for CCA usage
   ansible.builtin.lineinfile:
     dest: "{{ cca_manager_user_dir }}/.bash_profile"
