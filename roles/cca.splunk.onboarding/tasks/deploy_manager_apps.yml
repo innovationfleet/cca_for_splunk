@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2026.1.1
 
 - name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
   become: false
@@ -30,22 +30,123 @@
   no_log: "{{ hide_password }}"
   changed_when: false
 
-- name: Assert that no unexpected directories wil be deleted on the cluster manager
-  ansible.builtin.assert:
-    that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
-    success_msg: 'No critical app directories will be deleted on the cluster manager'
-    fail_msg: >-
-      An app directory deletion is detected on the cluster_manager. This is not allowed by
-      default. If you expect these directories to be deleted, set accept_manager_app_removal
-      to true in the extra_vars CCA dialogue.
-  with_items: "{{ cluster_apps_update_status.stdout_lines | default('') | list }}"
+- name: Extract deleted apps from rsync output during dry run
+  ansible.builtin.set_fact:
+    deleted_manager_apps: "{{ (cluster_apps_update_status.stdout_lines | default([])) | extract_deleted_apps }}"
+  no_log: "{{ hide_password }}"
+
+- name: Determine if there are changes to deploy from dry run
+  ansible.builtin.set_fact:
+    manager_apps_has_changes: >-
+      {{
+        (deleted_manager_apps | default([]) | length > 0) or
+        (cluster_apps_update_status.stdout | default('') | length > 0)
+      }}
+
+- name: Include task to check cluster status (after dry run - only if early check was skipped and there are changes)
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: cluster/get_cluster_status.yml
+  vars:
+    check_cluster_status: true
+    skip_splunk_status_check: true
   when:
-    - not accept_manager_app_removal | default(false)
+    - skip_early_cluster_status_check | default(false)
+    - manager_apps_has_changes | default(false)
+
+- name: Check and fail if cluster is not preflight ready (late check - after dry run)
+  when:
+    - cluster_label is defined
+    - deploy_scope | default('') == "manager-apps"
+    - skip_early_cluster_status_check | default(false)
+    - manager_apps_has_changes | default(false)
+  block:
+    - name: Normalize preflight output
+      ansible.builtin.set_fact:
+        pf_stdout_lines: >-
+          {{ (verbose_cluster_status.stdout | default('') | string | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
+        pf_stderr_lines: >-
+          {{ (verbose_cluster_status.stderr | default('') | string | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
+      no_log: true
+      when:
+        - not skip_deployment_preflight_check | default(false)
+        - cluster_label is defined
+        - deploy_scope | default('') == "manager-apps"
+        - skip_early_cluster_status_check | default(false)
+        - manager_apps_has_changes | default(false)
+        - verbose_cluster_status is defined
+
+    - name: Check and fail if cluster is not preflight ready (short message)
+      ansible.builtin.assert:
+        that:
+          - cluster_preflight_status_flag | default(false)
+        fail_msg: >-
+          Preflight failed.
+          Showing a short summary; detailed stdout/stderr will follow below.
+      when:
+        - not skip_deployment_preflight_check | default(false)
+        - cluster_label is defined
+        - deploy_scope | default('') == "manager-apps"
+        - skip_early_cluster_status_check | default(false)
+        - manager_apps_has_changes | default(false)
+        - verbose_cluster_status is defined
+
+  rescue:
+    - name: Detailed preflight output (only printed on failure)
+      ansible.builtin.debug:
+        msg: |
+          === stdout (first 200 lines) ===
+          {{ (pf_stdout_lines[:200] | join('\n')) if pf_stdout_lines | length > 0 else '<<no stdout>>' }}
+
+          === stderr (first 100 lines) ===
+          {{ (pf_stderr_lines[:100] | join('\n')) if pf_stderr_lines | length > 0 else '<<no stderr>>' }}
+
+    - name: Stop play after showing details
+      ansible.builtin.fail:
+        msg: >-
+          Preflight failed — see detailed output above.
+          This is a late check that only runs when 'skip_early_cluster_status_check: true' is set and changes are detected.
+
+- name: Count apps on remote cluster manager destination
+  ansible.builtin.find:
+    paths: "{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/"
+    file_type: directory
+    recurse: false
+  register: dest_manager_apps_result
+
+- name: Calculate deletion threshold for manager apps
+  ansible.builtin.set_fact:
+    manager_deletion_check: >-
+      {{ deleted_manager_apps | check_deletion_threshold(
+           (dest_manager_apps_result.files | length | int),
+           (manager_app_removal_percent_threshold | default(10) | int),
+           (manager_app_removal_max_count | default(3) | int),
+           (manager_app_removal_min_apps_for_percent | default(10) | int)
+         ) }}
+
+- name: Assert manager app deletions are within safe threshold
+  ansible.builtin.assert:
+    that:
+      - manager_deletion_check.is_within_threshold
+    fail_msg: >-
+      Manager app deletion exceeds safe threshold!
+      {{ manager_deletion_check.deleted_count }} apps would be deleted out of
+      {{ manager_deletion_check.total_count }} total on destination.
+      Threshold: {{ manager_deletion_check.threshold_type }} =
+      {{ manager_deletion_check.threshold_value }}{% if manager_deletion_check.threshold_type == 'percent' %}%
+      (max {{ manager_deletion_check.max_allowed }} apps){% endif %}.
+      Apps to delete: {{ deleted_manager_apps | join(', ') }}.
+      To force deletion, set accept_manager_app_removal to true.
+    success_msg: >-
+      Manager app deletion within safe threshold ({{ manager_deletion_check.deleted_count }}/{{ manager_deletion_check.total_count }} apps on destination)
+  when:
+    - not (accept_manager_app_removal | default(false))
+    - deleted_manager_apps | length > 0
 
 - name: Deploy the apps from the staging directory to the cluster manager
   become: false
   ansible.posix.synchronize:
-    src: '{{ manager_apps_staging_dir }}//'
+    src: '{{ manager_apps_staging_dir }}/'
     dest: '{{ splunk_path }}/etc/{{ cluster_manager_config_bundle_dir }}/'
     copy_links: true
     recursive: true

@@ -27,7 +27,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 # META_DATE
-# Release: 2023.3.2
+# Release: 2026.1.4
 
 - name: Splunkd restart handler on non cluster instances
   ansible.builtin.file:
@@ -39,6 +39,7 @@
     - inventory_hostname not in ( groups.cluster_peers | default([]) )
     - inventory_hostname not in ( groups.searchhead_members | default([]) )
 
+# Rolling restart uses CLI auth; after etc/passwd changes use immediate stop/start.
 - name: Splunkd restart handler on SHC members
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
@@ -48,6 +49,7 @@
   when:
     - inventory_hostname in ( groups.searchhead_members | default([]) )
     - not force_splunkd_restart | default(false)
+    - not cca_splunk_cli_passwd_changed | default(false) | bool
 
 - name: Override restart handler for SHC members
   ansible.builtin.file:
@@ -56,8 +58,10 @@
   listen: notify splunkd restart
   when:
     - inventory_hostname in ( groups.searchhead_members | default([]) )
-    - force_splunkd_restart | default(false)
+    - force_splunkd_restart | default(false) or cca_splunk_cli_passwd_changed | default(false) | bool
 
+# Immediate restart for CLI passwd change is handled in cca.core.splunk handlers only
+# (avoids duplicate stop/start when both roles are in the play).
 - name: Execute a splunkd stop,start when in force mode
   ansible.builtin.command:
     cmd: '{{ item }}'

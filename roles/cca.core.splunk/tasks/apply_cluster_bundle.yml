@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.1
 
 - name: Check if there is a pending config bundle to be pushed
   ansible.builtin.stat:
@@ -87,8 +87,7 @@
       ansible.builtin.set_fact:
         has_bundle_validation_errors: "{{
           (cluster_bundle_restart_status.stdout | default('')) is search('bundle_validation_errors')
-          and '[Critical]' in (cluster_bundle_restart_status.stdout | default(''))
-        }}"
+          and '[Critical]' in (cluster_bundle_restart_status.stdout | default('')) }}"
 
     - name: Fail task if bundle validation errors are found
       ansible.builtin.debug:
@@ -129,6 +128,10 @@
         - proceed_with_rolling_restart.user_input | default('no') != "yes"
         - prompt_rolling_restart | default(false)
 
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
+
 - name: Apply cluster-bundle
   when:
     - not ansible_check_mode
@@ -162,3 +165,7 @@
         check_preflight_status.yml
       vars:
         command_retries: "{{ preflight_command_retries | default(30) }}"
+
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml

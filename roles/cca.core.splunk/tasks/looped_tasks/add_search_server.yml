@@ -8,17 +8,24 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.4
 
 - name: "Add {{ host }} as a search peers to {{ inventory_hostname }}"
   delegate_to: "{{ inventory_hostname }}"
   ansible.builtin.command:
-    cmd: >
-      timeout {{ cca_splunk_command_timeout | default('60') }}
-      {{ splunk_path }}/bin/splunk add search-server {{ host }}:{{ splunk_enterprise_mgmt_port }}
-      -remoteUsername {{ splunk_cli_user }}
-      -remotePassword {{ splunk_cli_user_password }}
-      -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'
+    argv:
+      - timeout
+      - "{{ cca_splunk_command_timeout | default('60') }}"
+      - "{{ splunk_path }}/bin/splunk"
+      - add
+      - search-server
+      - "{{ host }}:{{ splunk_enterprise_mgmt_port }}"
+      - -remoteUsername
+      - "{{ splunk_cli_user }}"
+      - -remotePassword
+      - "{{ splunk_cli_user_password | trim }}"
+      - -auth
+      - "{{ splunk_cli_user }}:{{ splunk_cli_user_password | trim }}"
   register: command_result
   failed_when:
     - command_result.rc != 0

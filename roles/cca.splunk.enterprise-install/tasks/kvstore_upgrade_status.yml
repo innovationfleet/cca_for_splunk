@@ -57,7 +57,7 @@
   tags:
     - skip_ansible_lint
 
-- name: Set KVStore upgrade needed flag
+- name: Set flag for multistep KVStore upgrade
   ansible.builtin.set_fact:
     kvstore_upgrade_needed: "{{ stored_splunk_version is version('9.4.0', '<') and splunk_enterprise_version is version('9.4.0', '>=') }}"
   when:

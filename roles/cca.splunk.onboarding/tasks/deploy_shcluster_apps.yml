@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2024.1.1
+# Release: 2026.1.1
 
 - name: DRY RUN - Perform a dry run of the staged files towards the target to collect rsync changes
   become: false
@@ -30,17 +30,47 @@
   no_log: "{{ hide_password }}"
   changed_when: false
 
-- name: Assert that no unexpected directories wil be deleted on the deployer
+- name: Extract deleted apps from rsync output during dry run
+  ansible.builtin.set_fact:
+    deleted_shc_apps: "{{ (shcluster_apps_update_status.stdout_lines | default([])) | extract_deleted_apps }}"
+  no_log: "{{ hide_password }}"
+
+- name: Count apps on remote shcluster deployer destination
+  ansible.builtin.find:
+    paths: "{{ splunk_path }}/etc/shcluster/apps/"
+    file_type: directory
+    recurse: false
+  register: dest_shc_apps_result
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Calculate deletion threshold for shcluster apps
+  ansible.builtin.set_fact:
+    shc_deletion_check: >-
+      {{ deleted_shc_apps | check_deletion_threshold(
+           (dest_shc_apps_result.files | length | int),
+           (shc_app_removal_percent_threshold | default(10) | int),
+           (shc_app_removal_max_count | default(3) | int),
+           (shc_app_removal_min_apps_for_percent | default(10) | int)
+         ) }}
+
+- name: Assert shcluster app deletions are within safe threshold
   ansible.builtin.assert:
-    that: not item | regex_search('\*deleting\s+[A-Za-z_\-0-9]+\/[A-Za-z_\-0-9]+\/$')
-    success_msg: 'No critical app directories will be deleted on the deployer'
+    that:
+      - shc_deletion_check.is_within_threshold
     fail_msg: >-
-      An app directory deletion is detected on the deployer. This is not allowed by
-      default. If you expect these directories to be deleted, set accept_shc_app_removal
-      to true in the extra_vars CCA dialogue.
-  with_items: "{{ shcluster_apps_update_status.stdout_lines | default('') | list }}"
+      SHC app deletion exceeds safe threshold!
+      {{ shc_deletion_check.deleted_count }} apps would be deleted out of
+      {{ shc_deletion_check.total_count }} total on destination.
+      Threshold: {{ shc_deletion_check.threshold_type }} =
+      {{ shc_deletion_check.threshold_value }}{% if shc_deletion_check.threshold_type == 'percent' %}%
+      (max {{ shc_deletion_check.max_allowed }} apps){% endif %}.
+      Apps to delete: {{ deleted_shc_apps | join(', ') }}.
+      To force deletion, set accept_shc_app_removal to true.
+    success_msg: >-
+      SHC app deletion within safe threshold ({{ shc_deletion_check.deleted_count }}/{{ shc_deletion_check.total_count }} apps on destination)
   when:
-    - not accept_shc_app_removal | default(false)
+    - not (accept_shc_app_removal | default(false))
+    - deleted_shc_apps | length > 0
 
 - name: Deploy the apps from the staging directory to the deployer
   become: false

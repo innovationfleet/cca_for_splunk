@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.1
 # TODO: BUG - Add check to validate if there is a working captain among the SHC peers.
 # Possible skip bundle push if an brutal upgrade is performed.
 
@@ -46,6 +46,10 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
 
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
+
 #
 # Apply bundle on Search Head Cluster C2
 #
@@ -75,6 +79,10 @@
       ansible.builtin.file:
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
+
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
 
 #
 # Apply bundle on Search Head Cluster C3
@@ -106,6 +114,10 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
 
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
+
 #
 # Apply bundle on Search Head Cluster C4
 #
@@ -136,6 +148,10 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
 
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
+
 #
 # Apply bundle on Search Head Cluster C5
 #
@@ -165,6 +181,10 @@
       ansible.builtin.file:
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
+
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
 
 #
 # Apply bundle on Search Head Cluster C6
@@ -198,6 +218,10 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
 
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
+
 #
 # Apply bundle on Search Head Cluster C7
 #
@@ -229,6 +253,10 @@
       ansible.builtin.file:
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
+
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
 
 #
 # Apply bundle on Search Head Cluster C8
@@ -262,6 +290,10 @@
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
 
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml
+
 #
 # Apply bundle on Search Head Cluster C9
 #
@@ -293,3 +325,7 @@
       ansible.builtin.file:
         path: "{{ shcluster_bundle_push_pending }}"
         state: absent
+
+    - name: Include tasks to logout from splunk cli
+      ansible.builtin.include_tasks:
+        splunk_logout.yml

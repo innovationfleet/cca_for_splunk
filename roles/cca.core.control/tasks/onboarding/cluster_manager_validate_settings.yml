@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.1.1
 
 - name: To support Splunk Enterprise version 9+, verify that there is a valid defaults file version
   ansible.builtin.assert:
@@ -63,7 +63,6 @@
   ansible.builtin.assert:
     that:
       - stat_onboarding_repo_manager_apps.stat.exists
-      - splunk_enterprise_version is version('9.0.0', '>=')
     fail_msg: >-
       FAILED: Splunk version 9 needs an update to the repo directory for manager-apps.
       Change directory to {{ absolute_file_store_path }}/etc, execute git mv master-apps manager-apps .
@@ -73,6 +72,9 @@
   ignore_errors: true
   when:
     - cca_manager_apps_repo_name is not defined
+    - splunk_enterprise_version is defined
+    - (splunk_enterprise_version is version('9.0.0', '>='))
+    - (splunk_enterprise_version is version('10.0.0', '<'))
 
 - name: Set variable that an assert has failed.
   ansible.builtin.set_fact:

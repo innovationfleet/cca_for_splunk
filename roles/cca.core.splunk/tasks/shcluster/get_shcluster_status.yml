@@ -210,3 +210,7 @@
 - name: Include task to get certificate status
   ansible.builtin.include_tasks:
     get_certificate_status.yml
+
+- name: Include task to logout from splunk cli
+  ansible.builtin.include_tasks:
+    splunk_logout.yml

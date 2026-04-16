@@ -7,14 +7,8 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.1.1
 
-
-- name: Set fact for ds inventory name
-  ansible.builtin.set_fact:
-    ds_inventory_hostname: "{{ inventory_hostname }}"
-  delegate_to: localhost
-  delegate_facts: true
 
 - name: Set fact for local and remote dir
   ansible.builtin.set_fact:
@@ -35,7 +29,7 @@
   connection: local
   become: false
   ansible.builtin.file:
-    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ hostvars['localhost']['ds_inventory_hostname'] }}"
+    path: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}"
     state: directory
     mode: '0755'
   changed_when: false
@@ -76,7 +70,7 @@
   ansible.builtin.file:
     path: "{{ [cca_remote_tmp_dir | default('/tmp'),
                cca_runid, environment_name,
-               hostvars['localhost']['ds_inventory_hostname']] | path_join }}"
+               inventory_hostname] | path_join }}"
     state: 'directory'
     mode: '0755'
     recurse: true
@@ -102,7 +96,10 @@
   become: false
   delegate_to: localhost
   ansible.builtin.slurp:
-    src: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}/duplicates_data_local.json"
+    src: >-
+      {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid,
+      environment_name, 'localhost', inventory_hostname,
+      'duplicates_data_local.json'] | path_join }}
   register: duplicates_data
 
 - name: Check if duplicates data is present
@@ -128,7 +125,10 @@
   become: false
   delegate_to: localhost
   ansible.builtin.slurp:
-    src: "{{ (cca_local_tmp_dir | default('/tmp/cca_tmp')) }}/{{ cca_runid }}/{{ environment_name }}/localhost/{{ inventory_hostname }}/serverclass_data_local.json"
+    src: >-
+      {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid,
+      environment_name, 'localhost', inventory_hostname,
+      'serverclass_data_local.json'] | path_join }}
   register: local_serverclass_data
   when:
     - ansible_check_mode | default(false) or cca_validate_serverclass_apps | default(false)
@@ -182,10 +182,10 @@
   ansible.builtin.set_fact:
     remote_base_path: >-
       {{ [cca_remote_tmp_dir | default('/tmp'),
-         cca_runid, environment_name, hostvars['localhost']['ds_inventory_hostname']] | path_join }}
+         cca_runid, environment_name, inventory_hostname] | path_join }}
     local_base_path: >-
       {{ [cca_local_tmp_dir | default('/tmp/cca_tmp'),
-         cca_runid, environment_name, 'localhost',hostvars['localhost']['ds_inventory_hostname']] | path_join }}
+         cca_runid, environment_name, 'localhost', inventory_hostname] | path_join }}
 
 - name: Set intermediate variable
   ansible.builtin.set_fact:

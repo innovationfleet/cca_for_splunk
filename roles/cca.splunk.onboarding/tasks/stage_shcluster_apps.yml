@@ -7,12 +7,12 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.3
+# Release: 2026.1.1
 
 - name: Set staging directory
   ansible.builtin.set_fact:
     shcluster_staging_dir: >-
-      '{{ (cca_local_tmp_dir | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}'
+      {{ (cca_local_tmp_dir | default("/tmp/cca_tmp")) }}/{{ cca_runid }}/{{ environment_name }}/{{ inventory_hostname }}/{{ shcluster_label }}
     selected_apps_source_dir: >-
       {{
         selected_apps_absolute_sourcedir
@@ -72,7 +72,7 @@
   connection: local
   ansible.builtin.command: >-
     rsync --temp-dir="{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}" --delay-updates -F --compress --archive
-    "{{ selected_apps_source_dir | default(absolute_file_store_path + '/etc/' + selected_shcluster_apps_sourcedir) }}/{{ item.source_app }}/"
+    "{{ selected_shcluster_apps_absolute_sourcedir | default(absolute_file_store_path + '/etc/' + selected_shcluster_apps_sourcedir) }}/{{ item.source_app }}/"
     "{{ shcluster_staging_dir }}/apps/{{ item.name }}/"
   delegate_to: localhost
   when:

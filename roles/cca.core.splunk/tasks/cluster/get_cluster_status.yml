@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.1.1
 
 - name: Include tasks to login to splunk cli
   ansible.builtin.include_role:
@@ -60,12 +60,17 @@
     cmd: "timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk show cluster-status --verbose"
   register: verbose_cluster_status
   retries: "{{ cca_splunkd_cli_cluster_status_retries | default(10) | int }}"
-  delay: 10
-  until: verbose_cluster_status.rc ==  0
+  delay: "{{ cca_splunkd_cli_cluster_status_delay | default(10) | int }}"
+  until: >
+    verbose_cluster_status.rc == 0 and
+    (
+      (check_cluster_status | default(false)) or
+      (verbose_cluster_status.stdout | default('') | regex_search('Pre-flight check successful.*YES'))
+    )
   changed_when: false
   check_mode: false
   when:
-    - not skip_splunk_status_check | default(false)
+    - not (skip_splunk_status_check | default(false)) or (check_cluster_status | default(false))
   tags:
     - skip_ansible_lint
 
@@ -74,7 +79,7 @@
     cluster_preflight_status_flag: true
   when:
     - verbose_cluster_status.stdout | default('') | regex_search(('Pre-flight.*YES'))
-    - not skip_splunk_status_check | default(false)
+    - not (skip_splunk_status_check | default(false)) or (check_cluster_status | default(false))
 
 - name: Set fact for searchable rolling restart
   ansible.builtin.set_fact:
@@ -96,4 +101,10 @@
     tasks_from: get_certificate_status.yml
   when:
     - deploy_scope is not defined
-    - not skip_splunk_status_check | default(false)
+    - not (skip_splunk_status_check | default(false)) or (check_cluster_status | default(false))
+
+- name: Include tasks to logout from splunk cli
+  ansible.builtin.include_tasks:
+    splunk_logout.yml
+  when:
+    - not (skip_splunk_status_check | default(false)) or (check_cluster_status | default(false))

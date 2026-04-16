@@ -74,6 +74,7 @@
         repo: "{{ mitogen_repo }}"
         dest: "{{ user_home_directory | default('/opt/cca_manger') }}/tools/mitogen_{{ mitogen_major_minor }}"
         version: "{{ mitogen_tag }}"
+        force: true
 
     - name: Ensure .profile_local sources the new venv
       ansible.builtin.lineinfile:

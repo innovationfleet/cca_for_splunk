@@ -107,7 +107,7 @@ cd ~/tools/python-venv
 python -m venv ansible2.18
 source ansible2.18/bin/activate
 ~/tools/python-venv/ansible2.18/bin/python3.11 -m pip install --upgrade pip
-pip install ansible-core==2.18.6
+pip install ansible-core==2.18.12
 pip install ansible-runner pcrypt cryptography jmespath Jinja2 requests urllib3
 ansible-galaxy collection install community.general
 ansible-galaxy collection install ansible.posix
@@ -126,7 +126,7 @@ if [[ -v VIRTUAL_ENV ]] ; then ansible --version ; else echo "VIRTUAL_ENV is not
 
 You should expect a similar output as below. If you are not getting the expected result, review the previous steps.
 ```
-ansible [core 2.18.6]
+ansible [core 2.18.12]
   config file = None
   configured module search path = ['/opt/cca_manager/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
   ansible python module location = /opt/cca_manager/tools/python-venv/ansible2.18/lib64/python3.11/site-packages/ansible
@@ -166,7 +166,7 @@ The default strategy in Ansible is called linear and doesn't need to be specifie
 If we set it to `mitogen_linear` the playbooks will run much faster, up 4X.
 
 To use it your self, read up on [Ansible Mitogen](https://github.com/mitogen-hq/mitogen).
-Temporarily we have forked and patched the mitogen package. Get latest from https://github.com/innovationfleet/mitogen Remember to checkout branch ansible.2.18.6 after cloning the repo. Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
+Temporarily we have forked and patched the mitogen package. Get latest from https://github.com/innovationfleet/mitogen Remember to checkout branch ansible.12 after cloning the repo. Currently the package from github is needed, download and install it in the directory referenced by [ANSIBLE_STRATEGY_PLUGINS](#"ansiblestrategyplugins"-"internalccaforsplunktoolsmitogen-masteransiblemitogenpluginsstrategy")
 
 Add `export ANSIBLE_STRATEGY="mitogen_linear"`
 to start using the highly recommended strategy plugin.
@@ -226,4 +226,3 @@ At first the hosts file can seem complicated, be assured, it's not. All Splunk's
 ## Environment Specific Variables
 
 Look for all variables that needs to be updates. `grep -R UPDATE environments` will list all of them if you are in the root of the companion directories.
-

@@ -7,11 +7,18 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.1.4
 
 - name: Check release update for specific Amazon ansible_distributions
   ansible.builtin.shell:
-    cmd: set -o pipefail && dnf check-release-update 2>&1 | grep "dnf upgrade --releasever" | tail -1 | cut -d"=" -f2
+    cmd: |
+      set -o pipefail
+      dnf check-release-update 2>&1 \
+        | grep "dnf upgrade --releasever" \
+        | sed 's/.*releasever=//' \
+        | awk '{ print $1 }' \
+        | sort -V \
+        | tail -1
   args:
     executable: /bin/bash
   register: dnf_relesasever_status

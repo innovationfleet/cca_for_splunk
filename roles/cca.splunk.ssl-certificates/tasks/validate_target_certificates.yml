@@ -190,7 +190,7 @@
       ansible.builtin.template:
         src: etc/auth/certs/build_final_cert.j2
         dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
-        mode: '0644'
+        mode: '0600'
       check_mode: true
       register: final_cert_file_result
 

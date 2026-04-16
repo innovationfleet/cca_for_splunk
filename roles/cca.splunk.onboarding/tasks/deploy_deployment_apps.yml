@@ -7,25 +7,51 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.1.1
 
 - name: Extract deleted apps from rsync output during dry run
   ansible.builtin.set_fact:
-    deleted_deployment_apps: "{{ deployment_apps_update_status.stdout_lines | default('') | list | extract_deleted_apps }}"
+    deleted_deployment_apps: "{{ (deployment_apps_update_status.stdout_lines | default([])) | extract_deleted_apps }}"
   no_log: "{{ hide_password }}"
 
-- name: Assert that no unexpected directories will be deleted on the deployment server
+- name: Count apps on remote deployment server destination
+  ansible.builtin.find:
+    paths: "{{ splunk_path }}/etc/deployment-apps/"
+    file_type: directory
+    recurse: false
+  register: dest_deployment_apps_result
+  no_log: "{{ ansible_verbosity < 3 }}"
+
+- name: Calculate deletion threshold for deployment apps
+  ansible.builtin.set_fact:
+    deployment_deletion_check: >-
+      {{ deleted_deployment_apps | check_deletion_threshold(
+           (dest_deployment_apps_result.files | length | int),
+           (deployment_app_removal_percent_threshold | default(10) | int),
+           (deployment_app_removal_max_count | default(3) | int),
+           (deployment_app_removal_min_apps_for_percent | default(10) | int)
+         ) }}
+
+- name: Assert deployment app deletions are within safe threshold
   ansible.builtin.assert:
     that:
-      - deleted_deployment_apps | length == 0
+      - deployment_deletion_check.is_within_threshold
     fail_msg: >-
-      An app directory deletion is detected on the deployment Servers. This is not allowed by
-      default. Following apps will be removed: {{ deleted_deployment_apps | join(', ') }}.
-      If you expect these directories to be deleted, set accept_deployment_app_removal
-      to true in the extra_vars CCA dialogue.
-    success_msg: 'No critical app directories will be deleted on the deployment server'
+      Deployment app deletion exceeds safe threshold!
+      {{ deployment_deletion_check.deleted_count }} apps would be deleted out of
+      {{ deployment_deletion_check.total_count }} total on destination.
+      Threshold: {{ deployment_deletion_check.threshold_type }} =
+      {{ deployment_deletion_check.threshold_value }}{% if deployment_deletion_check.threshold_type == 'percent' %}%
+      (max {{ deployment_deletion_check.max_allowed }} apps){% endif %}.
+      Apps to delete: {{ deleted_deployment_apps | join(', ') }}.
+      To force deletion, set accept_deployment_app_removal to true.
+    success_msg: >-
+      Deployment app deletion within safe threshold
+      ({{ deployment_deletion_check.deleted_count }}/{{ deployment_deletion_check.total_count }}
+      apps on destination)
   when:
-    - not accept_deployment_app_removal | default(false)
+    - not (accept_deployment_app_removal | default(false))
+    - deleted_deployment_apps | length > 0
 
 - name: Deploy the apps from the staging directory to the deployment server
   become: false

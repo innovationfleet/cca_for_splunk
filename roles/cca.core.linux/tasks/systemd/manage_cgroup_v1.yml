@@ -7,7 +7,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.4
 
 - name: Block for debian based hosts
   when:
@@ -49,7 +49,7 @@
     src: "usr/local/bin/cca_cgroup_version_handler.sh"
     dest: "/usr/local/bin/cca_cgroup_version_handler.sh"
     owner: "{{ ansible_ssh_user }}"
-    group: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_user_gid }}"
     mode: '0750'
 
 - name: Configure cgroup-daemon service in /etc/systemd/system/cca_cgroup_version_daemon.service

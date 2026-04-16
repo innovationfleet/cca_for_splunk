@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.1.1
+# Release: 2026.1.1
 
 - name: Include task to login
   ansible.builtin.include_tasks: splunk_login.yml
@@ -23,3 +23,7 @@
     add_shcluster_member: true
   when:
     - shcluster_member_status_result.stdout | regex_search('(.*Search Head Clustering is not enabled on this node.*)')
+
+- name: Include tasks to logout from splunk cli
+  ansible.builtin.include_tasks:
+    file: ../cca.core.splunk/tasks/splunk_logout.yml

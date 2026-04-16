@@ -7,13 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1.2
+# Release: 2026.1.2
 
 - name: Perform a splunkd restart in a block
   block:
     - name: Restart splunkd on cli
       ansible.builtin.command: "{{ restart_command }}"
       register: splunk_restart_result
+      failed_when: >
+        splunk_restart_result.rc != 0 or
+        'Root permission is required' in (splunk_restart_result.stdout | default('')) or
+        'Root permission is required' in (splunk_restart_result.stderr | default(''))
       when:
         (
           stat_ansible_managed.stat.exists is defined and
@@ -46,10 +50,22 @@
         - skip_ansible_lint
 
   rescue:
+    - name: Fail when systemd control is not delegated to polkit
+      ansible.builtin.fail:
+        msg: >-
+          Splunk restart failed because systemd control requires root permissions.
+          Ensure the service is delegated via polkit for this account or run with appropriate privileges.
+      when: >
+        'Root permission is required' in (splunk_restart_result.stdout | default('')) or
+        'Root permission is required' in (splunk_restart_result.stderr | default(''))
+
     - name: Check if restart failed due to web interface unavailability
       ansible.builtin.fail:
         msg: "Splunk restart failed for unexpected reason"
-      when: "'web interface does not seem to be available' not in splunk_restart_result.stderr"
+      when: >
+        'Root permission is required' not in (splunk_restart_result.stdout | default('')) and
+        'Root permission is required' not in (splunk_restart_result.stderr | default('')) and
+        'web interface does not seem to be available' not in (splunk_restart_result.stderr | default(''))
 
     - name: Wait for Splunk to be fully operational after restart
       ansible.builtin.command:

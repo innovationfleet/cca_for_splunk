@@ -23,7 +23,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 # META_DATE
-# Release: 2023.3.2
+# Release: 2026.1.4
 
 - name: Splunkd restart handler on non cluster instances
   ansible.builtin.file:
@@ -35,13 +35,18 @@
     - inventory_hostname not in ( groups.cluster_peers | default([]) )
     - inventory_hostname not in ( groups.searchhead_members | default([]) )
 
+# Do not touch rolling-restart pending when CLI passwd changed: cca.core.splunk
+# handlers perform immediate stop/start (see cca_splunk_cli_passwd_changed).
 - name: Splunkd restart handler on SHC members
   ansible.builtin.file:
     path: "{{ rolling_restart_pending }}"
     state: touch
     mode: '664'
   listen: notify splunkd restart
-  when: inventory_hostname in ( groups.searchhead_members | default([]) )
+  when:
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
+    - not force_splunkd_restart | default(false)
+    - not cca_splunk_cli_passwd_changed | default(false) | bool
 
 - name: Splunkd restart handler on cluster peers for Cluster C1
   ansible.builtin.file:

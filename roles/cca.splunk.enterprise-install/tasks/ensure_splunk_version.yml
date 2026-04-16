@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2026.1.3
 
 - name: Gather only CPU facts
   ansible.builtin.gather_facts:
@@ -16,6 +16,11 @@
 
 - name: Include task to get Splunk status
   ansible.builtin.include_tasks: splunk_status.yml
+
+- name: Set current splunk version
+  ansible.builtin.include_role:
+    name: cca.core.splunk
+    tasks_from: get_splunk_version.yml
 
 - name: Include task to stage files
   ansible.builtin.include_tasks: stage_install_files.yml

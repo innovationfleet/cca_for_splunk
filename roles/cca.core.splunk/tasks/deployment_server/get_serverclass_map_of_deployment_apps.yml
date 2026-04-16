@@ -18,9 +18,10 @@
   become: false
   delegate_to: localhost
   ansible.builtin.set_fact:
-    serverclass_data:
-      "{{ lookup('file',
-      (cca_local_tmp_dir | default('/tmp/cca_tmp')) ~ '/' ~ cca_runid ~ '/'  ~ environment_name ~ '/'  ~ 'localhost'~ '/' ~ inventory_hostname ~ '/serverclass_data_local.json') }}"
+    serverclass_data: >-
+      {{ lookup('file',
+      [cca_local_tmp_dir | default('/tmp/cca_tmp'), cca_runid, environment_name, 'localhost',
+      inventory_hostname, 'serverclass_data_local.json'] | path_join) }}
   no_log: "{{ hide_password }}"
 
 - name: Perform lookup for classified apps
