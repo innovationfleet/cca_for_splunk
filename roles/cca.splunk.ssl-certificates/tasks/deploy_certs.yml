@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1
+# Release: 2026.1.4
 
 - name: Check if we have the cert file on the server
   ansible.builtin.stat:
@@ -31,7 +31,7 @@
   ansible.builtin.copy:
     src: '{{ cca_splunk_extension_certs_path }}/{{ item }}'
     dest: '{{ cca_splunk_certs_staging_path }}'
-    mode: '664'
+    mode: '600'
   no_log: "{{ hide_password }}"
   with_items:
     - '{{ cert_staging_file_name }}'
@@ -42,7 +42,7 @@
   ansible.builtin.copy:
     src: '{{ cca_splunk_extension_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
     dest: '{{ cca_splunk_certs_staging_path }}'
-    mode: '664'
+    mode: '600'
   check_mode: false
   when:
     - cca_splunk_cert_enrollment_method == "manual"
@@ -59,7 +59,7 @@
   ansible.builtin.copy:
     src: "{{ cca_splunk_extension_cert_rootca_fullpath | default('') }}"
     dest: '{{ cca_splunk_certs_staging_path }}'
-    mode: '664'
+    mode: '600'
   check_mode: false
   when:
     - cca_splunk_cert_enrollment_method == "api"
@@ -139,7 +139,7 @@
         dest: '{{ cca_splunk_certs_path }}/{{ cca_splunk_extension_cert_rootca }}'
         owner: '{{ splunk_user }}'
         group: '{{ splunk_user }}'
-        mode: "0644"
+        mode: "0600"
         content: "{{ concat_content }}"
       notify: notify splunkd restart
 
@@ -149,7 +149,7 @@
       ansible.builtin.copy:
         src: '{{ cca_splunk_certs_staging_path }}/{{ privkey_staging_file_name }}'
         dest: '{{ cca_splunk_certs_path }}/{{ privkey_file_name }}'
-        mode: '664'
+        mode: '600'
         remote_src: true
 
     - name: Set fact for cert file names and concatenation order
@@ -164,7 +164,7 @@
       ansible.builtin.template:
         src: etc/auth/certs/build_final_cert.j2
         dest: '{{ cca_splunk_certs_path }}/{{ cert_file_name }}'
-        mode: "0644"
+        mode: "0600"
       notify: notify splunkd restart
 
     - name: "Set fact if cert is found and valid for {{ cert_type }}"

@@ -31,6 +31,84 @@
 
     Release notes:
 
+    2026.1.4  - Improved ansible command arguments where splunk cli authentication is needed to better support
+                special character in passwords.
+              - Added improved support for Splunk admin password updates. Note that an admin password update on
+                search head clusters will do an immediate restart of the search head members.
+              - Bumped Splunk Enterprise versions. Splunk 9.4.10 or 10.0.5 is recommended for production.
+              - Improved Amazon release version detection to retrieve latest version in a list that is sorted
+                alphabetically.
+
+              Bug fixes:
+                * Corrected auth argument flag in check_preflight_status.yml.
+                * Tighten file permission on ssl certificates to '0600', required by postgres in 10.x. Prior to
+                  Splunk Enterprise upgrade, run manage_*.yml playbooks to set correct file permissions on certs.
+                * Corrected ansible group settings in cgroups task when user and group are different.
+
+
+    2026.1.3
+              - Added option to generate Splunk passwd hash and ansible vault string for update
+                of managed users on Splunk Infrastructure Servers. Use playbook cca_vaults_secret.yml
+
+              Bug fixes:
+                Corrected an issue with missing stored splunk enterprise version during Splunk Enterprise
+                Upgrade.
+
+
+    2026.1.2
+              - Bumped Splunk Enterprise versions. Splunk 9.4.9 or 10.0.4 is recommended for production.
+              - Added ability to use ansible vaulted files, use ansible-encrypt to encrypt a file, add .vault
+                as file ending to the file and it gets decrypted when deployed to the target host. Only files
+                that is part of selectable_apps and versioned_apps is currently supported. Update your
+                local settings from the updated file in templates directory
+                onboarding_templates/environment/ENVIRONMENT_NAME/group_vars/all/onboarding Consult support
+                before implementing vaulted files.
+              - Updated templates for Search Head cluster with settings needed for Enterprise security. Copy
+                templates/infrastructure_templates/ENVIRONMENT_NAME/group_vars/searchhead_* to your
+                environment group_vars directory.
+              - Trimmed changed event to get clean run if nothing is deployed.
+
+
+    2026.1.1
+              - Added support for Splunk Enterprise 10.2
+              - New section for splunk-launch.conf, use the updated template before upgrading to Splunk Enterprise 10.2+
+                Copy templates/infrastructure_templates/ENVIRONMENT_NAME/group_vars/all/general_settings to your
+                environment general_settings file.
+              - Splunk 9.4.7 or 10.0.2 is recommended for production.
+              - Enhanced cluster status check with preflight validation and configurable retry delay.
+              - Improved deployment server state file management with proper path handling and cleanup.
+              - Added check_deletion_threshold filter plugin for safer app deletion validation. See
+                templates/onboarding_templates/ENVIRONMENT_NAME/group_vars/all/onboarding for tuning
+                variables.
+              - Enhanced preflight output normalization with string filter for better reliability.
+              - Improved cluster status check integration when deploying manager apps with proper variable handling.
+              - Added conditional cluster status check with skip_early_cluster_status_check option for fail-fast or
+                skip-if-no-changes scenarios.
+              - Enhanced cluster status check to only validate preflight when checking status, not when waiting for
+                cluster readiness.
+              - Improved preflight failure error messages to include information about skip_early_cluster_status_check
+                option. Error messages now guide users on how to skip the fail-fast check and continue with deployment.
+              - Added proper splunk logout calls in tasks to prevent leftover authentication sessions on Splunk servers
+                after playbook execution completes.
+              - Bumped Ansible version to 2.18.12. Run ./cca_ctrl --upgrade from your CCA main repository and
+                select the playbook 'upgrade_cca_manager.yml'. When the upgrade is complete, log out and log in again.
+                on your CCA manager. Log out and log back to activate the new version.
+              - Bumped ansible-runner version to 2.4.2
+              - Bumped Mitogen version to a version compatible with ansible.2.18.12
+
+              Bug fixes:
+                 * Incorrect default path in stage selected shcluster apps.
+                 * Fixed staging directory path expression in stage_shcluster_apps.yml.
+                 * Fixed error message formatting in stage_deployment_apps.yml
+                 * Added proper cleanup of state files and logout in deployment server reload handler.
+                 * Fixed cluster status check retry logic to allow status collection even when preflight fails in
+                   check mode.
+                 * Fixed manager-apps validation to skip check for Splunk versions 10.0.0 and higher.
+                 * Fixed manager-apps validation to handle undefined splunk_enterprise_version variable gracefully.
+                 * Fixed loop variable collision warning in splunk_login.yml by using explicit loop_var to avoid
+                   conflicts with parent task variables.
+
+
       2025.3.3
               - Added shcluster label to search head members, update you local searchhead_members_shcluster_c*
                 files from templates/infrastructure_template/ENVIRONMENT_NAME/group_vars/ and shcluster_label

@@ -11,7 +11,7 @@
   pre_tasks:
     - name: Set CCA release version of readiness playbook
       ansible.builtin.set_fact:
-        cca_release: "2025.3.3"
+        cca_release: "2026.1.4"
 
     - name: START - Set target readiness score for CCA manager
       ansible.builtin.set_fact:
@@ -90,9 +90,9 @@
       connection: local
       ansible.builtin.assert:
         that:
-          - ansible_version.full is version('2.18.6', '>=')
+          - ansible_version.full is version('2.18.12', '>=')
         fail_msg:
-          You need to have ansible-core version 2.18.6+ on your control host to use
+          You need to have ansible-core version 2.18.12+ on your control host to use
           the automation framework. Detected version {{ ansible_version.full }}
         success_msg: >-
           You are running an validated ansible version {{ ansible_version.full }}

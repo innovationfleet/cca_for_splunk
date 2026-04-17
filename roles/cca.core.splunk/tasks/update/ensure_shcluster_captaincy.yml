@@ -8,7 +8,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.4
 
 - name: Ensure that splunk is running
   ansible.builtin.command:
@@ -39,11 +39,16 @@
 
 - name: Splunk login
   ansible.builtin.command:
-    cmd: >
-      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk login
-      --accept-license
-      --answer-yes
-      --no-prompt -auth "{{ splunk_cli_user }}:{{ splunk_cli_user_password }}"
+    argv:
+      - timeout
+      - "{{ cca_splunk_command_timeout | default('60') }}"
+      - "{{ splunk_path }}/bin/splunk"
+      - login
+      - --accept-license
+      - --answer-yes
+      - --no-prompt
+      - -auth
+      - "{{ splunk_cli_user }}:{{ splunk_cli_user_password | trim }}"
   register: splunk_login_result
   no_log: "{{ hide_password }}"
   until: splunk_login_result.rc == 0

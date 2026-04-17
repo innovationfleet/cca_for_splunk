@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.3
+# Release: 2026.1.2
 
 - name: Calculate number of retries based on seconds to wait
   ansible.builtin.set_fact:
@@ -19,6 +19,7 @@
     path: "{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}"
     state: directory
     mode: '0755'
+  changed_when: false
 
 - name: Check if a look file exists for cca infrastructure
   ansible.builtin.stat:

@@ -65,8 +65,8 @@
     that:
       - stat_environment_specific_path.stat.exists
     fail_msg: >-
-      The directory {{ selected_deployment_apps_source_dir }} is missing
-      correct and rerun the playbook.
+      The directory {{ selected_deployment_apps_source_dir }} is missing.
+      Please verify the path is correct and rerun the playbook.
 
 - name: Stage manager with deployment apps from environment directory
   become: false

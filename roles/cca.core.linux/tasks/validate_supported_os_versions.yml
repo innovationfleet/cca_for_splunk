@@ -13,7 +13,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.1
 #
 
 - name: Set package manager compatibility flags
@@ -29,13 +29,13 @@
     - ansible_distribution_major_version in ["8", "9"]
     - ansible_architecture == "x86_64"
 
-- name: List of supported RedHat versions
+- name: List of supported RedHat versions with DNF package manager
   ansible.builtin.set_fact:
     redhat_support: true
     package_manager: 'dnf'
   when:
     - ansible_distribution == "RedHat"
-    - ansible_distribution_major_version in ["8", "9"]
+    - ansible_distribution_major_version in ["8", "9", "10"]
     - ansible_architecture == "x86_64"
 
 - name: List of supported CentOS versions
@@ -80,7 +80,7 @@
     package_manager: 'apt'
   when:
     - ansible_distribution == "Debian"
-    - ansible_distribution_major_version == "12"
+    - ansible_distribution_major_version in ["11", "12"]
     - ansible_architecture == "x86_64"
 
 - name: List of supported Ubuntu versions

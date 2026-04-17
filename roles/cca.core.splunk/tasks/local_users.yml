@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.2.1
+# Release: 2026.1.4
 
 
 - name: Add admin user as local cli user
@@ -24,9 +24,17 @@
       :::18956
     mode: '0600'
     create: true
+  register: cca_splunk_local_users_admin_lineinfile
   notify: notify splunkd restart
   tags:
     - skip_ansible_lint
+
+- name: Core Control - Set fact for local users to manage
+  ansible.builtin.set_fact:
+    cca_splunk_local_users_to_manage: >-
+      {{ cca_splunk_local_users | default([]) | selectattr("state", "undefined") | list +
+      cca_splunk_local_users | default([]) | selectattr("state", "defined") |
+      selectattr("state", "eq", "present") | list }}
 
 - name: Core Control - Manage additional local users to Splunk
   ansible.builtin.lineinfile:
@@ -35,7 +43,8 @@
     line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
   loop_control:
     loop_var: user
-  loop: '{{ cca_splunk_local_users | default([]) | selectattr("state", "undefined") | list + cca_splunk_local_users | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}'
+  loop: '{{ cca_splunk_local_users_to_manage | default([]) }}'
+  register: cca_splunk_local_users_managed
   notify: notify splunkd restart
 
 - name: Core Control - Remove local users from Splunk
@@ -46,7 +55,16 @@
   loop_control:
     loop_var: user
   loop: '{{ cca_splunk_local_users | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+  register: cca_splunk_local_users_removed
   notify: notify splunkd restart
+
+- name: Group Vars - Set fact for local users to manage
+  ansible.builtin.set_fact:
+    cca_splunk_local_users_group_to_manage: >-
+      {{ cca_splunk_local_users_group_settings | default([]) |
+      selectattr("state", "undefined") | list +
+      cca_splunk_local_users_group_settings | default([]) |
+      selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}
 
 - name: Group Vars - Manage additional local users to Splunk
   ansible.builtin.lineinfile:
@@ -55,7 +73,8 @@
     line: ':{{ user.name }}:{{ user.passwd_hash }}::{{ user.description }}:{{ user.role }}:{{ user.email }}:::{{ user.id }}'
   loop_control:
     loop_var: user
-  loop: '{{ cca_splunk_local_users_group_settings | default([]) | selectattr("state", "undefined") | list + cca_splunk_local_users_group_settings | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "present") | list }}'
+  loop: '{{ cca_splunk_local_users_group_to_manage | default([]) }}'
+  register: cca_splunk_local_users_group_managed
   notify: notify splunkd restart
 
 - name: Group Vars - Remove local users from Splunk
@@ -66,4 +85,79 @@
   loop_control:
     loop_var: user
   loop: '{{ cca_splunk_local_users_group_settings | default([]) | selectattr("state", "defined") | selectattr("state", "eq", "absent") | list }}'
+  register: cca_splunk_local_users_group_removed
   notify: notify splunkd restart
+
+# splunk_cli_user may be set to "" (still "defined"), so plain default() never
+# falls back to cca_splunk_admin_user; trim + default(..., true) fixes that.
+# Usernames are compared case-insensitively (inventory vs Splunk passwd).
+- name: Set fact when Splunk CLI user line in etc/passwd was modified
+  ansible.builtin.set_fact:
+    cca_splunk_cli_passwd_changed: >-
+      {{
+        (
+          (cca_splunk_local_users_admin_lineinfile.changed | default(false))
+          and (
+            cca_splunk_admin_user | default('admin') | lower | trim
+            == cca_splunk_effective_cli_user | lower | trim
+          )
+        )
+        or (
+          (
+            cca_splunk_local_users_managed.results | default([])
+            | selectattr('changed', 'equalto', true)
+            | map(attribute='item')
+            | map(attribute='name')
+            | map('lower')
+            | list
+          )
+          | intersect([cca_splunk_effective_cli_user | lower | trim])
+          | length > 0
+        )
+        or (
+          (
+            cca_splunk_local_users_group_managed.results | default([])
+            | selectattr('changed', 'equalto', true)
+            | map(attribute='item')
+            | map(attribute='name')
+            | map('lower')
+            | list
+          )
+          | intersect([cca_splunk_effective_cli_user | lower | trim])
+          | length > 0
+        )
+        or (
+          (
+            cca_splunk_local_users_removed.results | default([])
+            | selectattr('changed', 'equalto', true)
+            | map(attribute='item')
+            | map(attribute='name')
+            | map('lower')
+            | list
+          )
+          | intersect([cca_splunk_effective_cli_user | lower | trim])
+          | length > 0
+        )
+        or (
+          (
+            cca_splunk_local_users_group_removed.results | default([])
+            | selectattr('changed', 'equalto', true)
+            | map(attribute='item')
+            | map(attribute='name')
+            | map('lower')
+            | list
+          )
+          | intersect([cca_splunk_effective_cli_user | lower | trim])
+          | length > 0
+        )
+      }}
+  vars:
+    cca_splunk_effective_cli_user: >-
+      {{
+        (
+          splunk_cli_user
+          | default(cca_splunk_admin_user | default('admin'), true)
+          | trim
+        )
+        | default(cca_splunk_admin_user | default('admin'), true)
+      }}

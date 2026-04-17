@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2026.1.1
 
 - name: Login to splunk
   ansible.builtin.include_tasks: splunk_login.yml
@@ -577,4 +577,9 @@
   when:
     - inventory_hostname in ( groups.searchhead_members_shcluster_c9 | default([]) )
     - not ansible_check_mode
+  run_once: true
+
+- name: Include tasks to logout from splunk cli
+  ansible.builtin.include_tasks:
+    file: ../cca.core.splunk/tasks/splunk_logout.yml
   run_once: true

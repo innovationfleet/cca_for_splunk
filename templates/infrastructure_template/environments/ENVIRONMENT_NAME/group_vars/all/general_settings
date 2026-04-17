@@ -1,6 +1,6 @@
 # Version parameter is used to validate this file
 # against cca_for_splunk framework requirements.
-cca_infrastructure_general_settings_file_version: '2025.3.1'
+cca_infrastructure_general_settings_file_version: '2026.1.1'
 
 # General settings for Splunk.
 # Group and host settings should be configured in
@@ -359,7 +359,7 @@ splunk_conf_general_settings:
     filename: splunk-launch.conf
     filepath: '{{ splunk_path }}/etc'
     sections:
-      - section:
+      - section: "{{ 'default' if (current_splunk_enterprise_version | default(splunk_enterprise_version)) is version('10.2.0', '>=') else 'none' }}"
         options:
          - option: 'SPLUNK_OS_USER'
            value: '{{ splunk_user }}'

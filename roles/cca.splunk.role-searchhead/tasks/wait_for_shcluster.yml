@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2026.1.1
 
 - name: Include task to login
   ansible.builtin.include_tasks: splunk_login.yml
@@ -113,3 +113,7 @@
   check_mode: false
   when:
     - not status_shc_init
+
+- name: Include tasks to logout from splunk cli
+  ansible.builtin.include_tasks:
+    file: ../cca.core.splunk/tasks/splunk_logout.yml

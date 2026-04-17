@@ -7,15 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.2.1
+# Release: 2026.1.4
 
 - name: Execute a splunkd stop, start when in force mode
   ansible.builtin.command:
-    cmd: "{{ item }}"
+    cmd: "{{ splunk_cmd }}"
   loop:
     - "{{ stop_command }}"
     - "sleep 5"
     - "{{ start_command }}"
+  loop_control:
+    loop_var: splunk_cmd
   when:
     - force_splunkd_restart | default(false)
   tags:
@@ -37,11 +39,16 @@
 
 - name: Splunk login
   ansible.builtin.command:
-    cmd: >
-      timeout {{ cca_splunk_command_timeout | default('60') }} {{ splunk_path }}/bin/splunk login
-      --accept-license
-      --answer-yes
-      --no-prompt -auth '{{ splunk_cli_user }}:{{ splunk_cli_user_password }}'
+    argv:
+      - timeout
+      - "{{ cca_splunk_command_timeout | default('60') }}"
+      - "{{ splunk_path }}/bin/splunk"
+      - login
+      - --accept-license
+      - --answer-yes
+      - --no-prompt
+      - -auth
+      - "{{ splunk_cli_user }}:{{ splunk_cli_user_password | trim }}"
   register: splunk_login_result
   no_log: "{{ hide_password }}"
   until: splunk_login_result.rc == 0
@@ -51,7 +58,7 @@
   changed_when: false
   check_mode: false
   when:
-    - not skip_splunk_status_check | default(false)
+    - not (skip_splunk_status_check | default(false)) or (check_cluster_status | default(false))
   tags:
     - skip_ansible_lint
 
@@ -68,4 +75,4 @@
     success_msg: >-
       Login successful
   when:
-    - not skip_splunk_status_check | default(false)
+    - not (skip_splunk_status_check | default(false)) or (check_cluster_status | default(false))

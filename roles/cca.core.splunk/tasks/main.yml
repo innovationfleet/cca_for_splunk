@@ -13,7 +13,7 @@
 #
 # Roger Lindquist (github.com/rlinq)
 #
-# Release: 2023.3.2
+# Release: 2026.1.4
 
 - name: Include task for checking cca_for_splunk init state
   ansible.builtin.include_tasks: check_init.yml
@@ -27,7 +27,7 @@
 - name: Include task for checking certificate status
   ansible.builtin.include_role:
     name: cca.splunk.ssl-certificates
-    tasks_from: validate_target_certificates
+    tasks_from: validate_target_certificates.yml
 
 - name: Include task to calculate splunk enterprise version
   ansible.builtin.include_tasks: get_splunk_version.yml
@@ -96,6 +96,16 @@
     ('The splunk daemon (splunkd) is already running' not in splunk_status_result.stdout)
   when:
     - inventory_hostname not in  ( groups.searchhead_members | default([]) )
+
+# Run pending splunkd restarts before wait_for_shcluster when etc/passwd changed
+# for the effective Splunk CLI user (splunk_cli_user / admin), so splunk_login
+# matches the credentials splunkd will use after handler processing.
+- name: Flush handlers before search head cluster wait and login
+  ansible.builtin.meta: flush_handlers
+  when:
+    - inventory_hostname in ( groups.searchhead_members | default([]) )
+    - stat_var_run_splunk.stat.exists
+    - cca_splunk_cli_passwd_changed | default(false) | bool
 
 - name: Wait for a rolling restart on search head cluster to complete
   ansible.builtin.import_role:

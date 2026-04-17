@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.1.1
+# Release: 2026.1.2
 
 # tasks file for cca.splunk.onboarding
 
@@ -22,12 +22,14 @@
 - name: Ensure local tmp directory exists
   become: false
   delegate_to: localhost
+  run_once: true
   connection: local
   ansible.builtin.file:
     path: "{{ cca_local_tmp_dir | default('/tmp/cca_tmp') }}"
     state: directory
     mode: '0700'
   check_mode: false
+  changed_when: false
 
 - name: Include task for shcluster app staging
   ansible.builtin.include_tasks: stage_shcluster_apps.yml
@@ -41,27 +43,36 @@
     - shcluster_label is defined
     - deploy_scope | default('') == "shcluster_apps"
 
-- name: Include task to check cluster status
+- name: Include task to check cluster status (early check - fail fast)
   ansible.builtin.include_role:
     name: cca.core.splunk
     tasks_from: cluster/get_cluster_status.yml
+  vars:
+    check_cluster_status: true
+    skip_splunk_status_check: true
   when:
     - cluster_label is defined
     - deploy_scope | default('') == "manager-apps"
+    - not (skip_early_cluster_status_check | default(false))
 
-- name: Check and fail if cluster is not preflight ready
+- name: Check and fail if cluster is not preflight ready (early check - fail fast)
+  when:
+    - cluster_label is defined
+    - deploy_scope | default('') == "manager-apps"
+    - not (skip_early_cluster_status_check | default(false))
   block:
     - name: Normalize preflight output
       ansible.builtin.set_fact:
         pf_stdout_lines: >-
-          {{ (verbose_cluster_status.stdout | default('') | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
+          {{ (verbose_cluster_status.stdout | default('') | string | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
         pf_stderr_lines: >-
-          {{ (verbose_cluster_status.stderr | default('') | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
+          {{ (verbose_cluster_status.stderr | default('') | string | replace('\\r\\n', '\n') | replace('\\n', '\n')) | split('\n') }}
       no_log: true
       when:
         - not skip_deployment_preflight_check | default(false)
         - cluster_label is defined
         - deploy_scope | default('') == "manager-apps"
+        - verbose_cluster_status is defined
 
     - name: Check and fail if cluster is not preflight ready (short message)
       ansible.builtin.assert:
@@ -74,6 +85,7 @@
         - not skip_deployment_preflight_check | default(false)
         - cluster_label is defined
         - deploy_scope | default('') == "manager-apps"
+        - verbose_cluster_status is defined
 
   rescue:
     - name: Detailed preflight output (only printed on failure)
@@ -87,7 +99,10 @@
 
     - name: Stop play after showing details
       ansible.builtin.fail:
-        msg: "Preflight failed — see detailed output above."
+        msg: >-
+          Preflight failed — see detailed output above.
+          To skip this early fail-fast check and continue with deployment, set 'skip_early_cluster_status_check: true'.
+          The deployment will continue and only fail if there are detected changes to deploy.
 
 - name: Include task for master apps staging
   ansible.builtin.include_tasks: stage_manager_apps.yml

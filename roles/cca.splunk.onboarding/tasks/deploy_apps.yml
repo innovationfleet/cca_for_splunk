@@ -7,28 +7,17 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.1.1.1
+# Release: 2026.1.4
 
 - name: Deploy the apps from the selected apps directory to the splunk servers
-  ansible.posix.synchronize:
-    src: >-
-        {{
-          (item.source_path | default(selected_apps_source_path)) ~
-          ('/' ~ item.source_app if item.source_app is defined else '') ~ '/'
-        }}
-    dest: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}/"
-    copy_links: true
-    recursive: true
-    checksum: true
-    times: false
-    delete: true
-    owner: false
-    group: false
-    archive: false
-    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
-    rsync_opts: '{{ selectable_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else selectable_apps_rsync_opts }}'
-  notify: notify standalone splunkd restart
+  vars:
+    app_src_dir: >-
+      {{
+        (item.source_path | default(selected_apps_source_path)) ~
+        ('/' ~ item.source_app if item.source_app is defined else '')
+      }}
+    app_dest_dir: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}"
+    app_rsync_opts: "{{ selectable_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else selectable_apps_rsync_opts }}"
   loop: '{{ selected_apps | default([]) if selected_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
@@ -37,34 +26,25 @@
     - (item.target is defined and
       item.target == inventory_hostname) or
       item.target is not defined
+  ansible.builtin.include_tasks: looped_tasks/deploy_app_in_loop.yml
 
 - name: Deploy apps from the versioned apps directory to the splunk servers
-  ansible.posix.synchronize:
-    src: >-
-        {{
-          (item.source_path | default(versioned_apps_source_path)) ~
-          ('/' ~ item.source_app if item.source_app is defined else '') ~ '/'
-        }}
-    dest: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}/"
-    copy_links: true
-    recursive: true
-    checksum: true
-    times: false
-    delete: true
-    owner: false
-    group: false
-    archive: false
-    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
-    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
-    rsync_opts: '{{ versioned_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else versioned_apps_rsync_opts }}'
-  notify: notify standalone splunkd restart
+  vars:
+    app_src_dir: >-
+      {{
+        (item.source_path | default(versioned_apps_source_path)) ~
+        ('/' ~ item.source_app if item.source_app is defined else '')
+      }}
+    app_dest_dir: "{{ splunk_path }}/etc/{{ item.dest_dir | default('apps') }}/{{ item.name }}"
+    app_rsync_opts: "{{ versioned_apps_rsync_opts + item.rsync_opts if item.rsync_opts is defined else versioned_apps_rsync_opts }}"
   loop: '{{ versioned_apps | default([]) if versioned_apps | default([]) is iterable else [] }}'
   when:
     - item.state == 'present'
     - item.dest_dir is not defined or
       item.dest_dir == 'deployment-apps' or item.dest_dir == 'apps'
-    - item.target is defined and item.target == inventory_hostname or
+    - (item.target is defined and item.target == inventory_hostname) or
       item.target is not defined
+  ansible.builtin.include_tasks: looped_tasks/deploy_app_in_loop.yml
 
 - name: Delete listed generic apps from server if they are set to absent
   ansible.builtin.file:

@@ -7,7 +7,7 @@
 #
 # Author: Roger Lindquist (github.com/rlinq)
 #
-# Release: 2025.3.2
+# Release: 2026.1.1
 
 - name: Include task to check pending actions
   ansible.builtin.include_tasks: check_pending_actions.yml
@@ -42,14 +42,23 @@
     - serverclass | default([]) | length <= cca_max_reload_serverclass_items | default(50)
     - not stat_splunkd_restart_pending.stat.exists | default(false)
 
+- name: Filter serverclass list to limit items for reload
+  ansible.builtin.set_fact:
+    serverclass_filtered: >-
+     {{ (serverclass | default([]))[: cca_max_reload_serverclass_items | default(50)] }}
+  when:
+    - use_serverclass_mode | default(false)
+    - reload_deployment_server | default(false)
+
 - name: Reload Deployment Server - Serverclass mode
   ansible.builtin.include_tasks: deployment_server/reload_serverclass_item.yml
-  loop: "{{ serverclass | default([]) }}"
+  loop: "{{ serverclass_filtered | default([]) }}"
   loop_control:
     loop_var: item
   when:
     - use_serverclass_mode | default(false)
     - reload_deployment_server | default(false)
+    - serverclass_filtered | default([]) | length > 0
 
 - name: Restart Deployment Server
   ansible.builtin.include_tasks: restart_splunkd.yml
@@ -58,3 +67,17 @@
       (use_serverclass_mode | default(false) and
        serverclass | default([]) | length > cca_max_reload_serverclass_items | default(50) and
        not reload_deployment_server | default(false))
+
+- name: Clean up state file for deployment server reload
+  ansible.builtin.file:
+    path: "{{ deployment_server_reload_pending }}"
+    state: absent
+
+- name: Clean up state file for deployment server restart
+  ansible.builtin.file:
+    path: "{{ splunkd_restart_pending }}"
+    state: absent
+
+- name: Include tasks to logout of splunk cli
+  ansible.builtin.include_tasks:
+    file: splunk_logout.yml

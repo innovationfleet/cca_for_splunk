@@ -1,0 +1,101 @@
+---
+# tasks file for cca.splunk.onboarding
+#
+# Description:
+#
+# Prerequisite:
+#
+# Author: Roger Lindquist (github.com/rlinq)
+#
+# Release: 2026.1.2
+
+
+- name: Identify vaulted files to copy (local)
+  delegate_to: localhost
+  connection: local
+  become: false
+  ansible.builtin.find:
+    paths: "{{ app_src_dir }}"
+    patterns: "*.vault"
+    file_type: file
+    recurse: true
+  register: vaulted_files
+
+- name: Initialize rsync excludes for decrypted vaulted outputs
+  ansible.builtin.set_fact:
+    vault_exclude_opts: []
+  changed_when: false
+
+- name: Add rsync excludes for decrypted vaulted outputs
+  vars:
+    vault_rel_path: "{{ vault_file.path | replace(app_src_dir ~ '/', '') }}"
+    vault_dest_rel_path: "{{ vault_rel_path[:-6] if vault_rel_path.endswith('.vault') else vault_rel_path }}"
+  ansible.builtin.set_fact:
+    vault_exclude_opts: "{{ vault_exclude_opts + ['--exclude=' ~ vault_dest_rel_path] }}"
+  loop: "{{ vaulted_files.files | default([]) }}"
+  loop_control:
+    loop_var: vault_file
+  when:
+    - vaulted_files.matched | default(0) | int > 0
+  changed_when: false
+
+- name: Deploy the app via rsync
+  ansible.posix.synchronize:
+    src: "{{ app_src_dir }}/"
+    dest: "{{ app_dest_dir }}/"
+    copy_links: true
+    recursive: true
+    checksum: true
+    times: false
+    delete: true
+    owner: false
+    group: false
+    archive: false
+    use_ssh_args: "{{ synchronize_module_use_ssh_args | default(false) }}"
+    rsync_path: '{% if splunk_user == ansible_ssh_user %}rsync{% else %}sudo -u {{ splunk_user }} rsync{% endif %}'
+    rsync_opts: "{{ app_rsync_opts + (vault_exclude_opts | default([])) }}"
+  notify: notify standalone splunkd restart
+
+- name: Ensure destination directories exist for vaulted files
+  become: true
+  become_user: "{{ splunk_user }}"
+  vars:
+    vault_rel_path: "{{ vault_file.path | replace(app_src_dir ~ '/', '') }}"
+    vault_dest_rel_path: "{{ vault_rel_path[:-6] if vault_rel_path.endswith('.vault') else vault_rel_path }}"
+  ansible.builtin.file:
+    path: >-
+      {{
+        (
+          app_dest_dir ~ '/' ~
+          vault_dest_rel_path
+        ) | dirname
+      }}
+    state: directory
+    mode: '0755'
+  loop: "{{ vaulted_files.files | default([]) }}"
+  loop_control:
+    loop_var: vault_file
+  when:
+    - vaulted_files.matched | default(0) | int > 0
+
+- name: Copy vaulted files (decrypt) to target
+  become: true
+  become_user: "{{ splunk_user }}"
+  vars:
+    vault_rel_path: "{{ vault_file.path | replace(app_src_dir ~ '/', '') }}"
+    vault_dest_rel_path: "{{ vault_rel_path[:-6] if vault_rel_path.endswith('.vault') else vault_rel_path }}"
+  ansible.builtin.copy:
+    src: "{{ vault_file.path }}"
+    dest: >-
+      {{
+        app_dest_dir ~ '/' ~
+        vault_dest_rel_path
+      }}
+    decrypt: true
+    mode: preserve
+  loop: "{{ vaulted_files.files | default([]) }}"
+  loop_control:
+    loop_var: vault_file
+  when:
+    - vaulted_files.matched | default(0) | int > 0
+  notify: notify standalone splunkd restart
